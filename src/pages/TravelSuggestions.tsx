@@ -6,14 +6,14 @@ import { recommend, seasonOfMonth } from '../data/recommend'
 import { BUDGETS, DURATIONS, EMPTY_FILTERS, TRIP_TYPES, summarize, type TravelFilters } from '../data/travelFilters'
 import { Link } from '../lib/router'
 import { MONTHS, faNum, fromGregorian } from '../lib/jalali'
-import { getSelectedDate } from '../lib/selection'
+import { useSelectedDate } from '../lib/selection'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
 
 // انتخاب‌های کاربر + فصلِ تاریخ انتخاب‌شده در تقویم → رتبه‌بندی مقصدهای Mock (Rule-Based).
 export default function TravelSuggestions() {
   const [dark] = useDarkMode()
   useThemeColorMeta(dark)
-  const date = getSelectedDate() ?? fromGregorian(new Date())
+  const date = useSelectedDate() ?? fromGregorian(new Date())
   const season = seasonOfMonth(date.month)
 
   const [filters, setFilters] = useState<TravelFilters>(EMPTY_FILTERS)
@@ -31,10 +31,9 @@ export default function TravelSuggestions() {
   }
 
   const result = useMemo(() => recommend(MOCK_DESTINATIONS, { season, filters: applied }), [season, applied])
-  const total = result.recommended.length + result.others.length
   const active = summarize(applied)
 
-  const renderCards = (list: typeof result.recommended) => (
+  const renderCards = (list: typeof result.suitable) => (
     <div className="dest-grid">
       {list.map((d) => (
         <DestinationCard key={d.id} destination={d} selected={d.id === selectedId} onSelect={() => setSelectedId(d.id === selectedId ? null : d.id)} />
@@ -77,30 +76,22 @@ export default function TravelSuggestions() {
         <section className="tp-results" aria-label="نتایج">
           <div className="tp-results-head">
             <h2>پیشنهادهای سفر</h2>
-            <span className="tp-count" aria-live="polite">{faNum(total)} پیشنهاد</span>
+            <span className="tp-count" aria-live="polite">{faNum(result.suitable.length + result.others.length)} مقصد</span>
           </div>
           {active.length > 0 && <p className="tp-active">{active.map(([label, value]) => `${label}: ${value}`).join(' · ')}</p>}
           {result.unknownDestination && <p className="tp-active">مقصدی با این نام در فهرست نیست؛ بهترین گزینه‌های دیگر نمایش داده شده‌اند.</p>}
 
-          {result.recommended.length > 0 && (
-            <div className="tp-section">
-              <h3>پیشنهادهای مناسب برای شما</h3>
-              <p className="tp-sub">بهترین گزینه‌ها بر اساس انتخاب‌های شما</p>
-              {renderCards(result.recommended)}
-            </div>
-          )}
+          <div className="tp-section">
+            <h3>پیشنهادهای مناسب برای {season}</h3>
+            <p className="tp-sub">مقصدهایی که {season} برایشان فصل خوبی است، مرتب‌شده بر اساس انتخاب‌های شما</p>
+            {result.suitable.length > 0 ? renderCards(result.suitable) : <p className="tp-empty">در این فصل مقصد مناسبی پیدا نشد.</p>}
+          </div>
+
           {result.others.length > 0 && (
             <div className="tp-section">
-              <h3>سایر پیشنهادها</h3>
-              <p className="tp-sub">گزینه‌های دیگری که ممکن است مناسب باشند</p>
+              <h3>پیشنهادهای دیگر</h3>
+              <p className="tp-sub">مقصدهایی که {season} برایشان فصل مناسبی نیست</p>
               {renderCards(result.others)}
-            </div>
-          )}
-          {total === 0 && (
-            <div className="tp-placeholder">
-              <strong>پیشنهاد مناسبی پیدا نشد</strong>
-              <p>فیلترها را کمی تغییر دهید تا گزینه‌های بیشتری نمایش داده شود.</p>
-              <button type="button" className="tp-btn" onClick={reset}>پاک کردن فیلترها</button>
             </div>
           )}
         </section>

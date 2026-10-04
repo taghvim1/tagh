@@ -104,6 +104,7 @@
 .tp-section { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .tp-section h3 { margin: 0; font-size: 1.05rem; }
 .tp-section .tp-sub { margin: 0 0 6px; font-size: .9rem; }
+.tp-empty { margin: 0; padding: 18px 0; color: var(--muted); }
 .tp-season { color: var(--muted); font-size: .9rem; }
 .tp-count, .tp-active { color: var(--muted); font-size: .9rem; }
 .tp-active { margin: 0; }
