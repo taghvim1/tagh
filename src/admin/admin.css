@@ -1,4 +1,24 @@
-.adm { min-height: 100vh; min-height: 100dvh; background: #f6f8fa; }
+/* فونت B Yekan
+   فایل فونت در پروژه نیست. پس از قرار دادن فایل‌ها در public/fonts/ خطوط url را از کامنت خارج کنید.
+   تا آن زمان اگر فونت روی دستگاه نصب باشد استفاده می‌شود، وگرنه فونت پیش‌فرض پروژه. */
+@font-face {
+  font-family: 'B Yekan';
+  src: local('B Yekan'), local('BYekan')/*,
+    url('/fonts/BYekan.woff2') format('woff2'),
+    url('/fonts/BYekan.woff') format('woff'),
+    url('/fonts/BYekan.ttf') format('truetype')*/;
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.adm {
+  --adm-font: 'B Yekan', 'BYekan', var(--font);
+  min-height: 100vh; min-height: 100dvh; background: #f6f8fa;
+  font-family: var(--adm-font);
+}
+.adm button, .adm input, .adm select, .adm textarea { font-family: inherit; }
+.adm-body { min-width: 0; }
 .adm * { min-width: 0; }
 
 /* موبایل: سایدبار به صورت Drawer از سمت راست (RTL) */
@@ -33,7 +53,7 @@
 .adm-avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #e3f1f2; color: var(--accent); font-weight: 700; }
 .adm-user-name { display: none; font-size: .9rem; color: var(--muted); }
 
-.adm-main { padding: 16px 12px 32px; display: flex; flex-direction: column; gap: 24px; max-width: 1100px; --adm-muted: #5b6674; }
+.adm-main { padding: 16px 12px 32px; display: flex; flex-direction: column; gap: 24px; width: 100%; max-width: 1760px; margin-inline: auto; --adm-muted: #5b6674; }
 .adm-card { background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
 .adm-soon { text-align: center; padding: 48px 16px; color: var(--muted); font-size: 1.05rem; }
 
@@ -60,7 +80,8 @@
 .adm-note { font-size: .85rem; }
 .adm-icon { display: block; }
 
-.adm-stats, .adm-actions { display: grid; gap: 12px; grid-template-columns: 1fr; }
+.adm-stats { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
+.adm-actions { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
 .adm-stat, .adm-action {
   display: flex; align-items: center; gap: 14px; padding: 16px;
   background: var(--bg); border: 1px solid var(--line); border-radius: 14px;
@@ -83,12 +104,8 @@
 .adm-info dt { color: var(--adm-muted); }
 .adm-info dd { margin: 0; font-weight: 600; }
 
-@media (min-width: 480px) { .adm-stats { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 768px) { .adm-actions { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1100px) {
-  .adm-stats { grid-template-columns: repeat(4, 1fr); }
-  .adm-split { grid-template-columns: 3fr 2fr; }
-}
+@media (min-width: 1024px) { .adm-split { grid-template-columns: 3fr 2fr; } }
+@media (min-width: 1280px) { .adm-main { padding: 32px 40px 48px; gap: 28px; } }
 
 /* مدیریت مناسبت‌ها */
 .adm-page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
@@ -138,7 +155,7 @@
 .adm-empty .adm-btn { margin-top: 14px; }
 
 /* Modal */
-.adm-modal { width: min(520px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; border: 0; border-radius: 16px; background: var(--bg); color: var(--ink); font-family: var(--font); }
+.adm-modal { width: min(520px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; border: 0; border-radius: 16px; background: var(--bg); color: var(--ink); font-family: inherit; }
 .adm-modal::backdrop { background: rgba(15, 23, 32, .45); }
 .adm-modal-body { padding: 20px; overflow-y: auto; max-height: calc(100dvh - 24px); }
 .adm-modal h2 { margin: 0 0 14px; font-size: 1.1rem; }
@@ -158,7 +175,8 @@
 @media (max-width: 420px) { .adm-form-row { grid-template-columns: 1fr; } .adm-form-actions .adm-btn { flex: 1; } }
 
 /* تنظیمات */
-.adm-settings { display: flex; flex-direction: column; gap: 24px; max-width: 720px; }
+.adm-settings { display: grid; gap: 24px; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 1024px) { .adm-settings { grid-template-columns: 2fr 1fr; } }
 .adm-settings-card { display: flex; flex-direction: column; gap: 4px; }
 .adm-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; padding: 8px 0; border-top: 1px solid var(--line); cursor: pointer; }
 .adm-settings-card .adm-form { padding-bottom: 12px; }
