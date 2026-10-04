@@ -1,0 +1,97 @@
+/* صفحهٔ اصلی تقویم؛ همهٔ توکن‌ها روی .cal-page هستند تا پنل مدیریت تحت‌تأثیر قرار نگیرد */
+.cal-page {
+  --bg: #ffffff; --bg-soft: #f4f6f8; --ink: #1b2430; --muted: #5b6674; --line: #d5dbe1;
+  --accent: #0e7c86; --accent-ink: #ffffff; --off: #c2410c; --holiday: #d92d20; --dot: #000000;
+  font-family: 'B Yekan', Tahoma, sans-serif;
+  background: var(--bg); color: var(--ink); color-scheme: light;
+  min-height: 100vh; min-height: 100dvh; overflow-x: hidden;
+}
+.cal-page[data-theme='dark'] {
+  --bg: #0f1720; --bg-soft: #17222e; --ink: #e8edf2; --muted: #a3afbb; --line: #2b3947;
+  --accent: #2fb6c1; --accent-ink: #06242a; --off: #fb923c; --holiday: #f97066; --dot: #ffffff;
+  color-scheme: dark;
+}
+.cal-page h1, .cal-page h2 { margin: 0; }
+
+.cal-main { width: 100%; max-width: 1400px; margin-inline: auto; padding: 16px 12px 40px; padding-inline-start: 34px; }
+.cal-col { display: flex; flex-direction: column; gap: 20px; width: 100%; margin-inline: auto; }
+
+/* هدر تاریخ */
+.dh { display: flex; flex-direction: column; gap: 10px; padding-top: 8px; }
+.dh-main { display: flex; align-items: center; flex-wrap: wrap; gap: clamp(12px, 3vw, 28px); }
+.dh-day { font-size: clamp(5rem, 20vw, 10rem); line-height: .95; font-weight: 700; color: var(--accent); }
+.dh-text { display: flex; flex-direction: column; gap: 4px; }
+.dh-weekday { font-size: clamp(1.7rem, 6vw, 3rem); font-weight: 700; line-height: 1.2; }
+.dh-month { font-size: clamp(1.2rem, 4vw, 1.9rem); color: var(--muted); }
+.dh-other { display: flex; flex-wrap: wrap; gap: 4px 20px; color: var(--muted); font-size: clamp(.95rem, 2.6vw, 1.15rem); }
+.dh-tag { display: inline-block; padding: 0 8px; margin-inline-end: 4px; background: var(--bg-soft); border: 1px solid var(--line); font-size: .8em; }
+
+/* تقویم */
+.calendar { display: flex; flex-direction: column; gap: 12px; }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.title { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.title h2 { font-size: clamp(1.4rem, 4.5vw, 2rem); }
+.year { color: var(--muted); font-size: clamp(1.1rem, 3.5vw, 1.5rem); }
+.nav { display: flex; gap: 6px; }
+.nav button { min-width: 44px; height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font-size: 1.2rem; cursor: pointer; }
+.nav button:hover:not(:disabled) { background: var(--bg-soft); }
+.nav button:focus-visible, .dr-item:focus-visible, .dr-handle:focus-visible, .cal-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.nav .today { font-size: .95rem; }
+.nav .today:disabled { color: var(--muted); cursor: default; }
+
+.grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.weekdays { margin-bottom: -12px; text-align: center; color: var(--muted); font-weight: 700; font-size: clamp(.8rem, 2.4vw, 1rem); background: var(--bg-soft); border: 1px solid var(--line); border-bottom: 0; }
+.weekdays div { padding: 10px 0; }
+.weekdays .short { display: none; }
+.weekdays .off { color: var(--off); }
+
+.days { gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.cell { position: relative; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--bg); }
+.cell-num { font-size: clamp(1.15rem, 4.6vw, 2.1rem); font-weight: 700; line-height: 1; }
+.cell-title { position: absolute; top: 3px; inset-inline: 4px; text-align: center; color: var(--muted); font-size: clamp(.55rem, 1.7vw, .8rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cell-dot { position: absolute; right: 5px; bottom: 5px; width: 8px; height: 8px; background: var(--dot); }
+.cell.off .cell-num { color: var(--off); }
+.cell.adjacent { background: var(--bg-soft); }
+.cell.adjacent .cell-num { color: var(--muted); font-weight: 400; opacity: .6; }
+.cell.holiday { box-shadow: inset 0 0 0 2px var(--holiday); }
+.cell.now { background: var(--accent); }
+.cell.now .cell-num, .cell.now .cell-title { color: var(--accent-ink); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 420px) {
+  .weekdays .full { display: none; }
+  .weekdays .short { display: inline; }
+}
+@media (min-width: 1024px) {
+  .cal-main { padding: 28px 32px 48px; }
+  /* مربع‌ها در ارتفاع صفحه جا شوند و در عین حال تقویم باریک نشود */
+  .cal-col { max-width: clamp(680px, calc((100dvh - 400px) * 7 / 6), 1150px); }
+}
+
+/* منوی سمت راست */
+.dr-backdrop { position: fixed; inset: 0; z-index: 40; border: 0; background: rgba(0, 0, 0, .45); opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s; }
+.dr-backdrop.open { opacity: 1; visibility: visible; }
+.dr { position: fixed; top: 0; bottom: 0; right: 0; z-index: 50; width: min(300px, 85vw); background: var(--bg); color: var(--ink); border-left: 1px solid var(--line); transform: translateX(100%); transition: transform .35s cubic-bezier(.22, 1, .36, 1), box-shadow .35s; font-family: inherit; }
+.dr.open { transform: none; box-shadow: -8px 0 30px rgba(0, 0, 0, .25); }
+.dr-handle { position: absolute; top: 50%; left: -28px; transform: translateY(-50%); width: 28px; height: 56px; padding: 0; display: grid; place-items: center; border: 1px solid var(--line); border-right: 0; border-radius: 56px 0 0 56px; background: var(--bg); color: var(--ink); font-size: 1.3rem; line-height: 1; cursor: grab; touch-action: none; }
+.dr-handle span { display: block; transition: transform .35s; }
+.dr.open .dr-handle span { transform: rotate(180deg); }
+.dr-content { height: 100%; display: flex; flex-direction: column; gap: 6px; padding: 20px 14px calc(20px + env(safe-area-inset-bottom)); overflow-y: auto; visibility: hidden; transition: visibility 0s .35s; }
+.dr.open .dr-content { visibility: visible; transition-delay: 0s; }
+.dr-title { margin: 0 0 8px; padding: 0 8px 12px; font-size: 1.15rem; border-bottom: 1px solid var(--line); }
+.dr-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.dr-spacer { flex: 1; }
+.dr-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; padding: 0 12px; border: 0; border-radius: 8px; background: none; color: var(--ink); text-align: start; cursor: pointer; }
+.dr-item:hover { background: var(--bg-soft); }
+.dr-item.active { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.dr-item[aria-disabled='true'] { color: var(--muted); cursor: not-allowed; }
+.dr-item small { font-size: .75rem; }
+.dr-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 0 12px; cursor: pointer; }
+.cal-switch { appearance: none; -webkit-appearance: none; flex: none; position: relative; width: 48px; height: 28px; margin: 0; border-radius: 999px; background: var(--line); cursor: pointer; transition: background .2s; }
+.cal-switch::before { content: ''; position: absolute; top: 3px; inset-inline-start: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .3); transition: inset-inline-start .2s; }
+.cal-switch:checked { background: var(--accent); }
+.cal-switch:checked::before { inset-inline-start: 23px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dr, .dr-backdrop, .dr-handle span, .dr-content, .cal-switch, .cal-switch::before { transition: none; }
+}

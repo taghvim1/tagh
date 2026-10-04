@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { getOccasion } from '../data/occasions'
 import { MONTHS, WEEKDAYS, buildMonthGrid, faNum, formatLongDate, fromGregorian, shiftMonth, type MonthRef } from '../lib/jalali'
 
 interface CalendarProps {
@@ -16,19 +17,17 @@ export default function Calendar({ today: todayProp }: CalendarProps) {
 
   return (
     <section className="calendar" aria-label="تقویم شمسی">
-      <header className="head">
+      <div className="head">
         <div className="title">
-          <h1>{MONTHS[view.month - 1]}</h1>
+          <h2>{MONTHS[view.month - 1]}</h2>
           <span className="year">{faNum(view.year)}</span>
         </div>
         <nav className="nav" aria-label="پیمایش ماه">
           <button onClick={() => setView((v) => shiftMonth(v, -1))} aria-label="ماه قبل">›</button>
-          <button className="today" onClick={() => setView(todayMonth)} disabled={isTodayMonth}>
-            امروز
-          </button>
+          <button className="today" onClick={() => setView(todayMonth)} disabled={isTodayMonth}>امروز</button>
           <button onClick={() => setView((v) => shiftMonth(v, 1))} aria-label="ماه بعد">‹</button>
         </nav>
-      </header>
+      </div>
 
       <div className="grid weekdays" role="row">
         {WEEKDAYS.map((w, i) => (
@@ -40,19 +39,20 @@ export default function Calendar({ today: todayProp }: CalendarProps) {
       </div>
 
       <div className="grid days">
-        {days.map(({ date, inMonth, isFriday, isToday }) => (
-          <div
-            key={`${date.month}-${date.day}`}
-            className={['cell', isFriday && 'off', !inMonth && 'adjacent', isToday && 'now'].filter(Boolean).join(' ')}
-            aria-current={isToday ? 'date' : undefined}
-            title={formatLongDate(date)}
-          >
-            {faNum(date.day)}
-          </div>
-        ))}
+        {days.map(({ date, inMonth, isFriday, isToday }) => {
+          const occ = inMonth ? getOccasion(date.month, date.day) : undefined
+          const cls = ['cell', isFriday && 'off', !inMonth && 'adjacent', isToday && 'now', occ?.holiday && 'holiday'].filter(Boolean).join(' ')
+          return (
+            <div key={`${date.month}-${date.day}`} className={cls} aria-current={isToday ? 'date' : undefined}
+              title={occ ? `${formatLongDate(date)} — ${occ.title}${occ.holiday ? ' (تعطیل)' : ''}` : formatLongDate(date)}>
+              {occ && <span className="cell-title">{occ.title}</span>}
+              <span className="cell-num">{faNum(date.day)}</span>
+              {occ && !occ.holiday && <span className="cell-dot" aria-hidden="true" />}
+              {occ?.holiday && <span className="sr-only">تعطیل</span>}
+            </div>
+          )
+        })}
       </div>
-
-      <p className="today-line">امروز: <strong>{formatLongDate(today)}</strong></p>
     </section>
   )
 }

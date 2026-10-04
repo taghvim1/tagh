@@ -1,0 +1,14 @@
+/* فونت B Yekan
+   فایل فونت در پروژه نیست. پس از قرار دادن فایل‌ها در public/fonts/ خطوط url را از کامنت خارج کنید (و نام کش در public/sw.js را عوض کنید).
+   تا آن زمان اگر فونت روی دستگاه نصب باشد استفاده می‌شود، وگرنه فونت پیش‌فرض پروژه. */
+@font-face {
+  font-family: 'B Yekan';
+  src: local('B Yekan'), local('BYekan')/*,
+    url('/fonts/BYekan.woff2') format('woff2'),
+    url('/fonts/BYekan.woff') format('woff'),
+    url('/fonts/BYekan.ttf') format('truetype')*/;
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+

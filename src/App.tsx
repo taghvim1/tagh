@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import Calendar from './components/Calendar'
+import CalendarPage from './pages/CalendarPage'
 import { usePath } from './lib/router'
 
 // پنل مدیریت جدا بارگذاری می‌شود و روی بستهٔ تقویم اثری ندارد
@@ -16,9 +16,5 @@ export default function App() {
     )
   }
 
-  return (
-    <main className="app">
-      <Calendar />
-    </main>
-  )
+  return <CalendarPage />
 }
