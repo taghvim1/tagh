@@ -10,17 +10,9 @@ export default function DateHeader({ today }: { today: Date }) {
   const j = fromGregorian(today)
   return (
     <header className="dh">
-      <div className="dh-main">
-        <h1 className="dh-day" aria-label={`امروز ${faNum(j.day)} ${MONTHS[j.month - 1]}`}>{faNum(j.day)}</h1>
-        <div className="dh-text">
-          <span className="dh-weekday">{WEEKDAYS[weekdayIndex(j)]}</span>
-          <span className="dh-month">{MONTHS[j.month - 1]} {faNum(j.year)}</span>
-        </div>
-      </div>
-      <div className="dh-other">
-        <span><span className="dh-tag">میلادی</span> {formatIn(today, 'gregory')}</span>
-        <span><span className="dh-tag">قمری</span> {formatIn(today, 'islamic-umalqura')}</span>
-      </div>
+      <h1 className="dh-main">{faNum(j.day)} {WEEKDAYS[weekdayIndex(j)]} {MONTHS[j.month - 1]}</h1>
+      <p className="dh-sub">{formatIn(today, 'gregory')}</p>
+      <p className="dh-sub">{formatIn(today, 'islamic-umalqura')}</p>
     </header>
   )
 }

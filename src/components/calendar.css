@@ -1,89 +1,89 @@
-/* صفحهٔ اصلی تقویم؛ همهٔ توکن‌ها روی .cal-page هستند تا پنل مدیریت تحت‌تأثیر قرار نگیرد */
+/* صفحهٔ اصلی تقویم؛ توکن‌ها روی .cal-page هستند تا پنل مدیریت تحت‌تأثیر قرار نگیرد */
 .cal-page {
-  --bg: #ffffff; --bg-soft: #f4f6f8; --ink: #1b2430; --muted: #5b6674; --line: #d5dbe1;
-  --accent: #0e7c86; --accent-ink: #ffffff; --off: #c2410c; --holiday: #d92d20; --dot: #000000;
+  --bg: #ffffff; --bg-soft: #f5f7f9; --ink: #1b2430; --muted: #5b6674; --line: #dfe3e8;
+  --accent: #0e7c86; --off: #c2410c; --holiday: #d92d20; --dot: #000000;
   font-family: 'B Yekan', Tahoma, sans-serif;
   background: var(--bg); color: var(--ink); color-scheme: light;
-  min-height: 100vh; min-height: 100dvh; overflow-x: hidden;
+  height: 100vh; height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow: hidden; display: flex; flex-direction: column;
 }
 .cal-page[data-theme='dark'] {
   --bg: #0f1720; --bg-soft: #17222e; --ink: #e8edf2; --muted: #a3afbb; --line: #2b3947;
-  --accent: #2fb6c1; --accent-ink: #06242a; --off: #fb923c; --holiday: #f97066; --dot: #ffffff;
+  --accent: #2fb6c1; --off: #fb923c; --holiday: #f97066; --dot: #ffffff;
   color-scheme: dark;
 }
-.cal-page h1, .cal-page h2 { margin: 0; }
+.cal-page h1, .cal-page h2, .cal-page p { margin: 0; }
+.cal-page button { -webkit-tap-highlight-color: transparent; }
+.cal-page button, .calendar { user-select: none; -webkit-user-select: none; }
 
-.cal-main { width: 100%; max-width: 1400px; margin-inline: auto; padding: 16px 12px 40px; padding-inline-start: 34px; }
-.cal-col { display: flex; flex-direction: column; gap: 20px; width: 100%; margin-inline: auto; }
+/* یک‌سوم بالا: تاریخ */
+.cal-top { flex: 0 0 33vh; flex-basis: 33dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; padding-inline: 12px; }
+.dh { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.dh-main { font-size: clamp(2.2rem, min(8vw, 11vh), 8rem); font-weight: 700; line-height: 1.15; white-space: nowrap; }
+.dh-sub { color: var(--muted); font-size: clamp(.9rem, min(2.4vw, 3vh), 1.35rem); line-height: 1.5; }
+.dh-main + .dh-sub { margin-top: 6px; }
 
-/* هدر تاریخ */
-.dh { display: flex; flex-direction: column; gap: 10px; padding-top: 8px; }
-.dh-main { display: flex; align-items: center; flex-wrap: wrap; gap: clamp(12px, 3vw, 28px); }
-.dh-day { font-size: clamp(5rem, 20vw, 10rem); line-height: .95; font-weight: 700; color: var(--accent); }
-.dh-text { display: flex; flex-direction: column; gap: 4px; }
-.dh-weekday { font-size: clamp(1.7rem, 6vw, 3rem); font-weight: 700; line-height: 1.2; }
-.dh-month { font-size: clamp(1.2rem, 4vw, 1.9rem); color: var(--muted); }
-.dh-other { display: flex; flex-wrap: wrap; gap: 4px 20px; color: var(--muted); font-size: clamp(.95rem, 2.6vw, 1.15rem); }
-.dh-tag { display: inline-block; padding: 0 8px; margin-inline-end: 4px; background: var(--bg-soft); border: 1px solid var(--line); font-size: .8em; }
-
-/* تقویم */
-.calendar { display: flex; flex-direction: column; gap: 12px; }
+/* دو‌سوم پایین: تقویم */
+.cal-bottom { flex: 1 1 0; min-height: 0; width: 100%; max-width: 1500px; margin-inline: auto; display: flex; flex-direction: column; padding: 4px 3vw 12px; padding-inline-start: max(3vw, 26px); }
+.calendar { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
 .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .title { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
-.title h2 { font-size: clamp(1.4rem, 4.5vw, 2rem); }
-.year { color: var(--muted); font-size: clamp(1.1rem, 3.5vw, 1.5rem); }
-.nav { display: flex; gap: 6px; }
-.nav button { min-width: 44px; height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font-size: 1.2rem; cursor: pointer; }
+.title h2 { font-size: clamp(1.3rem, 3.5vw, 1.8rem); }
+.year { color: var(--muted); font-size: clamp(1rem, 2.6vw, 1.3rem); }
+.nav { display: flex; gap: 4px; }
+.nav button { min-width: 44px; height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 0; background: var(--bg); color: var(--ink); font-size: 1.2rem; cursor: pointer; }
 .nav button:hover:not(:disabled) { background: var(--bg-soft); }
-.nav button:focus-visible, .dr-item:focus-visible, .dr-handle:focus-visible, .cal-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .nav .today { font-size: .95rem; }
 .nav .today:disabled { color: var(--muted); cursor: default; }
+.nav button:focus-visible, .cell:focus-visible, .dr-item:focus-visible, .dr-handle:focus-visible, .cal-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
 
 .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-.weekdays { margin-bottom: -12px; text-align: center; color: var(--muted); font-weight: 700; font-size: clamp(.8rem, 2.4vw, 1rem); background: var(--bg-soft); border: 1px solid var(--line); border-bottom: 0; }
-.weekdays div { padding: 10px 0; }
+.weekdays { text-align: center; color: var(--muted); font-weight: 700; font-size: clamp(.8rem, 1.8vw, 1rem); }
+.weekdays div { padding: 6px 0; }
 .weekdays .short { display: none; }
 .weekdays .off { color: var(--off); }
 
-.days { gap: 1px; background: var(--line); border: 1px solid var(--line); }
-.cell { position: relative; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--bg); }
-.cell-num { font-size: clamp(1.15rem, 4.6vw, 2.1rem); font-weight: 700; line-height: 1; }
-.cell-title { position: absolute; top: 3px; inset-inline: 4px; text-align: center; color: var(--muted); font-size: clamp(.55rem, 1.7vw, .8rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cell-dot { position: absolute; right: 5px; bottom: 5px; width: 8px; height: 8px; background: var(--dot); }
+.days { flex: 1; min-height: 0; grid-template-rows: repeat(var(--rows, 6), minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.cell { position: relative; min-height: 0; min-width: 0; padding: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 0; border-radius: 0; background: var(--bg); color: var(--ink); font: inherit; cursor: pointer; }
+@media (hover: hover) { .cell:hover { background: var(--bg-soft); } }
+.cell-num { font-size: clamp(1.1rem, min(3.2vw, 4.4vh), 2.3rem); font-weight: 700; line-height: 1; }
+.cell-title { position: absolute; top: 4px; inset-inline: 4px; text-align: center; color: var(--muted); font-size: clamp(.55rem, min(1.3vw, 1.8vh), .8rem); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cell-tri { position: absolute; right: 0; bottom: 0; width: 14px; height: 14px; background: var(--dot); clip-path: polygon(100% 0, 100% 100%, 0 100%); }
 .cell.off .cell-num { color: var(--off); }
 .cell.adjacent { background: var(--bg-soft); }
 .cell.adjacent .cell-num { color: var(--muted); font-weight: 400; opacity: .6; }
-.cell.holiday { box-shadow: inset 0 0 0 2px var(--holiday); }
-.cell.now { background: var(--accent); }
-.cell.now .cell-num, .cell.now .cell-title { color: var(--accent-ink); }
-.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.cell.holiday::before { content: ''; position: absolute; inset: 0; border: 2px solid var(--holiday); pointer-events: none; }
+/* امروز: عدد رنگی + خط زیر عدد (مستقل از انتخاب) */
+.cell.now .cell-num { color: var(--accent); }
+.cell.now::after { content: ''; position: absolute; bottom: 8%; inset-inline: 30%; height: 3px; background: var(--accent); }
+/* انتخاب‌شده: وارونه */
+.cell.selected { background: var(--ink); }
+.cell.selected .cell-num, .cell.selected .cell-title { color: var(--bg); opacity: 1; font-weight: 700; }
+.cell.selected .cell-tri { background: var(--bg); }
+.cell.selected.now::after { background: var(--bg); }
 
 @media (max-width: 420px) {
   .weekdays .full { display: none; }
   .weekdays .short { display: inline; }
 }
-@media (min-width: 1024px) {
-  .cal-main { padding: 28px 32px 48px; }
-  /* مربع‌ها در ارتفاع صفحه جا شوند و در عین حال تقویم باریک نشود */
-  .cal-col { max-width: clamp(680px, calc((100dvh - 400px) * 7 / 6), 1150px); }
-}
 
 /* منوی سمت راست */
-.dr-backdrop { position: fixed; inset: 0; z-index: 40; border: 0; background: rgba(0, 0, 0, .45); opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s; }
+.dr-backdrop { position: fixed; inset: 0; z-index: 40; border: 0; background: rgba(0, 0, 0, .35); opacity: 0; visibility: hidden; transition: opacity .35s ease-out, visibility .35s; }
 .dr-backdrop.open { opacity: 1; visibility: visible; }
-.dr { position: fixed; top: 0; bottom: 0; right: 0; z-index: 50; width: min(300px, 85vw); background: var(--bg); color: var(--ink); border-left: 1px solid var(--line); transform: translateX(100%); transition: transform .35s cubic-bezier(.22, 1, .36, 1), box-shadow .35s; font-family: inherit; }
-.dr.open { transform: none; box-shadow: -8px 0 30px rgba(0, 0, 0, .25); }
-.dr-handle { position: absolute; top: 50%; left: -28px; transform: translateY(-50%); width: 28px; height: 56px; padding: 0; display: grid; place-items: center; border: 1px solid var(--line); border-right: 0; border-radius: 56px 0 0 56px; background: var(--bg); color: var(--ink); font-size: 1.3rem; line-height: 1; cursor: grab; touch-action: none; }
-.dr-handle span { display: block; transition: transform .35s; }
+.dr { position: fixed; top: 0; bottom: 0; right: 0; z-index: 50; width: 80vw; background: var(--bg); color: var(--ink); border-left: 1px solid var(--line); transform: translateX(100%); transition: transform .35s ease-out, box-shadow .35s ease-out; font-family: inherit; }
+@media (min-width: 768px) { .dr { width: clamp(280px, 33vw, 360px); } }
+.dr.open { transform: none; box-shadow: -4px 0 16px rgba(0, 0, 0, .12); }
+.dr-handle { position: absolute; top: 33vh; top: 33dvh; left: -20px; transform: translateY(-50%); width: 20px; height: 40px; padding: 0; display: grid; place-items: center; border: 1px solid var(--line); border-right: 0; border-radius: 40px 0 0 40px; background: var(--bg); color: var(--ink); font-size: 1.1rem; line-height: 1; cursor: pointer; touch-action: none; }
+.dr-handle span { display: block; transition: transform .35s ease-out; }
 .dr.open .dr-handle span { transform: rotate(180deg); }
 .dr-content { height: 100%; display: flex; flex-direction: column; gap: 6px; padding: 20px 14px calc(20px + env(safe-area-inset-bottom)); overflow-y: auto; visibility: hidden; transition: visibility 0s .35s; }
-.dr.open .dr-content { visibility: visible; transition-delay: 0s; }
-.dr-title { margin: 0 0 8px; padding: 0 8px 12px; font-size: 1.15rem; border-bottom: 1px solid var(--line); }
-.dr-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.dr.open .dr-content, .dr.dragging .dr-content { visibility: visible; transition-delay: 0s; }
+.dr-title { margin: 0 0 8px; padding: 0 8px 12px; font-size: 1.1rem; border-bottom: 1px solid var(--line); }
+.dr-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
 .dr-spacer { flex: 1; }
-.dr-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; padding: 0 12px; border: 0; border-radius: 8px; background: none; color: var(--ink); text-align: start; cursor: pointer; }
+.dr-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 48px; padding: 0 12px; border: 0; border-radius: 0; background: none; color: var(--ink); text-align: start; cursor: pointer; }
 .dr-item:hover { background: var(--bg-soft); }
-.dr-item.active { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.dr-item.active { background: var(--ink); color: var(--bg); font-weight: 700; }
 .dr-item[aria-disabled='true'] { color: var(--muted); cursor: not-allowed; }
 .dr-item small { font-size: .75rem; }
 .dr-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 0 12px; cursor: pointer; }

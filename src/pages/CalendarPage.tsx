@@ -18,12 +18,8 @@ export default function CalendarPage() {
 
   return (
     <div className="cal-page" data-theme={dark ? 'dark' : 'light'}>
-      <main className="cal-main">
-        <div className="cal-col">
-          <DateHeader today={now} />
-          <Calendar today={now} />
-        </div>
-      </main>
+      <section className="cal-top"><DateHeader today={now} /></section>
+      <section className="cal-bottom"><Calendar today={now} /></section>
       <Drawer dark={dark} onDarkChange={setDark} />
     </div>
   )

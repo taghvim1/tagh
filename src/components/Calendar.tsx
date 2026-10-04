@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import { getOccasion } from '../data/occasions'
-import { MONTHS, WEEKDAYS, buildMonthGrid, faNum, formatLongDate, fromGregorian, shiftMonth, type MonthRef } from '../lib/jalali'
+import { MONTHS, WEEKDAYS, buildMonthGrid, faNum, formatLongDate, fromGregorian, isSameDate, shiftMonth, type JalaliDate, type MonthRef } from '../lib/jalali'
 
 interface CalendarProps {
   /** تاریخ «امروز»؛ پیش‌فرض تاریخ دستگاه */
@@ -11,6 +11,7 @@ export default function Calendar({ today: todayProp }: CalendarProps) {
   const today = useMemo(() => fromGregorian(todayProp ?? new Date()), [todayProp])
   const todayMonth: MonthRef = { year: today.year, month: today.month }
   const [view, setView] = useState<MonthRef>(todayMonth)
+  const [selected, setSelected] = useState<JalaliDate | null>(null)
 
   const days = useMemo(() => buildMonthGrid(view, today), [view, today])
   const isTodayMonth = view.year === today.year && view.month === today.month
@@ -38,18 +39,19 @@ export default function Calendar({ today: todayProp }: CalendarProps) {
         ))}
       </div>
 
-      <div className="grid days">
+      <div className="grid days" style={{ '--rows': days.length / 7 } as CSSProperties}>
         {days.map(({ date, inMonth, isFriday, isToday }) => {
           const occ = inMonth ? getOccasion(date.month, date.day) : undefined
-          const cls = ['cell', isFriday && 'off', !inMonth && 'adjacent', isToday && 'now', occ?.holiday && 'holiday'].filter(Boolean).join(' ')
+          const isSelected = !!selected && isSameDate(date, selected)
+          const label = occ ? `${formatLongDate(date)} — ${occ.title}${occ.holiday ? ' (تعطیل)' : ''}` : formatLongDate(date)
+          const cls = ['cell', isFriday && 'off', !inMonth && 'adjacent', isToday && 'now', isSelected && 'selected', occ?.holiday && 'holiday'].filter(Boolean).join(' ')
           return (
-            <div key={`${date.month}-${date.day}`} className={cls} aria-current={isToday ? 'date' : undefined}
-              title={occ ? `${formatLongDate(date)} — ${occ.title}${occ.holiday ? ' (تعطیل)' : ''}` : formatLongDate(date)}>
+            <button key={`${date.month}-${date.day}`} type="button" className={cls} aria-pressed={isSelected} aria-current={isToday ? 'date' : undefined}
+              aria-label={label} title={label} onClick={() => setSelected(date)}>
               {occ && <span className="cell-title">{occ.title}</span>}
               <span className="cell-num">{faNum(date.day)}</span>
-              {occ && !occ.holiday && <span className="cell-dot" aria-hidden="true" />}
-              {occ?.holiday && <span className="sr-only">تعطیل</span>}
-            </div>
+              {occ && !occ.holiday && <span className="cell-tri" aria-hidden="true" />}
+            </button>
           )
         })}
       </div>

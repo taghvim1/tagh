@@ -1,21 +1,22 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 
 interface Props {
   dark: boolean
   onDarkChange: (value: boolean) => void
 }
 
-const DRAG_START = 8 // پیکسل حرکت برای تشخیص «کشیدن» از «کلیک»
-const DRAG_OPEN = 30
+const DRAG_START = 8 // حرکت کمتر از این مقدار «کلیک» حساب می‌شود
+const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 
 export default function Drawer({ dark, onDarkChange }: Props) {
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<'menu' | 'settings'>('menu')
+  const [dragX, setDragX] = useState<number | null>(null) // جابه‌جایی لحظه‌ای هنگام کشیدن
+  const panel = useRef<HTMLElement>(null)
   const drag = useRef<{ x: number; moved: boolean } | null>(null)
   const dragged = useRef(false)
 
   const show = () => { setView('menu'); setOpen(true) }
-  const toggle = () => (open ? setOpen(false) : show())
 
   useEffect(() => {
     if (!open) return
@@ -24,33 +25,43 @@ export default function Drawer({ dark, onDarkChange }: Props) {
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
 
+  const width = () => panel.current?.offsetWidth ?? 300
+
   const onDown = (e: PointerEvent<HTMLButtonElement>) => {
     drag.current = { x: e.clientX, moved: false }
     e.currentTarget.setPointerCapture(e.pointerId)
   }
   const onMove = (e: PointerEvent<HTMLButtonElement>) => {
-    if (drag.current && Math.abs(e.clientX - drag.current.x) > DRAG_START) drag.current.moved = true
+    const d = drag.current
+    if (!d) return
+    const dx = e.clientX - d.x
+    if (Math.abs(dx) > DRAG_START) d.moved = true
+    if (d.moved) setDragX(open ? clamp(dx, 0, width()) : clamp(dx, -width(), 0))
   }
   const onUp = (e: PointerEvent<HTMLButtonElement>) => {
     const d = drag.current
     drag.current = null
+    setDragX(null)
     if (!d?.moved) return
     dragged.current = true // کلیکِ بعد از کشیدن نباید دوباره تغییر وضعیت دهد
     const dx = e.clientX - d.x
-    if (dx < -DRAG_OPEN) show()
-    else if (dx > DRAG_OPEN) setOpen(false)
+    if (!open && dx < -width() * 0.25) show()
+    else if (open && dx > width() * 0.25) setOpen(false)
   }
   const onClick = () => {
     if (dragged.current) { dragged.current = false; return }
-    toggle()
+    if (open) setOpen(false)
+    else show()
   }
+
+  const dragStyle: CSSProperties | undefined = dragX === null ? undefined : { transform: `translateX(calc(${open ? 0 : 100}% + ${dragX}px))`, transition: 'none' }
 
   return (
     <>
       <button className={`dr-backdrop${open ? ' open' : ''}`} aria-label="بستن منو" tabIndex={-1} onClick={() => setOpen(false)} />
-      <aside id="cal-drawer" className={`dr${open ? ' open' : ''}`} aria-label="منوی اصلی">
+      <aside ref={panel} id="cal-drawer" className={`dr${open ? ' open' : ''}${dragX !== null ? ' dragging' : ''}`} style={dragStyle} aria-label="منوی اصلی">
         <button className="dr-handle" aria-label={open ? 'بستن منو' : 'باز کردن منو'} aria-expanded={open} aria-controls="cal-drawer"
-          onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={() => { drag.current = null }} onClick={onClick}>
+          onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={() => { drag.current = null; setDragX(null) }} onClick={onClick}>
           <span aria-hidden="true">‹</span>
         </button>
 
