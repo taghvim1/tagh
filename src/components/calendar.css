@@ -1,99 +1,77 @@
-/* صفحهٔ اصلی تقویم؛ توکن‌ها روی .cal-page هستند تا پنل مدیریت تحت‌تأثیر قرار نگیرد */
-.cal-page {
-  --bg: #ffffff; --bg-soft: #f5f7f9; --ink: #1b2430; --muted: #5b6674; --line: #dfe3e8;
-  --accent: #0e7c86; --off: #c2410c; --holiday: #d92d20; --dot: #000000;
-  --info: clamp(56px, 8dvh, 80px);
+/* صفحه‌های تقویم و پیشنهاد سفر؛ توکن‌ها روی کلاس خود صفحه‌اند تا پنل مدیریت تحت‌تأثیر قرار نگیرد */
+.cal-page, .tp-page {
+  --bg: #ffffff; --bg-soft: #f2f2f7; --ink: #1c1c1e; --muted: #8e8e93; --line: #d1d1d6;
+  --accent: #ff3b30; --accent-ink: #ffffff; --holiday: #ff3b30; --dot: #8e8e93;
+  --info: clamp(64px, 9dvh, 96px);
   font-family: 'B Yekan', Tahoma, sans-serif;
   background: var(--bg); color: var(--ink); color-scheme: light;
-  height: 100vh; height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-  overflow: hidden; display: flex; flex-direction: column;
 }
-.cal-page[data-theme='dark'] {
-  --bg: #0f1720; --bg-soft: #17222e; --ink: #e8edf2; --muted: #a3afbb; --line: #2b3947;
-  --accent: #2fb6c1; --off: #fb923c; --holiday: #f97066; --dot: #ffffff;
+.cal-page[data-theme='dark'], .tp-page[data-theme='dark'] {
+  --bg: #0f1720; --bg-soft: #1b2733; --ink: #f2f4f7; --muted: #9aa6b2; --line: #2e3c4a;
+  --accent: #ff453a; --holiday: #ff453a; --dot: #9aa6b2;
   color-scheme: dark;
 }
-.cal-page h1, .cal-page h2, .cal-page p { margin: 0; }
-.cal-page button { -webkit-tap-highlight-color: transparent; }
-.cal-page button, .calendar { user-select: none; -webkit-user-select: none; }
+.cal-page h1, .cal-page h2, .cal-page p, .tp-page h1, .tp-page h2, .tp-page p { margin: 0; }
+.cal-page button, .calendar { user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+.cal-page :is(button, a):focus-visible, .tp-page a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-/* یک‌سوم بالا: تاریخ */
-.cal-top { flex: 0 0 33vh; flex-basis: 33dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; padding-inline: 12px; }
+.cal-page { height: 100vh; height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow: hidden; display: flex; flex-direction: column; }
+
+/* بالا: تاریخ امروز */
+.cal-top { flex: 0 0 38vh; flex-basis: 38dvh; display: flex; align-items: center; justify-content: center; text-align: center; padding-inline: 12px; }
 .dh { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.dh-main { display: flex; align-items: baseline; justify-content: center; gap: clamp(8px, 2vw, 24px); white-space: nowrap; line-height: 1.1; }
-.dh-day { font-size: clamp(3.5rem, min(14vw, 17dvh), 9rem); font-weight: 700; line-height: 1; }
-.dh-side { font-size: clamp(1.4rem, min(4.5vw, 6dvh), 3rem); font-weight: 700; }
-.dh-sub { color: var(--muted); font-size: clamp(.85rem, min(2.2vw, 2.6dvh), 1.2rem); line-height: 1.5; }
+.dh-main { display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1.15; }
+.dh-weekday, .dh-month { font-size: clamp(1.5rem, min(7vw, 4.6dvh), 2.8rem); font-weight: 700; }
+.dh-day { font-size: clamp(4.5rem, min(26vw, 16dvh), 9rem); font-weight: 700; line-height: 1; color: var(--accent); }
+.dh-sub { color: var(--muted); font-size: clamp(.85rem, min(2.8vw, 2.4dvh), 1.15rem); line-height: 1.6; }
+.dh-main + .dh-sub { margin-top: 6px; }
 
-/* بخش مناسبت: ارتفاع ثابت بین تاریخ و تقویم */
-.cal-info { flex: 0 0 auto; height: var(--info); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding-inline: 12px; text-align: center; overflow: hidden; }
-.cal-info p { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.info-hint { color: var(--muted); font-size: .85rem; opacity: .7; }
-.info-date { font-size: 1.05rem; font-weight: 700; }
-.info-occ { color: var(--muted); font-size: .95rem; }
+/* وسط: فلش‌های ماه + اطلاعات روز انتخاب‌شده (ارتفاع ثابت) */
+.cal-info { flex: 0 0 auto; height: var(--info); display: flex; align-items: center; justify-content: space-between; gap: 8px; width: min(100%, 700px); margin-inline: auto; padding-inline: max(3vw, 12px); padding-inline-start: max(3vw, 28px); overflow: hidden; }
+.info-text { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+.info-label { color: var(--muted); font-size: clamp(.8rem, 2.4vw, .95rem); }
+.info-title { max-width: 100%; font-size: clamp(1.4rem, min(6.5vw, 4dvh), 2.3rem); font-weight: 700; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.info-nav { flex: none; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; background: none; color: var(--accent); cursor: pointer; }
+.info-nav:hover { opacity: .7; }
 
-/* بخش پایین: تقویم با اندازهٔ معمول (حداکثر ۷۰۰px)، وسط‌چین و بدون کشیدگی */
-.cal-bottom { flex: 1 1 0; min-height: 0; display: flex; justify-content: center; align-items: flex-start; padding: 0 3vw 12px; padding-inline-start: max(3vw, 26px); }
-.calendar { display: flex; flex-direction: column; gap: 8px; width: min(100%, 700px, max(280px, calc((67dvh - var(--info) - 110px) * 7 / var(--rows, 6)))); }
-.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.title { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
-.title h2 { font-size: clamp(1.3rem, 3.5vw, 1.8rem); }
-.year { color: var(--muted); font-size: clamp(1rem, 2.6vw, 1.3rem); }
-.nav { display: flex; gap: 4px; }
-.nav button { min-width: 44px; height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 0; background: var(--bg); color: var(--ink); font-size: 1.2rem; cursor: pointer; }
-.nav button:hover:not(:disabled) { background: var(--bg-soft); }
-.nav .today { font-size: .95rem; }
-.nav .today:disabled { color: var(--muted); cursor: default; }
-.nav button:focus-visible, .cell:focus-visible, .dr-item:focus-visible, .dr-handle:focus-visible, .cal-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
-
+/* پایین: تقویم بدون خط و کادر */
+.cal-bottom { flex: 1 1 0; min-height: 0; display: flex; justify-content: center; align-items: flex-start; padding: 0 3vw 12px; padding-inline-start: max(3vw, 28px); }
+.calendar { display: flex; flex-direction: column; gap: 6px; width: min(100%, 640px, max(260px, calc((62dvh - var(--info) - 60px) * 7 / var(--rows, 6)))); }
 .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-.weekdays { text-align: center; color: var(--muted); font-weight: 700; font-size: clamp(.8rem, 1.8vw, 1rem); }
-.weekdays div { padding: 6px 0; }
-.weekdays .short { display: none; }
-.weekdays .off { color: var(--off); }
+.weekdays { text-align: center; color: var(--muted); font-size: clamp(.62rem, 2.6vw, .95rem); }
+.weekdays div { padding: 6px 0; white-space: nowrap; }
 
-.days { gap: 1px; background: var(--line); border: 1px solid var(--line); }
-.cell { position: relative; aspect-ratio: 1 / 1; min-height: 0; min-width: 0; padding: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 0; border-radius: 0; background: var(--bg); color: var(--ink); font: inherit; cursor: pointer; }
-@media (hover: hover) { .cell:hover { background: var(--bg-soft); } }
-.cell-num { font-size: clamp(1rem, 3vw, 1.7rem); font-weight: 700; line-height: 1; }
-.cell-title { position: absolute; top: 4px; inset-inline: 4px; text-align: center; color: var(--muted); font-size: clamp(.55rem, 1.2vw, .72rem); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cell-tri { position: absolute; right: 0; bottom: 0; width: 12px; height: 12px; background: var(--dot); clip-path: polygon(100% 0, 100% 100%, 0 100%); }
-.cell.off .cell-num { font-size: clamp(1rem, 3vw, 1.7rem); font-weight: 700; line-height: 1; }
-.cell.adjacent { background: var(--bg-soft); }
-.cell.adjacent .cell-num { font-size: clamp(1rem, 3vw, 1.7rem); font-weight: 700; line-height: 1; }
-.cell.holiday::before { content: ''; position: absolute; inset: 0; border: 2px solid var(--holiday); pointer-events: none; }
-/* امروز: عدد رنگی + خط زیر عدد (مستقل از انتخاب) */
-.cell.now .cell-num { font-size: clamp(1rem, 3vw, 1.7rem); font-weight: 700; line-height: 1; }
-.cell.now::after { content: ''; position: absolute; bottom: 8%; inset-inline: 30%; height: 3px; background: var(--accent); }
-/* انتخاب‌شده: وارونه */
-.cell.selected { background: var(--ink); }
-.cell.selected .cell-num, .cell.selected .cell-title { color: var(--bg); opacity: 1; font-weight: 700; }
-.cell.selected .cell-tri { background: var(--bg); }
-.cell.selected.now::after { background: var(--bg); }
-
-@media (max-width: 420px) {
-  .weekdays .full { display: none; }
-  .weekdays .short { display: inline; }
-}
+.cell { position: relative; aspect-ratio: 1 / 1; min-width: 0; min-height: 0; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 0; background: none; color: var(--ink); font: inherit; cursor: pointer; }
+.cell::before { content: ''; position: absolute; inset: 9%; border-radius: 50%; border: 2px solid transparent; }
+@media (hover: hover) { .cell:hover::before { background: var(--bg-soft); } }
+.cell-num { position: relative; font-size: clamp(1.05rem, 5vw, 1.9rem); line-height: 1; }
+.cell.off .cell-num { color: var(--accent); }
+.cell.adjacent .cell-num { color: var(--muted); opacity: .55; }
+.cell.now .cell-num { color: var(--accent); font-weight: 700; }
+.cell.holiday::before { border-color: var(--holiday); }
+.cell.selected::before { background: var(--accent); }
+.cell.selected .cell-num { color: var(--accent-ink); font-weight: 700; opacity: 1; }
+.cell-dot { position: absolute; bottom: 2%; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--dot); }
+.cell:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 50%; }
 
 /* منوی سمت راست */
-.dr-backdrop { position: fixed; inset: 0; z-index: 40; border: 0; background: rgba(0, 0, 0, .35); opacity: 0; visibility: hidden; transition: opacity .35s ease-out, visibility .35s; }
+.dr-backdrop { position: fixed; inset: 0; z-index: 40; border: 0; background: rgba(0, 0, 0, .3); opacity: 0; visibility: hidden; transition: opacity .35s ease-out, visibility .35s; }
 .dr-backdrop.open { opacity: 1; visibility: visible; }
 .dr { position: fixed; top: 0; bottom: 0; right: 0; z-index: 50; width: min(80vw, 320px); background: var(--bg); color: var(--ink); border-left: 1px solid var(--line); transform: translateX(100%); transition: transform .35s ease-out, box-shadow .35s ease-out; font-family: inherit; }
 @media (min-width: 640px) { .dr { width: clamp(260px, 40vw, 360px); } }
 @media (min-width: 1024px) { .dr { width: min(300px, 33vw); } }
-.dr.open { transform: none; box-shadow: -4px 0 16px rgba(0, 0, 0, .12); }
-.dr-handle { position: absolute; top: 33vh; top: 33dvh; left: -20px; transform: translateY(-50%); width: 20px; height: 40px; padding: 0; display: grid; place-items: center; border: 1px solid var(--line); border-right: 0; border-radius: 40px 0 0 40px; background: var(--bg); color: var(--ink); font-size: 1.1rem; line-height: 1; cursor: pointer; touch-action: none; }
-.dr-handle span { display: block; transition: transform .35s ease-out; }
-.dr.open .dr-handle span { transform: rotate(180deg); }
+.dr.open { transform: none; box-shadow: -4px 0 16px rgba(0, 0, 0, .1); }
+.dr-handle { position: absolute; top: 41vh; top: 41dvh; left: -24px; transform: translateY(-50%); width: 24px; height: 48px; padding: 0; border: 1px solid var(--line); border-right: 0; border-radius: 48px 0 0 48px; background: var(--bg-soft); cursor: pointer; touch-action: none; }
 .dr-content { height: 100%; display: flex; flex-direction: column; gap: 6px; padding: 20px 14px calc(20px + env(safe-area-inset-bottom)); overflow-y: auto; visibility: hidden; transition: visibility 0s .35s; }
 .dr.open .dr-content, .dr.dragging .dr-content { visibility: visible; transition-delay: 0s; }
 .dr-title { margin: 0 0 6px; padding: 0 8px 10px; font-size: 1rem; border-bottom: 1px solid var(--line); }
 .dr-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
 .dr-spacer { flex: 1; }
-.dr-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 12px; font-size: .95rem; border: 0; border-radius: 0; background: none; color: var(--ink); text-align: start; cursor: pointer; }
+.dr-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 12px; font-size: .95rem; border: 0; border-radius: 0; background: none; color: var(--ink); text-align: start; text-decoration: none; cursor: pointer; }
+.dr-label { display: flex; align-items: center; gap: 10px; }
 .dr-item:hover { background: var(--bg-soft); }
-.dr-item.active { background: var(--ink); color: var(--bg); font-weight: 700; }
+.dr-item.active { color: var(--accent); font-weight: 700; }
 .dr-item[aria-disabled='true'] { color: var(--muted); cursor: not-allowed; }
 .dr-item small { font-size: .75rem; }
 .dr-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 0 12px; cursor: pointer; }
@@ -101,7 +79,23 @@
 .cal-switch::before { content: ''; position: absolute; top: 3px; inset-inline-start: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .3); transition: inset-inline-start .2s; }
 .cal-switch:checked { background: var(--accent); }
 .cal-switch:checked::before { inset-inline-start: 23px; }
+.cal-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* صفحهٔ پیشنهاد سفر */
+.tp-page { min-height: 100vh; min-height: 100dvh; }
+.tp-main { max-width: 640px; margin-inline: auto; padding: 20px 20px 48px; display: flex; flex-direction: column; gap: 28px; }
+.tp-back { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--accent); text-decoration: none; }
+.tp-head { display: flex; flex-direction: column; gap: 8px; }
+.tp-head h1 { font-size: clamp(1.8rem, 6vw, 2.4rem); font-weight: 700; }
+.tp-lead { font-size: 1.1rem; }
+.tp-sub { color: var(--muted); }
+.tp-date { display: flex; flex-direction: column; gap: 4px; padding-block: 16px; border-block: 1px solid var(--line); }
+.tp-label { color: var(--muted); font-size: .9rem; }
+.tp-date strong { font-size: clamp(1.6rem, 6vw, 2.2rem); color: var(--accent); }
+.tp-placeholder { padding: 28px 20px; border: 1px dashed var(--line); border-radius: 12px; text-align: center; display: flex; flex-direction: column; gap: 8px; }
+.tp-placeholder h2 { font-size: 1.1rem; }
+.tp-placeholder p { color: var(--muted); line-height: 1.8; }
 
 @media (prefers-reduced-motion: reduce) {
-  .dr, .dr-backdrop, .dr-handle span, .dr-content, .cal-switch, .cal-switch::before { transition: none; }
+  .dr, .dr-backdrop, .dr-content, .cal-switch, .cal-switch::before { transition: none; }
 }
