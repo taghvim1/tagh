@@ -10,7 +10,12 @@ export default function DateHeader({ today }: { today: Date }) {
   const j = fromGregorian(today)
   return (
     <header className="dh">
-      <h1 className="dh-main">{faNum(j.day)} {WEEKDAYS[weekdayIndex(j)]} {MONTHS[j.month - 1]}</h1>
+      {/* ترتیب در RTL: نام روز هفته ← عدد روز ← ماه */}
+      <h1 className="dh-main">
+        <span className="dh-side">{WEEKDAYS[weekdayIndex(j)]}</span>
+        <span className="dh-day">{faNum(j.day)}</span>
+        <span className="dh-side">{MONTHS[j.month - 1]}</span>
+      </h1>
       <p className="dh-sub">{formatIn(today, 'gregory')}</p>
       <p className="dh-sub">{formatIn(today, 'islamic-umalqura')}</p>
     </header>

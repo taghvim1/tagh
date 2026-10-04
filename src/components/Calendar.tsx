@@ -5,19 +5,21 @@ import { MONTHS, WEEKDAYS, buildMonthGrid, faNum, formatLongDate, fromGregorian,
 interface CalendarProps {
   /** تاریخ «امروز»؛ پیش‌فرض تاریخ دستگاه */
   today?: Date
+  /** روز انتخاب‌شده (کنترل‌شده از بیرون تا بخش اطلاعات مناسبت هم از آن استفاده کند) */
+  selected: JalaliDate | null
+  onSelect: (date: JalaliDate) => void
 }
 
-export default function Calendar({ today: todayProp }: CalendarProps) {
+export default function Calendar({ today: todayProp, selected, onSelect }: CalendarProps) {
   const today = useMemo(() => fromGregorian(todayProp ?? new Date()), [todayProp])
   const todayMonth: MonthRef = { year: today.year, month: today.month }
   const [view, setView] = useState<MonthRef>(todayMonth)
-  const [selected, setSelected] = useState<JalaliDate | null>(null)
 
   const days = useMemo(() => buildMonthGrid(view, today), [view, today])
   const isTodayMonth = view.year === today.year && view.month === today.month
 
   return (
-    <section className="calendar" aria-label="تقویم شمسی">
+    <section className="calendar" aria-label="تقویم شمسی" style={{ '--rows': days.length / 7 } as CSSProperties}>
       <div className="head">
         <div className="title">
           <h2>{MONTHS[view.month - 1]}</h2>
@@ -39,7 +41,7 @@ export default function Calendar({ today: todayProp }: CalendarProps) {
         ))}
       </div>
 
-      <div className="grid days" style={{ '--rows': days.length / 7 } as CSSProperties}>
+      <div className="grid days">
         {days.map(({ date, inMonth, isFriday, isToday }) => {
           const occ = inMonth ? getOccasion(date.month, date.day) : undefined
           const isSelected = !!selected && isSameDate(date, selected)
@@ -47,7 +49,7 @@ export default function Calendar({ today: todayProp }: CalendarProps) {
           const cls = ['cell', isFriday && 'off', !inMonth && 'adjacent', isToday && 'now', isSelected && 'selected', occ?.holiday && 'holiday'].filter(Boolean).join(' ')
           return (
             <button key={`${date.month}-${date.day}`} type="button" className={cls} aria-pressed={isSelected} aria-current={isToday ? 'date' : undefined}
-              aria-label={label} title={label} onClick={() => setSelected(date)}>
+              aria-label={label} title={label} onClick={() => onSelect(date)}>
               {occ && <span className="cell-title">{occ.title}</span>}
               <span className="cell-num">{faNum(date.day)}</span>
               {occ && !occ.holiday && <span className="cell-tri" aria-hidden="true" />}
