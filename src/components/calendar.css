@@ -83,7 +83,7 @@
 
 /* صفحهٔ پیشنهاد سفر */
 .tp-page { min-height: 100vh; min-height: 100dvh; }
-.tp-main { max-width: 640px; margin-inline: auto; padding: 20px 20px 48px; display: flex; flex-direction: column; gap: 28px; }
+.tp-main { max-width: 960px; margin-inline: auto; padding: 20px 20px 48px; display: flex; flex-direction: column; gap: 28px; }
 .tp-back { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--accent); text-decoration: none; }
 .tp-head { display: flex; flex-direction: column; gap: 8px; }
 .tp-head h1 { font-size: clamp(1.8rem, 6vw, 2.4rem); font-weight: 700; }
@@ -95,6 +95,49 @@
 .tp-placeholder { padding: 28px 20px; border: 1px dashed var(--line); border-radius: 12px; text-align: center; display: flex; flex-direction: column; gap: 8px; }
 .tp-placeholder h2 { font-size: 1.1rem; }
 .tp-placeholder p { color: var(--muted); line-height: 1.8; }
+
+/* نتایج و کارت مقصدها */
+.tp-head, .tp-date, .tp-form { max-width: 640px; }
+.tp-results { display: flex; flex-direction: column; gap: 14px; }
+.tp-results-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.tp-results-head h2 { font-size: 1.2rem; }
+.tp-section { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.tp-section h3 { margin: 0; font-size: 1.05rem; }
+.tp-section .tp-sub { margin: 0 0 6px; font-size: .9rem; }
+.tp-season { color: var(--muted); font-size: .9rem; }
+.tp-count, .tp-active { color: var(--muted); font-size: .9rem; }
+.tp-active { margin: 0; }
+.dest-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.dest-card { display: flex; flex-direction: column; gap: 14px; padding: 16px; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--ink); font: inherit; text-align: start; cursor: pointer; user-select: none; -webkit-user-select: none; }
+@media (hover: hover) { .dest-card:hover { background: var(--bg-soft); } }
+.dest-card.selected { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.dest-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.dest-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.dest-name { font-size: 1.25rem; }
+.dest-province { color: var(--muted); font-size: .9rem; }
+.dest-meta { margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: .92rem; }
+.dest-meta div { display: flex; justify-content: space-between; gap: 12px; }
+.dest-meta dt { color: var(--muted); }
+.dest-meta dd { margin: 0; text-align: end; }
+
+/* فیلترهای پیشنهاد سفر */
+.tp-form { display: flex; flex-direction: column; gap: 22px; }
+.tp-field { display: flex; flex-direction: column; gap: 8px; }
+.tp-input { width: 100%; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); font: inherit; }
+.tp-input::placeholder { color: var(--muted); }
+.tp-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.tp-chip { min-height: 40px; padding: 0 16px; border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--ink); font: inherit; font-size: .95rem; cursor: pointer; user-select: none; -webkit-user-select: none; }
+@media (hover: hover) { .tp-chip:hover { background: var(--bg-soft); } }
+.tp-chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.tp-chip:focus-visible, .tp-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tp-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.tp-btn { min-height: 44px; padding: 0 20px; border: 1px solid var(--line); border-radius: 10px; background: none; color: var(--ink); font: inherit; cursor: pointer; }
+.tp-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.tp-summary { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.tp-summary span { color: var(--muted); }
+.tp-note { color: var(--muted); font-size: .9rem; }
+@media (max-width: 420px) { .tp-actions .tp-btn { flex: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
   .dr, .dr-backdrop, .dr-content, .cal-switch, .cal-switch::before { transition: none; }

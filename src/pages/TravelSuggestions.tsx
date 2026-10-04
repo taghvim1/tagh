@@ -1,13 +1,46 @@
+import { useMemo, useState, type FormEvent } from 'react'
+import ChipGroup from '../components/ChipGroup'
+import DestinationCard from '../components/DestinationCard'
+import { MOCK_DESTINATIONS } from '../data/destinations'
+import { recommend, seasonOfMonth } from '../data/recommend'
+import { BUDGETS, DURATIONS, EMPTY_FILTERS, TRIP_TYPES, summarize, type TravelFilters } from '../data/travelFilters'
 import { Link } from '../lib/router'
 import { MONTHS, faNum, fromGregorian } from '../lib/jalali'
 import { getSelectedDate } from '../lib/selection'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
 
-// صفحهٔ اولیهٔ پیشنهاد سفر؛ فیلترها و موتور پیشنهاد در مراحل بعد اضافه می‌شوند.
+// انتخاب‌های کاربر + فصلِ تاریخ انتخاب‌شده در تقویم → رتبه‌بندی مقصدهای Mock (Rule-Based).
 export default function TravelSuggestions() {
   const [dark] = useDarkMode()
   useThemeColorMeta(dark)
   const date = getSelectedDate() ?? fromGregorian(new Date())
+  const season = seasonOfMonth(date.month)
+
+  const [filters, setFilters] = useState<TravelFilters>(EMPTY_FILTERS)
+  const [applied, setApplied] = useState<TravelFilters>(EMPTY_FILTERS) // فیلترهای اعمال‌شده روی لیست
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const set = <K extends keyof TravelFilters>(key: K, value: TravelFilters[K]) => setFilters((f) => ({ ...f, [key]: value }))
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault()
+    setApplied(filters)
+  }
+  const reset = () => {
+    setFilters(EMPTY_FILTERS)
+    setApplied(EMPTY_FILTERS)
+  }
+
+  const result = useMemo(() => recommend(MOCK_DESTINATIONS, { season, filters: applied }), [season, applied])
+  const total = result.recommended.length + result.others.length
+  const active = summarize(applied)
+
+  const renderCards = (list: typeof result.recommended) => (
+    <div className="dest-grid">
+      {list.map((d) => (
+        <DestinationCard key={d.id} destination={d} selected={d.id === selectedId} onSelect={() => setSelectedId(d.id === selectedId ? null : d.id)} />
+      ))}
+    </div>
+  )
 
   return (
     <div className="tp-page" data-theme={dark ? 'dark' : 'light'}>
@@ -23,11 +56,53 @@ export default function TravelSuggestions() {
         <section className="tp-date" aria-label="تاریخ انتخاب‌شده">
           <span className="tp-label">تاریخ انتخاب‌شده</span>
           <strong>{faNum(date.day)} {MONTHS[date.month - 1]}</strong>
+          <span className="tp-season">فصل: {season}</span>
         </section>
 
-        <section className="tp-placeholder">
-          <h2>پیشنهادهای سفر</h2>
-          <p>پیشنهادهای مناسب برای این تاریخ در این بخش نمایش داده می‌شوند.</p>
+        <form className="tp-form" onSubmit={submit} noValidate>
+          <label className="tp-field">
+            <span className="tp-label">مقصد</span>
+            <input className="tp-input" value={filters.destination} onChange={(e) => set('destination', e.target.value)} placeholder="مثلاً اصفهان، یزد، شمال..." />
+          </label>
+          <ChipGroup label="نوع سفر" options={TRIP_TYPES} value={filters.type} onChange={(v) => set('type', v)} />
+          <ChipGroup label="مدت سفر" options={DURATIONS} value={filters.duration} onChange={(v) => set('duration', v)} />
+          <ChipGroup label="بودجه" options={BUDGETS} value={filters.budget} onChange={(v) => set('budget', v)} />
+
+          <div className="tp-actions">
+            <button type="submit" className="tp-btn primary">نمایش پیشنهادها</button>
+            <button type="button" className="tp-btn" onClick={reset}>پاک کردن فیلترها</button>
+          </div>
+        </form>
+
+        <section className="tp-results" aria-label="نتایج">
+          <div className="tp-results-head">
+            <h2>پیشنهادهای سفر</h2>
+            <span className="tp-count" aria-live="polite">{faNum(total)} پیشنهاد</span>
+          </div>
+          {active.length > 0 && <p className="tp-active">{active.map(([label, value]) => `${label}: ${value}`).join(' · ')}</p>}
+          {result.unknownDestination && <p className="tp-active">مقصدی با این نام در فهرست نیست؛ بهترین گزینه‌های دیگر نمایش داده شده‌اند.</p>}
+
+          {result.recommended.length > 0 && (
+            <div className="tp-section">
+              <h3>پیشنهادهای مناسب برای شما</h3>
+              <p className="tp-sub">بهترین گزینه‌ها بر اساس انتخاب‌های شما</p>
+              {renderCards(result.recommended)}
+            </div>
+          )}
+          {result.others.length > 0 && (
+            <div className="tp-section">
+              <h3>سایر پیشنهادها</h3>
+              <p className="tp-sub">گزینه‌های دیگری که ممکن است مناسب باشند</p>
+              {renderCards(result.others)}
+            </div>
+          )}
+          {total === 0 && (
+            <div className="tp-placeholder">
+              <strong>پیشنهاد مناسبی پیدا نشد</strong>
+              <p>فیلترها را کمی تغییر دهید تا گزینه‌های بیشتری نمایش داده شود.</p>
+              <button type="button" className="tp-btn" onClick={reset}>پاک کردن فیلترها</button>
+            </div>
+          )}
         </section>
       </main>
     </div>
