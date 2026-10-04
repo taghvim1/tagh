@@ -62,3 +62,10 @@ h1 { margin: 0; font-size: clamp(1.5rem, 6vw, 2rem); font-weight: 700; }
 @media (min-width: 1200px) {
   .app { max-width: 720px; padding-top: 64px; }
 }
+
+/* روزهای ماه قبل/بعد */
+.cell.adjacent { color: #b4bcc7; border-color: transparent; background: #fafbfc; }
+.cell.adjacent.off { color: #e3b09a; }
+
+.today-line { margin: 16px 0 0; text-align: center; color: var(--muted); font-size: 0.95rem; }
+.today-line strong { color: var(--ink); font-weight: 600; }

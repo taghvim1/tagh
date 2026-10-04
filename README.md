@@ -26,3 +26,9 @@ Service Worker فقط در نسخه build فعال می‌شود:
 3. تنظیمات Build و Start از `railway.json` خوانده می‌شود (`npm run build` و `npm start`).
 4. Settings ← Networking ← Generate Domain.
 5. آدرس https را در Chrome باز کنید و تست PWA را انجام دهید.
+
+## مسیرها
+- `/` تقویم
+- `/admin`، `/admin/calendar`، `/admin/events`، `/admin/settings`: اسکلت پنل مدیریت (فعلاً بدون قابلیت واقعی)
+
+مسیرها سمت کلاینت هستند؛ `serve -s` همهٔ مسیرها را به `index.html` برمی‌گرداند.
