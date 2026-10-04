@@ -2,6 +2,8 @@ import type { ReactElement } from 'react'
 import Dashboard from './pages/Dashboard'
 import ComingSoon from './pages/ComingSoon'
 import Events from './pages/Events'
+import Settings from './pages/Settings'
+import Users from './pages/Users'
 
 export interface AdminRoute {
   path: string
@@ -14,5 +16,6 @@ export const ADMIN_ROUTES: AdminRoute[] = [
   { path: '/admin', title: 'داشبورد', element: <Dashboard /> },
   { path: '/admin/calendar', title: 'تقویم', element: <ComingSoon text="صفحه تقویم مدیریتی - به زودی" /> },
   { path: '/admin/events', title: 'مناسبت‌ها', element: <Events /> },
-  { path: '/admin/settings', title: 'تنظیمات', element: <ComingSoon text="تنظیمات سیستم - به زودی" /> },
+  { path: '/admin/users', title: 'کاربران', element: <Users /> },
+  { path: '/admin/settings', title: 'تنظیمات', element: <Settings /> },
 ]

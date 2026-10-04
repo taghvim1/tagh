@@ -156,3 +156,24 @@
   .adm-event-cards { display: none; }
 }
 @media (max-width: 420px) { .adm-form-row { grid-template-columns: 1fr; } .adm-form-actions .adm-btn { flex: 1; } }
+
+/* تنظیمات */
+.adm-settings { display: flex; flex-direction: column; gap: 24px; max-width: 720px; }
+.adm-settings-card { display: flex; flex-direction: column; gap: 4px; }
+.adm-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; padding: 8px 0; border-top: 1px solid var(--line); cursor: pointer; }
+.adm-settings-card .adm-form { padding-bottom: 12px; }
+.adm-switch-text { display: flex; flex-direction: column; gap: 2px; }
+
+.adm-switch { appearance: none; -webkit-appearance: none; flex: none; position: relative; width: 48px; height: 28px; margin: 0; border-radius: 999px; background: #c4cbd3; cursor: pointer; transition: background .15s; }
+.adm-switch::before { content: ''; position: absolute; top: 3px; inset-inline-start: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: inset-inline-start .15s; }
+.adm-switch:checked { background: var(--accent); }
+.adm-switch:checked::before { inset-inline-start: 23px; }
+.adm-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.adm-save-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.adm-saved { color: #0b5f55; font-size: .9rem; }
+.adm-demo-note { margin: 4px 0 0; }
+@media (max-width: 420px) { .adm-save-row .adm-btn { width: 100%; } }
+
+/* کاربران: فیلترها فقط دو ستون */
+@media (min-width: 640px) { .adm-filters.two { grid-template-columns: 1fr 180px; } }
