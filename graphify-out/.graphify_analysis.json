@@ -1,0 +1,433 @@
+{
+  "communities": {
+    "0": [
+      "ref_react",
+      "ref_react_dom",
+      "src_app",
+      "src_app_adminapp",
+      "src_app_app",
+      "src_components_chipgroup",
+      "src_components_chipgroup_chipgroup",
+      "src_components_chipgroup_props",
+      "src_components_destinationcard",
+      "src_components_destinationcard_destinationcard",
+      "src_components_destinationcard_props",
+      "src_data_destinations",
+      "src_data_destinations_destination",
+      "src_data_destinations_destinationterms",
+      "src_data_destinations_matchesdestination",
+      "src_data_destinations_mock_destinations",
+      "src_data_destinations_normalize",
+      "src_data_destinations_season",
+      "src_data_recommend",
+      "src_data_recommend_recommend",
+      "src_data_recommend_recommendinput",
+      "src_data_recommend_recommendresult",
+      "src_data_recommend_scored",
+      "src_data_recommend_season_by_month",
+      "src_data_recommend_seasonofmonth",
+      "src_data_recommend_weights",
+      "src_data_travelfilters",
+      "src_data_travelfilters_budgets",
+      "src_data_travelfilters_durations",
+      "src_data_travelfilters_empty_filters",
+      "src_data_travelfilters_summarize",
+      "src_data_travelfilters_travelfilters",
+      "src_data_travelfilters_trip_types",
+      "src_fonts",
+      "src_lib_selection",
+      "src_lib_selection_getselecteddate",
+      "src_lib_selection_listeners",
+      "src_lib_selection_setselecteddate",
+      "src_lib_selection_subscribeselecteddate",
+      "src_lib_selection_useselecteddate",
+      "src_lib_theme",
+      "src_lib_theme_usedarkmode",
+      "src_lib_theme_usethemecolormeta",
+      "src_main",
+      "src_pages_calendarpage_calendarpage",
+      "src_pages_travelsuggestions",
+      "src_pages_travelsuggestions_travelsuggestions",
+      "src_styles"
+    ],
+    "1": [
+      "src_admin_data_eventdate",
+      "src_admin_data_eventdate_parseddate",
+      "src_admin_data_eventdate_parsejalaliinput",
+      "src_admin_data_eventdate_tolatindigits",
+      "src_admin_data_eventdate_topersiandigits",
+      "src_components_calendar",
+      "src_components_calendar_calendar",
+      "src_components_calendar_calendarprops",
+      "src_components_dateheader",
+      "src_components_dateheader_dateheader",
+      "src_components_dateheader_formatin",
+      "src_components_occasioninfo",
+      "src_components_occasioninfo_occasioninfo",
+      "src_components_occasionrow",
+      "src_components_occasionrow_chevron",
+      "src_components_occasionrow_occasionrow",
+      "src_components_occasionrow_props",
+      "src_data_occasions",
+      "src_data_occasions_getoccasion",
+      "src_data_occasions_mock",
+      "src_data_occasions_occasion",
+      "src_lib_jalali",
+      "src_lib_jalali_buildmonthgrid",
+      "src_lib_jalali_calendarday",
+      "src_lib_jalali_fanum",
+      "src_lib_jalali_formatlongdate",
+      "src_lib_jalali_fromgregorian",
+      "src_lib_jalali_isleapyear",
+      "src_lib_jalali_issamedate",
+      "src_lib_jalali_jalalidate",
+      "src_lib_jalali_monthlength",
+      "src_lib_jalali_monthref",
+      "src_lib_jalali_months",
+      "src_lib_jalali_shiftmonth",
+      "src_lib_jalali_togregoriandate",
+      "src_lib_jalali_weekdayindex",
+      "src_lib_jalali_weekdays",
+      "src_pages_calendarpage"
+    ],
+    "2": [
+      "package",
+      "package_dependencies",
+      "package_dependencies_jalaali_js",
+      "package_dependencies_react",
+      "package_dependencies_react_dom",
+      "package_dependencies_serve",
+      "package_dependencies_types_jalaali_js",
+      "package_devdependencies",
+      "package_devdependencies_types_react",
+      "package_devdependencies_types_react_dom",
+      "package_devdependencies_typescript",
+      "package_devdependencies_vite",
+      "package_devdependencies_vitejs_plugin_react",
+      "package_engines",
+      "package_engines_node",
+      "package_name",
+      "package_private",
+      "package_scripts",
+      "package_scripts_build",
+      "package_scripts_dev",
+      "package_scripts_preview",
+      "package_scripts_start",
+      "package_type",
+      "package_version",
+      "ref_jalaali_js",
+      "ref_serve",
+      "ref_types_jalaali_js",
+      "ref_types_react",
+      "ref_types_react_dom",
+      "ref_typescript",
+      "ref_vite",
+      "ref_vitejs_plugin_react",
+      "vite_config"
+    ],
+    "3": [
+      "src_admin_components_icon",
+      "src_admin_components_icon_icon",
+      "src_admin_components_icon_iconname",
+      "src_admin_components_icon_paths",
+      "src_admin_components_quickaction",
+      "src_admin_components_quickaction_props",
+      "src_admin_components_quickaction_quickaction",
+      "src_admin_components_statcard",
+      "src_admin_components_statcard_props",
+      "src_admin_components_statcard_statcard",
+      "src_admin_pages_dashboard",
+      "src_admin_pages_dashboard_actions",
+      "src_admin_pages_dashboard_dashboard",
+      "src_admin_pages_dashboard_stats",
+      "src_admin_pages_dashboard_system_info",
+      "src_components_drawer",
+      "src_components_drawer_clamp",
+      "src_components_drawer_drawer",
+      "src_components_drawer_icon",
+      "src_components_drawer_icons",
+      "src_components_drawer_props",
+      "src_lib_router",
+      "src_lib_router_getpath",
+      "src_lib_router_link",
+      "src_lib_router_linkprops",
+      "src_lib_router_navigate",
+      "src_lib_router_subscribe",
+      "src_lib_router_usepath"
+    ],
+    "4": [
+      "src_admin_components_eventform",
+      "src_admin_components_eventform_eventdraft",
+      "src_admin_components_eventform_eventform",
+      "src_admin_components_eventform_props",
+      "src_admin_components_eventtable",
+      "src_admin_components_eventtable_actions",
+      "src_admin_components_eventtable_badge",
+      "src_admin_components_eventtable_eventtable",
+      "src_admin_components_eventtable_props",
+      "src_admin_components_modal",
+      "src_admin_components_modal_modal",
+      "src_admin_components_modal_props",
+      "src_admin_data_events",
+      "src_admin_data_events_default_filters",
+      "src_admin_data_events_event_statuses",
+      "src_admin_data_events_event_types",
+      "src_admin_data_events_eventfilters",
+      "src_admin_data_events_eventitem",
+      "src_admin_data_events_eventstatus",
+      "src_admin_data_events_eventtype",
+      "src_admin_data_events_filterevents",
+      "src_admin_data_events_mock_events",
+      "src_admin_data_events_normalize",
+      "src_admin_pages_events",
+      "src_admin_pages_events_events",
+      "src_admin_pages_events_formstate"
+    ],
+    "5": [
+      "src_admin_admin",
+      "src_admin_adminapp",
+      "src_admin_adminapp_adminapp",
+      "src_admin_components_adminlayout",
+      "src_admin_components_adminlayout_adminlayout",
+      "src_admin_components_adminlayout_props",
+      "src_admin_components_section",
+      "src_admin_components_section_section",
+      "src_admin_components_sidebar",
+      "src_admin_components_sidebar_props",
+      "src_admin_components_sidebar_sidebar",
+      "src_admin_components_topbar",
+      "src_admin_components_topbar_props",
+      "src_admin_components_topbar_topbar",
+      "src_admin_pages_comingsoon",
+      "src_admin_pages_comingsoon_comingsoon",
+      "src_admin_pages_settings",
+      "src_admin_pages_settings_initial",
+      "src_admin_pages_settings_settings",
+      "src_admin_pages_settings_switch",
+      "src_admin_routes",
+      "src_admin_routes_admin_routes",
+      "src_admin_routes_adminroute"
+    ],
+    "6": [
+      "src_jalali",
+      "src_jalali_breaks",
+      "src_jalali_d2gyear",
+      "src_jalali_d2j",
+      "src_jalali_div",
+      "src_jalali_fanum",
+      "src_jalali_firstweekday",
+      "src_jalali_g2d",
+      "src_jalali_isleap",
+      "src_jalali_j2d",
+      "src_jalali_jalcal",
+      "src_jalali_jdate",
+      "src_jalali_mod",
+      "src_jalali_monthlength",
+      "src_jalali_months",
+      "src_jalali_tojalali",
+      "src_jalali_weekdays"
+    ],
+    "7": [
+      "src_admin_components_usertable",
+      "src_admin_components_usertable_badge",
+      "src_admin_components_usertable_detailsbutton",
+      "src_admin_components_usertable_props",
+      "src_admin_components_usertable_usertable",
+      "src_admin_data_users",
+      "src_admin_data_users_default_user_filters",
+      "src_admin_data_users_filterusers",
+      "src_admin_data_users_mock_users",
+      "src_admin_data_users_normalize",
+      "src_admin_data_users_user_statuses",
+      "src_admin_data_users_userfilters",
+      "src_admin_data_users_useritem",
+      "src_admin_data_users_userstatus",
+      "src_admin_pages_users",
+      "src_admin_pages_users_users"
+    ],
+    "8": [
+      "tsconfig",
+      "tsconfig_compileroptions",
+      "tsconfig_compileroptions_isolatedmodules",
+      "tsconfig_compileroptions_jsx",
+      "tsconfig_compileroptions_lib",
+      "tsconfig_compileroptions_module",
+      "tsconfig_compileroptions_moduleresolution",
+      "tsconfig_compileroptions_noemit",
+      "tsconfig_compileroptions_skiplibcheck",
+      "tsconfig_compileroptions_strict",
+      "tsconfig_compileroptions_target",
+      "tsconfig_include"
+    ],
+    "9": [
+      "railway",
+      "railway_build",
+      "railway_build_buildcommand",
+      "railway_deploy",
+      "railway_deploy_startcommand",
+      "railway_schema"
+    ],
+    "10": [
+      "public_sw",
+      "public_sw_shell"
+    ],
+    "11": [
+      "src_vite_env_d"
+    ]
+  },
+  "cohesion": {
+    "0": 0.0975177304964539,
+    "1": 0.155049786628734,
+    "2": 0.0625,
+    "3": 0.13756613756613756,
+    "4": 0.1723076923076923,
+    "5": 0.1541501976284585,
+    "6": 0.2647058823529412,
+    "7": 0.25,
+    "8": 0.16666666666666666,
+    "9": 0.3333333333333333,
+    "10": 1.0,
+    "11": 1.0
+  },
+  "gods": [
+    {
+      "id": "ref_react",
+      "label": "react",
+      "degree": 19
+    },
+    {
+      "id": "src_lib_jalali_fanum",
+      "label": "faNum()",
+      "degree": 18
+    },
+    {
+      "id": "src_pages_travelsuggestions_travelsuggestions",
+      "label": "TravelSuggestions()",
+      "degree": 14
+    },
+    {
+      "id": "src_pages_calendarpage_calendarpage",
+      "label": "CalendarPage()",
+      "degree": 12
+    },
+    {
+      "id": "src_lib_jalali_weekdayindex",
+      "label": "weekdayIndex()",
+      "degree": 10
+    },
+    {
+      "id": "src_lib_router_link",
+      "label": "Link()",
+      "degree": 10
+    },
+    {
+      "id": "tsconfig_compileroptions",
+      "label": "compilerOptions",
+      "degree": 10
+    },
+    {
+      "id": "src_data_destinations_destination",
+      "label": "Destination",
+      "degree": 9
+    },
+    {
+      "id": "src_lib_jalali_jalalidate",
+      "label": "JalaliDate",
+      "degree": 8
+    },
+    {
+      "id": "src_admin_data_eventdate_parsejalaliinput",
+      "label": "parseJalaliInput()",
+      "degree": 7
+    }
+  ],
+  "surprises": [
+    {
+      "source": "Props",
+      "target": "Destination",
+      "source_files": [
+        "src/components/DestinationCard.tsx",
+        "src/data/destinations.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "peripheral node `Props` unexpectedly reaches hub `Destination`"
+    },
+    {
+      "source": "RecommendResult",
+      "target": "Destination",
+      "source_files": [
+        "src/data/recommend.ts",
+        "src/data/destinations.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "peripheral node `RecommendResult` unexpectedly reaches hub `Destination`"
+    },
+    {
+      "source": "Scored",
+      "target": "Destination",
+      "source_files": [
+        "src/data/recommend.ts",
+        "src/data/destinations.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "peripheral node `Scored` unexpectedly reaches hub `Destination`"
+    },
+    {
+      "source": "Props",
+      "target": "IconName",
+      "source_files": [
+        "src/admin/components/QuickAction.tsx",
+        "src/admin/components/Icon.tsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "peripheral node `Props` unexpectedly reaches hub `IconName`"
+    },
+    {
+      "source": "Props",
+      "target": "IconName",
+      "source_files": [
+        "src/admin/components/StatCard.tsx",
+        "src/admin/components/Icon.tsx"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "peripheral node `Props` unexpectedly reaches hub `IconName`"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `react` connect `Community 0` to `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 7`?",
+      "why": "High betweenness centrality (0.312) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `faNum()` connect `Community 1` to `Community 0`, `Community 4`, `Community 7`?",
+      "why": "High betweenness centrality (0.062) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `Props`, `ParsedDate`, `Occasion` to the rest of the system?",
+      "why": "66 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.0975177304964539 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 2` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.0625 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 3` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.13756613756613756 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

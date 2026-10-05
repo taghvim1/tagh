@@ -1,44 +1,37 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useRef, useState, type FormEvent } from 'react'
 import ChipGroup from '../components/ChipGroup'
 import DestinationCard from '../components/DestinationCard'
-import { MOCK_DESTINATIONS } from '../data/destinations'
-import { recommend, seasonOfMonth } from '../data/recommend'
-import { BUDGETS, DURATIONS, EMPTY_FILTERS, TRIP_TYPES, summarize, type TravelFilters } from '../data/travelFilters'
+import TripDate from '../components/TripDate'
+import { MOCK_DESTINATIONS, type Destination } from '../data/destinations'
 import { Link } from '../lib/router'
-import { MONTHS, faNum, fromGregorian } from '../lib/jalali'
-import { useSelectedDate } from '../lib/selection'
+import { fromGregorian } from '../lib/jalali'
+import { setSelectedDate, useSelectedDate } from '../lib/selection'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
+import { getSavedFilters, saveFilters } from '../lib/travelFilterStore'
+import { BUDGET_OPTIONS, DURATION_OPTIONS, EMPTY_FILTERS, SCOPE_OPTIONS, TYPE_OPTIONS, summarize, type TravelFilters } from '../travel/filters'
+import { recommend } from '../travel/recommend'
+import { faNum } from '../lib/jalali'
 
-// انتخاب‌های کاربر + فصلِ تاریخ انتخاب‌شده در تقویم → رتبه‌بندی مقصدهای Mock (Rule-Based).
+// تاریخ (از تقویم یا امروز) + فیلترها → موتور پیشنهاد؛ هر تغییر بلافاصله اعمال می‌شود.
 export default function TravelSuggestions() {
   const [dark] = useDarkMode()
   useThemeColorMeta(dark)
-  const date = useSelectedDate() ?? fromGregorian(new Date())
-  const season = seasonOfMonth(date.month)
 
-  const [filters, setFilters] = useState<TravelFilters>(EMPTY_FILTERS)
-  const [applied, setApplied] = useState<TravelFilters>(EMPTY_FILTERS) // فیلترهای اعمال‌شده روی لیست
-  const [selectedId, setSelectedId] = useState<number | null>(null)
-  const set = <K extends keyof TravelFilters>(key: K, value: TravelFilters[K]) => setFilters((f) => ({ ...f, [key]: value }))
+  const today = useMemo(() => fromGregorian(new Date()), [])
+  const date = useSelectedDate() ?? today // ورود مستقیم: تاریخ جاری
 
-  const submit = (e: FormEvent) => {
-    e.preventDefault()
-    setApplied(filters)
-  }
-  const reset = () => {
-    setFilters(EMPTY_FILTERS)
-    setApplied(EMPTY_FILTERS)
-  }
+  const [filters, setFilters] = useState<TravelFilters>(getSavedFilters)
+  const update = (next: TravelFilters) => { setFilters(next); saveFilters(next) }
+  const set = <K extends keyof TravelFilters>(key: K, value: TravelFilters[K]) => update({ ...filters, [key]: value })
+  const reset = () => update(EMPTY_FILTERS)
 
-  const result = useMemo(() => recommend(MOCK_DESTINATIONS, { season, filters: applied }), [season, applied])
-  const active = summarize(applied)
+  const { season, suitable, others } = useMemo(() => recommend(MOCK_DESTINATIONS, { date, filters }), [date, filters])
+  const total = suitable.length + others.length
+  const active = summarize(filters)
+  const results = useRef<HTMLElement>(null)
 
-  const renderCards = (list: typeof result.suitable) => (
-    <div className="dest-grid">
-      {list.map((d) => (
-        <DestinationCard key={d.id} destination={d} selected={d.id === selectedId} onSelect={() => setSelectedId(d.id === selectedId ? null : d.id)} />
-      ))}
-    </div>
+  const cards = (list: Destination[]) => (
+    <div className="dest-grid">{list.map((d) => <DestinationCard key={d.id} destination={d} season={season} />)}</div>
   )
 
   return (
@@ -48,51 +41,55 @@ export default function TravelSuggestions() {
 
         <header className="tp-head">
           <h1>پیشنهاد سفر</h1>
-          <p className="tp-lead">مقصد مناسب خودت را برای این تاریخ پیدا کن.</p>
-          <p className="tp-sub">برای شروع، تاریخ و شرایط سفر خودت را انتخاب کن.</p>
+          <p className="tp-lead">بر اساس زمان سفر و انتخاب‌های شما، مقصدهای مناسب را پیدا کنید.</p>
         </header>
 
-        <section className="tp-date" aria-label="تاریخ انتخاب‌شده">
-          <span className="tp-label">تاریخ انتخاب‌شده</span>
-          <strong>{faNum(date.day)} {MONTHS[date.month - 1]}</strong>
-          <span className="tp-season">فصل: {season}</span>
-        </section>
+        <TripDate date={date} season={season} onChange={setSelectedDate} />
 
-        <form className="tp-form" onSubmit={submit} noValidate>
+        <form className="tp-form" onSubmit={(e: FormEvent) => e.preventDefault()} noValidate>
           <label className="tp-field">
             <span className="tp-label">مقصد</span>
-            <input className="tp-input" value={filters.destination} onChange={(e) => set('destination', e.target.value)} placeholder="مثلاً اصفهان، یزد، شمال..." />
+            <input className="tp-input" value={filters.destination} onChange={(e) => set('destination', e.target.value)} placeholder="نام شهر یا کشور" />
           </label>
-          <ChipGroup label="نوع سفر" options={TRIP_TYPES} value={filters.type} onChange={(v) => set('type', v)} />
-          <ChipGroup label="مدت سفر" options={DURATIONS} value={filters.duration} onChange={(v) => set('duration', v)} />
-          <ChipGroup label="بودجه" options={BUDGETS} value={filters.budget} onChange={(v) => set('budget', v)} />
-
+          <ChipGroup label="نوع مقصد" options={SCOPE_OPTIONS} value={filters.scope} onChange={(v) => set('scope', v)} />
+          <ChipGroup label="نوع سفر" options={TYPE_OPTIONS} value={filters.type} onChange={(v) => set('type', v)} />
+          <ChipGroup label="مدت سفر" options={DURATION_OPTIONS} value={filters.duration} onChange={(v) => set('duration', v)} />
+          <ChipGroup label="بودجه" options={BUDGET_OPTIONS} value={filters.budget} onChange={(v) => set('budget', v)} />
           <div className="tp-actions">
-            <button type="submit" className="tp-btn primary">نمایش پیشنهادها</button>
+            {/* نتایج با هر تغییر به‌روز می‌شوند؛ این دکمه فقط به بخش نتایج می‌برد */}
+            <button type="button" className="tp-btn primary" onClick={() => results.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>نمایش پیشنهادها</button>
             <button type="button" className="tp-btn" onClick={reset}>پاک کردن فیلترها</button>
           </div>
         </form>
 
-        <section className="tp-results" aria-label="نتایج">
+        <section className="tp-results" ref={results} aria-label="نتایج">
           <div className="tp-results-head">
             <h2>پیشنهادهای سفر</h2>
-            <span className="tp-count" aria-live="polite">{faNum(result.suitable.length + result.others.length)} مقصد</span>
+            <span className="tp-count" aria-live="polite">{faNum(total)} مقصد</span>
           </div>
           {active.length > 0 && <p className="tp-active">{active.map(([label, value]) => `${label}: ${value}`).join(' · ')}</p>}
-          {result.unknownDestination && <p className="tp-active">مقصدی با این نام در فهرست نیست؛ بهترین گزینه‌های دیگر نمایش داده شده‌اند.</p>}
 
-          <div className="tp-section">
-            <h3>پیشنهادهای مناسب برای {season}</h3>
-            <p className="tp-sub">مقصدهایی که {season} برایشان فصل خوبی است، مرتب‌شده بر اساس انتخاب‌های شما</p>
-            {result.suitable.length > 0 ? renderCards(result.suitable) : <p className="tp-empty">در این فصل مقصد مناسبی پیدا نشد.</p>}
-          </div>
-
-          {result.others.length > 0 && (
-            <div className="tp-section">
-              <h3>پیشنهادهای دیگر</h3>
-              <p className="tp-sub">مقصدهایی که {season} برایشان فصل مناسبی نیست</p>
-              {renderCards(result.others)}
+          {total === 0 ? (
+            <div className="tp-placeholder">
+              <strong>مقصد مناسبی پیدا نشد</strong>
+              <p>فیلترها را تغییر دهید یا همه فیلترها را پاک کنید.</p>
+              <button type="button" className="tp-btn" onClick={reset}>پاک کردن فیلترها</button>
             </div>
+          ) : (
+            <>
+              <div className="tp-section">
+                <h3>پیشنهادهای مناسب برای شما</h3>
+                <p className="tp-sub">مقصدهایی که با زمان سفر و انتخاب‌های شما هماهنگی بیشتری دارند.</p>
+                {suitable.length > 0 ? cards(suitable) : <p className="tp-empty">برای فصل {season} مقصد مناسبی با این فیلترها پیدا نشد.</p>}
+              </div>
+              {others.length > 0 && (
+                <div className="tp-section">
+                  <h3>پیشنهادهای دیگر</h3>
+                  <p className="tp-sub">مقصدهای دیگری که می‌توانید بررسی کنید.</p>
+                  {cards(others)}
+                </div>
+              )}
+            </>
           )}
         </section>
       </main>

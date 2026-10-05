@@ -7,7 +7,7 @@ interface Props {
   onChange: (value: string) => void
 }
 
-// انتخاب تکی؛ کلیک دوباره روی گزینهٔ انتخاب‌شده آن را برمی‌دارد.
+// انتخاب تکی؛ گزینهٔ «همه» حالت بدون فیلتر است
 export default function ChipGroup({ label, options, value, onChange }: Props) {
   const id = useId()
   return (
@@ -15,7 +15,7 @@ export default function ChipGroup({ label, options, value, onChange }: Props) {
       <span id={id} className="tp-label">{label}</span>
       <div className="tp-chips" role="group" aria-labelledby={id}>
         {options.map((o) => (
-          <button key={o} type="button" className={`tp-chip${o === value ? ' on' : ''}`} aria-pressed={o === value} onClick={() => onChange(o === value ? '' : o)}>
+          <button key={o} type="button" className={`tp-chip${o === value ? ' on' : ''}`} aria-pressed={o === value} onClick={() => onChange(o)}>
             {o}
           </button>
         ))}
