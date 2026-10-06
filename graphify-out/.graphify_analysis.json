@@ -1,11 +1,6 @@
 {
   "communities": {
     "0": [
-      "ref_react",
-      "ref_react_dom",
-      "src_app",
-      "src_app_adminapp",
-      "src_app_app",
       "src_components_chipgroup",
       "src_components_chipgroup_chipgroup",
       "src_components_chipgroup_props",
@@ -13,42 +8,48 @@
       "src_components_destinationcard_destinationcard",
       "src_components_destinationcard_props",
       "src_data_destinations",
+      "src_data_destinations_abroad",
+      "src_data_destinations_base",
+      "src_data_destinations_budgets",
       "src_data_destinations_destination",
-      "src_data_destinations_destinationterms",
-      "src_data_destinations_matchesdestination",
+      "src_data_destinations_domestic",
+      "src_data_destinations_durations",
+      "src_data_destinations_locationlabel",
       "src_data_destinations_mock_destinations",
-      "src_data_destinations_normalize",
       "src_data_destinations_season",
-      "src_data_recommend",
-      "src_data_recommend_recommend",
-      "src_data_recommend_recommendinput",
+      "src_data_destinations_trip_types",
       "src_data_recommend_recommendresult",
       "src_data_recommend_scored",
-      "src_data_recommend_season_by_month",
-      "src_data_recommend_seasonofmonth",
-      "src_data_recommend_weights",
-      "src_data_travelfilters",
-      "src_data_travelfilters_budgets",
-      "src_data_travelfilters_durations",
-      "src_data_travelfilters_empty_filters",
-      "src_data_travelfilters_summarize",
-      "src_data_travelfilters_travelfilters",
-      "src_data_travelfilters_trip_types",
-      "src_fonts",
-      "src_lib_selection",
-      "src_lib_selection_getselecteddate",
-      "src_lib_selection_listeners",
-      "src_lib_selection_setselecteddate",
-      "src_lib_selection_subscribeselecteddate",
-      "src_lib_selection_useselecteddate",
-      "src_lib_theme",
-      "src_lib_theme_usedarkmode",
-      "src_lib_theme_usethemecolormeta",
-      "src_main",
-      "src_pages_calendarpage_calendarpage",
+      "src_lib_travelfilterstore",
+      "src_lib_travelfilterstore_getsavedfilters",
+      "src_lib_travelfilterstore_savefilters",
       "src_pages_travelsuggestions",
       "src_pages_travelsuggestions_travelsuggestions",
-      "src_styles"
+      "src_travel_filters",
+      "src_travel_filters_all",
+      "src_travel_filters_applyfilters",
+      "src_travel_filters_budget_options",
+      "src_travel_filters_destinationterms",
+      "src_travel_filters_duration_options",
+      "src_travel_filters_empty_filters",
+      "src_travel_filters_isactive",
+      "src_travel_filters_isfilteractive",
+      "src_travel_filters_matchesdestinationtext",
+      "src_travel_filters_normalize",
+      "src_travel_filters_scope_options",
+      "src_travel_filters_scope_value",
+      "src_travel_filters_summarize",
+      "src_travel_filters_travelfilters",
+      "src_travel_filters_type_options",
+      "src_travel_recommend",
+      "src_travel_recommend_reasonfor",
+      "src_travel_recommend_recommend",
+      "src_travel_recommend_recommendresult",
+      "src_travel_recommend_scoredestination",
+      "src_travel_recommend_weights",
+      "src_travel_season",
+      "src_travel_season_season_by_month",
+      "src_travel_season_seasonofmonth"
     ],
     "1": [
       "src_admin_data_eventdate",
@@ -68,6 +69,9 @@
       "src_components_occasionrow_chevron",
       "src_components_occasionrow_occasionrow",
       "src_components_occasionrow_props",
+      "src_components_tripdate",
+      "src_components_tripdate_props",
+      "src_components_tripdate_tripdate",
       "src_data_occasions",
       "src_data_occasions_getoccasion",
       "src_data_occasions_mock",
@@ -88,7 +92,14 @@
       "src_lib_jalali_togregoriandate",
       "src_lib_jalali_weekdayindex",
       "src_lib_jalali_weekdays",
-      "src_pages_calendarpage"
+      "src_lib_selection",
+      "src_lib_selection_getselecteddate",
+      "src_lib_selection_listeners",
+      "src_lib_selection_setselecteddate",
+      "src_lib_selection_subscribeselecteddate",
+      "src_lib_selection_useselecteddate",
+      "src_pages_calendarpage",
+      "src_pages_calendarpage_calendarpage"
     ],
     "2": [
       "package",
@@ -126,36 +137,7 @@
       "vite_config"
     ],
     "3": [
-      "src_admin_components_icon",
-      "src_admin_components_icon_icon",
-      "src_admin_components_icon_iconname",
-      "src_admin_components_icon_paths",
-      "src_admin_components_quickaction",
-      "src_admin_components_quickaction_props",
-      "src_admin_components_quickaction_quickaction",
-      "src_admin_components_statcard",
-      "src_admin_components_statcard_props",
-      "src_admin_components_statcard_statcard",
-      "src_admin_pages_dashboard",
-      "src_admin_pages_dashboard_actions",
-      "src_admin_pages_dashboard_dashboard",
-      "src_admin_pages_dashboard_stats",
-      "src_admin_pages_dashboard_system_info",
-      "src_components_drawer",
-      "src_components_drawer_clamp",
-      "src_components_drawer_drawer",
-      "src_components_drawer_icon",
-      "src_components_drawer_icons",
-      "src_components_drawer_props",
-      "src_lib_router",
-      "src_lib_router_getpath",
-      "src_lib_router_link",
-      "src_lib_router_linkprops",
-      "src_lib_router_navigate",
-      "src_lib_router_subscribe",
-      "src_lib_router_usepath"
-    ],
-    "4": [
+      "ref_react",
       "src_admin_components_eventform",
       "src_admin_components_eventform_eventdraft",
       "src_admin_components_eventform_eventform",
@@ -183,15 +165,65 @@
       "src_admin_pages_events_events",
       "src_admin_pages_events_formstate"
     ],
+    "4": [
+      "ref_react_dom",
+      "src_app",
+      "src_app_adminapp",
+      "src_app_app",
+      "src_components_drawer",
+      "src_components_drawer_clamp",
+      "src_components_drawer_drawer",
+      "src_components_drawer_icon",
+      "src_components_drawer_icons",
+      "src_components_drawer_props",
+      "src_data_destinations_finddestination",
+      "src_fonts",
+      "src_lib_router",
+      "src_lib_router_getpath",
+      "src_lib_router_link",
+      "src_lib_router_linkprops",
+      "src_lib_router_navigate",
+      "src_lib_router_subscribe",
+      "src_lib_router_usepath",
+      "src_lib_theme",
+      "src_lib_theme_usedarkmode",
+      "src_lib_theme_usethemecolormeta",
+      "src_main",
+      "src_pages_destinationdetails",
+      "src_pages_destinationdetails_destinationdetails",
+      "src_pages_destinationdetails_saved",
+      "src_styles"
+    ],
     "5": [
+      "src_admin_components_icon",
+      "src_admin_components_icon_icon",
+      "src_admin_components_icon_iconname",
+      "src_admin_components_icon_paths",
+      "src_admin_components_quickaction",
+      "src_admin_components_quickaction_props",
+      "src_admin_components_quickaction_quickaction",
+      "src_admin_components_section",
+      "src_admin_components_section_section",
+      "src_admin_components_statcard",
+      "src_admin_components_statcard_props",
+      "src_admin_components_statcard_statcard",
+      "src_admin_pages_dashboard",
+      "src_admin_pages_dashboard_actions",
+      "src_admin_pages_dashboard_dashboard",
+      "src_admin_pages_dashboard_stats",
+      "src_admin_pages_dashboard_system_info",
+      "src_admin_pages_settings",
+      "src_admin_pages_settings_initial",
+      "src_admin_pages_settings_settings",
+      "src_admin_pages_settings_switch"
+    ],
+    "6": [
       "src_admin_admin",
       "src_admin_adminapp",
       "src_admin_adminapp_adminapp",
       "src_admin_components_adminlayout",
       "src_admin_components_adminlayout_adminlayout",
       "src_admin_components_adminlayout_props",
-      "src_admin_components_section",
-      "src_admin_components_section_section",
       "src_admin_components_sidebar",
       "src_admin_components_sidebar_props",
       "src_admin_components_sidebar_sidebar",
@@ -200,15 +232,11 @@
       "src_admin_components_topbar_topbar",
       "src_admin_pages_comingsoon",
       "src_admin_pages_comingsoon_comingsoon",
-      "src_admin_pages_settings",
-      "src_admin_pages_settings_initial",
-      "src_admin_pages_settings_settings",
-      "src_admin_pages_settings_switch",
       "src_admin_routes",
       "src_admin_routes_admin_routes",
       "src_admin_routes_adminroute"
     ],
-    "6": [
+    "7": [
       "src_jalali",
       "src_jalali_breaks",
       "src_jalali_d2gyear",
@@ -227,7 +255,7 @@
       "src_jalali_tojalali",
       "src_jalali_weekdays"
     ],
-    "7": [
+    "8": [
       "src_admin_components_usertable",
       "src_admin_components_usertable_badge",
       "src_admin_components_usertable_detailsbutton",
@@ -245,7 +273,24 @@
       "src_admin_pages_users",
       "src_admin_pages_users_users"
     ],
-    "8": [
+    "9": [
+      "src_data_destinations_destinationterms",
+      "src_data_destinations_matchesdestination",
+      "src_data_recommend",
+      "src_data_recommend_recommend",
+      "src_data_recommend_recommendinput",
+      "src_data_recommend_season_by_month",
+      "src_data_recommend_seasonofmonth",
+      "src_data_recommend_weights",
+      "src_data_travelfilters",
+      "src_data_travelfilters_budgets",
+      "src_data_travelfilters_durations",
+      "src_data_travelfilters_empty_filters",
+      "src_data_travelfilters_summarize",
+      "src_data_travelfilters_travelfilters",
+      "src_data_travelfilters_trip_types"
+    ],
+    "10": [
       "tsconfig",
       "tsconfig_compileroptions",
       "tsconfig_compileroptions_isolatedmodules",
@@ -259,7 +304,7 @@
       "tsconfig_compileroptions_target",
       "tsconfig_include"
     ],
-    "9": [
+    "11": [
       "railway",
       "railway_build",
       "railway_build_buildcommand",
@@ -267,48 +312,70 @@
       "railway_deploy_startcommand",
       "railway_schema"
     ],
-    "10": [
+    "12": [
       "public_sw",
       "public_sw_shell"
     ],
-    "11": [
+    "13": [
       "src_vite_env_d"
     ]
   },
   "cohesion": {
-    "0": 0.0975177304964539,
-    "1": 0.155049786628734,
+    "0": 0.0935374149659864,
+    "1": 0.12411347517730496,
     "2": 0.0625,
-    "3": 0.13756613756613756,
-    "4": 0.1723076923076923,
-    "5": 0.1541501976284585,
-    "6": 0.2647058823529412,
-    "7": 0.25,
-    "8": 0.16666666666666666,
-    "9": 0.3333333333333333,
-    "10": 1.0,
-    "11": 1.0
+    "3": 0.16809116809116809,
+    "4": 0.13675213675213677,
+    "5": 0.19047619047619047,
+    "6": 0.21323529411764705,
+    "7": 0.2647058823529412,
+    "8": 0.25,
+    "9": 0.17142857142857143,
+    "10": 0.16666666666666666,
+    "11": 0.3333333333333333,
+    "12": 1.0,
+    "13": 1.0
   },
   "gods": [
     {
-      "id": "ref_react",
-      "label": "react",
-      "degree": 19
-    },
-    {
       "id": "src_lib_jalali_fanum",
       "label": "faNum()",
-      "degree": 18
+      "degree": 20
+    },
+    {
+      "id": "ref_react",
+      "label": "react",
+      "degree": 20
     },
     {
       "id": "src_pages_travelsuggestions_travelsuggestions",
       "label": "TravelSuggestions()",
+      "degree": 16
+    },
+    {
+      "id": "src_lib_router_link",
+      "label": "Link()",
       "degree": 14
+    },
+    {
+      "id": "src_lib_jalali_jalalidate",
+      "label": "JalaliDate",
+      "degree": 11
     },
     {
       "id": "src_pages_calendarpage_calendarpage",
       "label": "CalendarPage()",
-      "degree": 12
+      "degree": 11
+    },
+    {
+      "id": "src_data_destinations_destination",
+      "label": "Destination",
+      "degree": 10
+    },
+    {
+      "id": "src_data_destinations_season",
+      "label": "Season",
+      "degree": 10
     },
     {
       "id": "src_lib_jalali_weekdayindex",
@@ -316,43 +383,12 @@
       "degree": 10
     },
     {
-      "id": "src_lib_router_link",
-      "label": "Link()",
-      "degree": 10
-    },
-    {
       "id": "tsconfig_compileroptions",
       "label": "compilerOptions",
       "degree": 10
-    },
-    {
-      "id": "src_data_destinations_destination",
-      "label": "Destination",
-      "degree": 9
-    },
-    {
-      "id": "src_lib_jalali_jalalidate",
-      "label": "JalaliDate",
-      "degree": 8
-    },
-    {
-      "id": "src_admin_data_eventdate_parsejalaliinput",
-      "label": "parseJalaliInput()",
-      "degree": 7
     }
   ],
   "surprises": [
-    {
-      "source": "Props",
-      "target": "Destination",
-      "source_files": [
-        "src/components/DestinationCard.tsx",
-        "src/data/destinations.ts"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "references",
-      "why": "peripheral node `Props` unexpectedly reaches hub `Destination`"
-    },
     {
       "source": "RecommendResult",
       "target": "Destination",
@@ -377,57 +413,73 @@
     },
     {
       "source": "Props",
-      "target": "IconName",
+      "target": "Season",
       "source_files": [
-        "src/admin/components/QuickAction.tsx",
-        "src/admin/components/Icon.tsx"
+        "src/components/TripDate.tsx",
+        "src/data/destinations.ts"
       ],
       "confidence": "EXTRACTED",
       "relation": "references",
-      "why": "peripheral node `Props` unexpectedly reaches hub `IconName`"
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "RecommendInput",
+      "target": "Season",
+      "source_files": [
+        "src/data/recommend.ts",
+        "src/data/destinations.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "bridges separate communities"
     },
     {
       "source": "Props",
-      "target": "IconName",
+      "target": "EventItem",
       "source_files": [
-        "src/admin/components/StatCard.tsx",
-        "src/admin/components/Icon.tsx"
+        "src/admin/components/EventForm.tsx",
+        "src/admin/data/events.ts"
       ],
       "confidence": "EXTRACTED",
       "relation": "references",
-      "why": "peripheral node `Props` unexpectedly reaches hub `IconName`"
+      "why": "peripheral node `Props` unexpectedly reaches hub `EventItem`"
     }
   ],
   "questions": [
     {
       "type": "bridge_node",
-      "question": "Why does `react` connect `Community 0` to `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 7`?",
-      "why": "High betweenness centrality (0.312) - this node is a cross-community bridge."
+      "question": "Why does `react` connect `Community 3` to `Community 0`, `Community 1`, `Community 2`, `Community 4`, `Community 5`, `Community 6`, `Community 8`?",
+      "why": "High betweenness centrality (0.287) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `faNum()` connect `Community 1` to `Community 0`, `Community 4`, `Community 7`?",
-      "why": "High betweenness centrality (0.062) - this node is a cross-community bridge."
+      "question": "Why does `faNum()` connect `Community 1` to `Community 8`, `Community 0`, `Community 3`?",
+      "why": "High betweenness centrality (0.061) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `Link()` connect `Community 4` to `Community 0`, `Community 5`, `Community 6`?",
+      "why": "High betweenness centrality (0.038) - this node is a cross-community bridge."
     },
     {
       "type": "isolated_nodes",
-      "question": "What connects `Props`, `ParsedDate`, `Occasion` to the rest of the system?",
-      "why": "66 weakly-connected nodes found - possible documentation gaps or missing edges."
+      "question": "What connects `Props`, `Base`, `ParsedDate` to the rest of the system?",
+      "why": "76 weakly-connected nodes found - possible documentation gaps or missing edges."
     },
     {
       "type": "low_cohesion",
       "question": "Should `Community 0` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.0975177304964539 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.0935374149659864 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 1` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.12411347517730496 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
       "question": "Should `Community 2` be split into smaller, more focused modules?",
       "why": "Cohesion score 0.0625 - nodes in this community are weakly interconnected."
-    },
-    {
-      "type": "low_cohesion",
-      "question": "Should `Community 3` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.13756613756613756 - nodes in this community are weakly interconnected."
     }
   ]
 }

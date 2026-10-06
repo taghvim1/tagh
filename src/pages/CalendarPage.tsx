@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import Calendar from '../components/Calendar'
 import DateHeader from '../components/DateHeader'
-import Drawer from '../components/Drawer'
+import AppChrome from '../components/AppChrome'
 import OccasionRow from '../components/OccasionRow'
+import { useCalendarData } from '../lib/calendarData'
 import { fromGregorian, shiftMonth, type JalaliDate, type MonthRef } from '../lib/jalali'
 import { getSelectedDate, setSelectedDate } from '../lib/selection'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
@@ -12,6 +13,7 @@ export default function CalendarPage() {
   const today = useMemo(() => fromGregorian(now), [now])
   const [dark, setDark] = useDarkMode()
   useThemeColorMeta(dark)
+  useCalendarData() // با رسیدن داده‌های جدید تقویم دوباره رندر می‌شود
 
   // اگر کاربر از صفحهٔ دیگری برگشته، همان روز انتخاب‌شده قبلی باز می‌ماند؛ در غیر این صورت امروز
   const [selected, setSelected] = useState<JalaliDate>(() => getSelectedDate() ?? today)
@@ -28,7 +30,7 @@ export default function CalendarPage() {
       <section className="cal-top"><DateHeader today={now} /></section>
       <OccasionRow view={view} selected={selected} onPrev={() => setView((v) => shiftMonth(v, -1))} onNext={() => setView((v) => shiftMonth(v, 1))} />
       <section className="cal-bottom"><Calendar today={today} view={view} selected={selected} onSelect={select} /></section>
-      <Drawer dark={dark} onDarkChange={setDark} onToday={() => select(today)} />
+      <AppChrome overlay dark={dark} onDarkChange={setDark} onToday={() => select(today)} />
     </div>
   )
 }

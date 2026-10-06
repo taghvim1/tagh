@@ -1,9 +1,10 @@
 import { useMemo, useRef, useState, type FormEvent } from 'react'
+import AppChrome from '../components/AppChrome'
 import ChipGroup from '../components/ChipGroup'
 import DestinationCard from '../components/DestinationCard'
 import TripDate from '../components/TripDate'
 import { MOCK_DESTINATIONS, type Destination } from '../data/destinations'
-import { Link } from '../lib/router'
+import { BackLink } from '../lib/router'
 import { fromGregorian } from '../lib/jalali'
 import { setSelectedDate, useSelectedDate } from '../lib/selection'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
@@ -14,7 +15,7 @@ import { faNum } from '../lib/jalali'
 
 // تاریخ (از تقویم یا امروز) + فیلترها → موتور پیشنهاد؛ هر تغییر بلافاصله اعمال می‌شود.
 export default function TravelSuggestions() {
-  const [dark] = useDarkMode()
+  const [dark, setDark] = useDarkMode()
   useThemeColorMeta(dark)
 
   const today = useMemo(() => fromGregorian(new Date()), [])
@@ -36,8 +37,9 @@ export default function TravelSuggestions() {
 
   return (
     <div className="tp-page" data-theme={dark ? 'dark' : 'light'}>
+      <AppChrome title="تقویم سفر" dark={dark} onDarkChange={setDark} />
       <main className="tp-main">
-        <Link to="/" className="tp-back"><span aria-hidden="true">›</span> بازگشت به تقویم</Link>
+        <BackLink fallback="/" className="tp-back"><span aria-hidden="true">›</span> بازگشت به تقویم</BackLink>
 
         <header className="tp-head">
           <h1>پیشنهاد سفر</h1>

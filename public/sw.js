@@ -1,46 +1,48 @@
-const CACHE = 'taghvim-v3'
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png']
+// Offline-First: پوستهٔ برنامه و همهٔ فایل‌های ساخت در نصب Precache می‌شوند و همیشه فوراً از کش سرو می‌شوند.
+// نسخهٔ جدید در پس‌زمینه دریافت می‌شود (به‌روزرسانی sw.js)؛ داده‌های /data/ اول از شبکه و در نبود اینترنت از کش می‌آیند.
+// این دو مقدار هنگام build توسط scripts/precache-plugin.mjs پر می‌شوند.
+const BUILD = '__BUILD__'
+const PRECACHE = [/*PRECACHE*/]
+const PREFIX = 'taghvim-'
+const CACHE = PREFIX + BUILD
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()))
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()))
 })
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
+    caches.keys().then((keys) => {
+      // نسخهٔ فعلی و یکی قبل از آن می‌مانند تا صفحهٔ باز با فایل‌های قدیمی (مثلاً Chunk تنبل) خراب نشود
+      const mine = keys.filter((k) => k.startsWith(PREFIX)).sort().reverse()
+      return Promise.all(mine.slice(2).concat(keys.filter((k) => !k.startsWith(PREFIX))).map((k) => caches.delete(k)))
+    }).then(() => self.clients.claim())
   )
 })
 
+const put = (req, res) => caches.open(CACHE).then((c) => c.put(req, res))
+
 self.addEventListener('fetch', (e) => {
   const req = e.request
-  if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return
+  const url = new URL(req.url)
+  if (req.method !== 'GET' || url.origin !== location.origin) return
 
-  // صفحه: اول شبکه (برای دریافت نسخهٔ جدید)، در حالت آفلاین از کش
-  if (req.mode === 'navigate') {
+  // داده‌های تقویم: اول شبکه (برای نسخهٔ جدید)، در نبود اینترنت آخرین نسخهٔ ذخیره‌شده
+  if (url.pathname.startsWith('/data/')) {
     e.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone()
-          caches.open(CACHE).then((c) => c.put('./index.html', copy))
-          return res
-        })
-        .catch(() => caches.match('./index.html'))
+      fetch(req).then((res) => { if (res.ok) put(req, res.clone()); return res }).catch(() => caches.match(req))
     )
     return
   }
 
-  // فایل‌ها: اول کش
+  // ناوبری: بلافاصله پوستهٔ برنامه از کش (بدون انتظار برای شبکه)
+  if (req.mode === 'navigate') {
+    e.respondWith(caches.open(CACHE).then((c) => c.match('/')).then((hit) => hit || fetch(req)))
+    return
+  }
+
+  // فایل‌ها: اول کش، بعد شبکه (و ذخیره)
   e.respondWith(
-    caches.match(req).then(
-      (hit) =>
-        hit ||
-        fetch(req).then((res) => {
-          const copy = res.clone()
-          caches.open(CACHE).then((c) => c.put(req, copy))
-          return res
-        })
-    )
+    caches.match(req).then((hit) => hit || fetch(req).then((res) => { if (res.ok) put(req, res.clone()); return res }))
   )
 })

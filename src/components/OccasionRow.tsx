@@ -1,4 +1,4 @@
-import { getOccasion } from '../data/occasions'
+import { getOccasion } from '../lib/calendarData'
 import { MONTHS, WEEKDAYS, faNum, weekdayIndex, type JalaliDate, type MonthRef } from '../lib/jalali'
 
 interface Props {

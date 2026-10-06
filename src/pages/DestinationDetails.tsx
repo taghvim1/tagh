@@ -1,13 +1,14 @@
 import { useState } from 'react'
+import AppChrome from '../components/AppChrome'
 import { findDestination, locationLabel } from '../data/destinations'
-import { Link } from '../lib/router'
+import { BackLink } from '../lib/router'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
 
 // ذخیرهٔ نمایشی؛ فقط در حافظهٔ همین جلسه (بدون حساب کاربری یا سرور)
 const saved = new Set<number>()
 
 export default function DestinationDetails({ id }: { id: number }) {
-  const [dark] = useDarkMode()
+  const [dark, setDark] = useDarkMode()
   useThemeColorMeta(dark)
   const d = findDestination(id)
   const [isSaved, setIsSaved] = useState(() => saved.has(id))
@@ -19,8 +20,9 @@ export default function DestinationDetails({ id }: { id: number }) {
 
   return (
     <div className="tp-page" data-theme={dark ? 'dark' : 'light'}>
+      <AppChrome title="تقویم سفر" dark={dark} onDarkChange={setDark} />
       <main className="tp-main">
-        <Link to="/travel-suggestions" className="tp-back"><span aria-hidden="true">›</span> بازگشت به پیشنهادها</Link>
+        <BackLink fallback="/travel-suggestions" className="tp-back"><span aria-hidden="true">›</span> بازگشت به پیشنهادها</BackLink>
         {!d ? (
           <header className="tp-head"><h1>مقصد پیدا نشد</h1><p className="tp-lead">این مقصد وجود ندارد.</p></header>
         ) : (

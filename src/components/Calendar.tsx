@@ -1,5 +1,5 @@
 import { useMemo, type CSSProperties } from 'react'
-import { getOccasion } from '../data/occasions'
+import { getOccasion } from '../lib/calendarData'
 import { WEEKDAYS, buildMonthGrid, faNum, formatLongDate, isSameDate, type JalaliDate, type MonthRef } from '../lib/jalali'
 
 interface CalendarProps {
