@@ -181,3 +181,21 @@
 
 /* کاربران: فیلترها فقط دو ستون */
 @media (min-width: 640px) { .adm-filters.two { grid-template-columns: 1fr 180px; } }
+
+/* مدیریت مقصدها و تورها */
+.adm-modal.wide { width: min(860px, calc(100vw - 24px)); }
+.adm-kv { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 4px 0; }
+.adm-checks { margin: 0; padding: 0; border: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.adm-checks legend { padding: 0; margin-bottom: 6px; font-size: .9rem; }
+.adm-form .adm-check { flex-direction: row; align-items: center; gap: 8px; cursor: pointer; }
+.adm-form .adm-check input { width: auto; min-height: 0; }
+.adm-form .adm-form-row { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.adm-sub { margin: 8px 0 0; font-size: 1rem; }
+.adm-season-box { margin: 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; display: flex; flex-direction: column; gap: 12px; }
+.adm-season-box legend { padding: 0 6px; font-weight: 700; }
+.adm-error-list { margin: 0; padding: 10px 28px; border: 1px solid #f1c7c3; border-radius: 8px; background: #fdf1f0; color: #b42318; font-size: .88rem; line-height: 1.8; }
+.adm-seasons { display: flex; flex-wrap: wrap; gap: 8px; }
+.adm-table-wrap.scroll { display: block; overflow-x: auto; }
+.adm-seasonal input, .adm-seasonal select { min-height: 36px; padding: 0 8px; border: 1px solid #cdd3da; border-radius: 8px; background: var(--bg); color: var(--ink); font: inherit; width: 100%; min-width: 90px; }
+.adm-seasonal td:last-child input { min-width: 220px; }
+.adm-seasonal td:nth-child(3) input, .adm-seasonal td:nth-child(4) input { min-width: 70px; max-width: 90px; }

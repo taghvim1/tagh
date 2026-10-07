@@ -1,72 +1,49 @@
 import { useEffect, useState } from 'react'
 import type { Season } from '../data/destinations'
-import { BUDGET_OPTIONS, COMPANION_OPTIONS, DURATION_OPTIONS, EMPTY_FILTERS, SCOPE_OPTIONS, TYPE_OPTIONS, VISA_OPTIONS, type TravelFilters } from '../travel/filters'
+import { BUDGET_OPTIONS, COMPANION_OPTIONS, DURATION_OPTIONS, EMPTY_FILTERS, RAINFALL_OPTIONS, SCOPE_OPTIONS, SUITABILITY_OPTIONS, TEMPERATURE_OPTIONS, TYPE_OPTIONS, VISA_OPTIONS, type TravelFilters } from '../travel/filters'
+import { SEASONS } from '../travel/season'
 import ChipGroup from './ChipGroup'
+import FilterSheet from './FilterSheet'
 
 interface Props {
   open: boolean
   onClose: () => void
   value: TravelFilters
-  onApply: (filters: TravelFilters) => void
   season: Season
+  /** پیش‌فرض فصل (از تقویم/فصل جاری) برای «پاک کردن» */
+  defaultSeason: Season
+  onApply: (filters: TravelFilters, season: Season) => void
 }
 
-// پنل فیلتر پیشرفته؛ فقط با باز شدن در DOM وجود دارد. تغییرات با «اعمال فیلترها» ثبت می‌شوند.
-export default function AdvancedFilter({ open, onClose, value, onApply, season }: Props) {
+// فیلتر پیشرفته؛ فصل انتخاب‌شده همچنان معیار اصلی است و همهٔ فیلترها روی همان فصل اعمال می‌شوند.
+export default function AdvancedFilter({ open, onClose, value, season, defaultSeason, onApply }: Props) {
   const [draft, setDraft] = useState(value)
-  const [mounted, setMounted] = useState(open)
-  const [shown, setShown] = useState(false)
-
-  useEffect(() => { if (open) setDraft(value) }, [open, value])
-
-  // نصب/حذف از DOM با فاصلهٔ انیمیشن
-  useEffect(() => {
-    if (open) {
-      setMounted(true)
-      const r = requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)))
-      return () => cancelAnimationFrame(r)
-    }
-    setShown(false)
-    const t = setTimeout(() => setMounted(false), 280)
-    return () => clearTimeout(t)
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
-
-  if (!mounted) return null
+  const [draftSeason, setDraftSeason] = useState(season)
+  useEffect(() => { if (open) { setDraft(value); setDraftSeason(season) } }, [open, value, season])
   const set = <K extends keyof TravelFilters>(key: K, v: TravelFilters[K]) => setDraft((d) => ({ ...d, [key]: v }))
 
   return (
-    <>
-      <button className={`af-backdrop${shown ? ' open' : ''}`} aria-label="بستن فیلتر" tabIndex={-1} onClick={onClose} />
-      <section className={`af${shown ? ' open' : ''}`} role="dialog" aria-modal="true" aria-label="فیلتر پیشرفته">
-        <div className="af-head">
-          <h2>فیلتر پیشرفته</h2>
-          <button type="button" className="af-close" aria-label="بستن" onClick={onClose}>×</button>
-        </div>
-        <div className="af-body">
-          <p className="af-season">فصل انتخاب‌شده: <strong>{season}</strong> (فیلترها روی همین فصل اعمال می‌شوند)</p>
-          <label className="tp-field">
-            <span className="tp-label">جستجو</span>
-            <input className="tp-input" type="search" value={draft.query} onChange={(e) => set('query', e.target.value)} placeholder="جستجوی شهر یا کشور" />
-          </label>
-          <ChipGroup label="نوع مقصد" options={SCOPE_OPTIONS} value={draft.scope} onChange={(v) => set('scope', v)} />
-          <ChipGroup label="بودجه" options={BUDGET_OPTIONS} value={draft.budget} onChange={(v) => set('budget', v)} />
-          <ChipGroup label="نوع سفر" options={TYPE_OPTIONS} value={draft.type} onChange={(v) => set('type', v)} />
-          <ChipGroup label="مدت سفر" options={DURATION_OPTIONS} value={draft.duration} onChange={(v) => set('duration', v)} />
-          <ChipGroup label="مناسب برای" options={COMPANION_OPTIONS} value={draft.companion} onChange={(v) => set('companion', v)} />
-          <ChipGroup label="ویزا" options={VISA_OPTIONS} value={draft.visa} onChange={(v) => set('visa', v)} />
-        </div>
-        <div className="af-foot">
-          <button type="button" className="tp-btn primary" onClick={() => { onApply(draft); onClose() }}>اعمال فیلترها</button>
-          <button type="button" className="tp-btn" onClick={() => { setDraft(EMPTY_FILTERS); onApply(EMPTY_FILTERS) }}>پاک کردن فیلترها</button>
-        </div>
-      </section>
-    </>
+    <FilterSheet
+      open={open}
+      onClose={onClose}
+      title="فیلتر پیشرفته"
+      onApply={() => { onApply(draft, draftSeason); onClose() }}
+      onReset={() => { setDraft(EMPTY_FILTERS); setDraftSeason(defaultSeason); onApply(EMPTY_FILTERS, defaultSeason) }}
+    >
+      <label className="tp-field">
+        <span className="tp-label">جستجو</span>
+        <input className="tp-input" type="search" value={draft.query} onChange={(e) => set('query', e.target.value)} placeholder="جستجوی شهر، کشور یا مقصد..." />
+      </label>
+      <ChipGroup label="فصل" options={SEASONS.map((s) => s.title)} value={draftSeason} onChange={(v) => setDraftSeason(v as Season)} />
+      <ChipGroup label="نوع مقصد" options={SCOPE_OPTIONS} value={draft.scope} onChange={(v) => set('scope', v)} />
+      <ChipGroup label="بودجه" options={BUDGET_OPTIONS} value={draft.budget} onChange={(v) => set('budget', v)} />
+      <ChipGroup label="نوع سفر" options={TYPE_OPTIONS} value={draft.type} onChange={(v) => set('type', v)} />
+      <ChipGroup label="مدت سفر" options={DURATION_OPTIONS} value={draft.duration} onChange={(v) => set('duration', v)} />
+      <ChipGroup label="مناسب برای" options={COMPANION_OPTIONS} value={draft.companion} onChange={(v) => set('companion', v)} />
+      <ChipGroup label="تناسب آب‌وهوا" options={SUITABILITY_OPTIONS} value={draft.suitability} onChange={(v) => set('suitability', v)} />
+      <ChipGroup label="دما" options={TEMPERATURE_OPTIONS} value={draft.temperature} onChange={(v) => set('temperature', v)} />
+      <ChipGroup label="بارندگی" options={RAINFALL_OPTIONS} value={draft.rainfall} onChange={(v) => set('rainfall', v)} />
+      <ChipGroup label="ویزا" options={VISA_OPTIONS} value={draft.visa} onChange={(v) => set('visa', v)} />
+    </FilterSheet>
   )
 }

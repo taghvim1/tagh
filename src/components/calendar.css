@@ -108,7 +108,6 @@
 /* صفحهٔ پیشنهاد سفر */
 .tp-page { min-height: 100vh; min-height: 100dvh; }
 .tp-main { max-width: 960px; margin-inline: auto; padding: 20px 20px 48px; display: flex; flex-direction: column; gap: 28px; }
-.tp-back { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--accent); text-decoration: none; }
 .tp-head { display: flex; flex-direction: column; gap: 8px; }
 .tp-head h1 { font-size: clamp(1.8rem, 6vw, 2.4rem); font-weight: 700; }
 .tp-lead { font-size: 1.1rem; }
@@ -124,30 +123,8 @@
 .tp-section { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .tp-section h3 { margin: 0; font-size: 1.05rem; }
 .tp-section .tp-sub { margin: 0 0 6px; font-size: .9rem; }
-.dd-desc { margin: 0; font-size: 1.05rem; line-height: 1.9; max-width: 640px; }
-.dd-meta { max-width: 640px; padding: 8px 0; border-block: 1px solid var(--line); }
-.dd-meta div { padding: 6px 0; }
 .tp-empty { margin: 0; padding: 18px 0; color: var(--muted); }
 .tp-active { margin: 0; }
-.dest-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
-.dest-card { display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--ink); text-decoration: none; }
-.dest-img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: var(--bg-soft); }
-.dest-body { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 16px; }
-.dest-reason { color: var(--muted); font-size: .88rem; line-height: 1.7; }
-@media (hover: hover) { .dest-card:hover { background: var(--bg-soft); } }
-.dest-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.dest-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.dest-name { font-size: 1.25rem; }
-.dest-province { color: var(--muted); font-size: .9rem; }
-.dest-meta { margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: .92rem; }
-.dest-meta div { display: flex; justify-content: space-between; gap: 12px; }
-.dest-meta dt { color: var(--muted); }
-.dest-meta dd { margin: 0; text-align: end; }
-.dd-hero { display: block; width: 100%; max-width: 640px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 4px; background: var(--bg-soft); }
-.dd-note { margin: 0; max-width: 640px; color: var(--muted); font-size: .88rem; line-height: 1.7; }
-.dd-attractions { max-width: 640px; }
-.dd-attractions h2 { margin: 0 0 8px; font-size: 1.1rem; }
-.dd-attractions ul { margin: 0; padding-inline-start: 20px; line-height: 2; }
 
 /* فیلترهای پیشنهاد سفر */
 .tp-field { display: flex; flex-direction: column; gap: 8px; }
@@ -169,7 +146,7 @@
 .tp-step { display: flex; flex-direction: column; gap: 14px; }
 .tp-step-title, .tp-results-title { margin: 0; font-size: 1.25rem; }
 .season-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-@media (min-width: 640px) { .season-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 1024px) { .season-grid { grid-template-columns: repeat(4, 1fr); } }
 .season-btn { --sc: #2e9e6b; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 104px; padding: 12px; border: 2px solid transparent; border-radius: 16px; background: color-mix(in srgb, var(--sc) 12%, var(--bg)); color: var(--sc); font: inherit; font-size: 1.1rem; font-weight: 700; cursor: pointer; }
 .season-btn.summer { --sc: #e8830c; }
 .season-btn.autumn { --sc: #c2571a; }
@@ -202,6 +179,69 @@
   .af.open { transform: translate(-50%, -50%); opacity: 1; }
 }
 
+/* کارت ساده مقصد: تصویر + نام (موبایل: ۲ ستون) */
+.dest-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 640px) { .dest-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); } }
+.dest-card { display: flex; flex-direction: column; padding: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink); font: inherit; text-align: start; cursor: pointer; }
+.dest-img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--bg-soft); }
+.dest-name { padding: 10px 12px; font-size: .95rem; font-weight: 700; }
+@media (hover: hover) { .dest-card:hover { background: var(--bg-soft); } }
+.dest-card:focus-visible, .tour-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* پنجرهٔ مرکزی (مقصد/تور) با پس‌زمینهٔ تیره و محو */
+.cm-root { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 12px; opacity: 0; transition: opacity .22s ease-out; }
+.cm-root.open { opacity: 1; }
+.cm-backdrop { position: absolute; inset: 0; border: 0; background: rgba(0, 0, 0, .5); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.cm { position: relative; width: min(92vw, 420px); max-height: 90vh; max-height: 90dvh; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); border-radius: 16px; overflow: hidden; font-family: inherit; transform: translateY(12px) scale(.98); transition: transform .22s ease-out; }
+.cm-root.open .cm { transform: none; }
+@media (min-width: 768px) { .cm { width: min(720px, 90vw); max-height: 88vh; max-height: 88dvh; } }
+.cm-scroll { overflow-y: auto; }
+.cm-close { position: absolute; top: 10px; inset-inline-start: 10px; z-index: 2; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .45); color: #fff; font-size: 1.4rem; line-height: 1; cursor: pointer; }
+.cm-close:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* محتوای جزئیات */
+.dc { display: flex; flex-direction: column; gap: 16px; padding-bottom: 20px; }
+.dc-hero { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: var(--bg-soft); }
+.dc > :not(.dc-hero) { margin-inline: 18px; }
+.dc-head h2 { margin: 0; font-size: 1.5rem; }
+.dc-loc { margin: 2px 0 0; color: var(--muted); }
+.dc-desc { margin: 0; line-height: 1.9; }
+.dc-block h3 { margin: 0 0 8px; font-size: 1.05rem; }
+.dc-season { color: var(--accent); font-weight: 400; }
+.dc-season-desc { margin: 0 0 8px; color: var(--muted); line-height: 1.8; }
+.dc-grid { margin: 0; display: grid; gap: 4px 16px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .dc-grid { grid-template-columns: 1fr 1fr; } }
+.dc-grid div { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: .93rem; }
+.dc-grid dt { color: var(--muted); flex: none; }
+.dc-grid dd { margin: 0; text-align: end; }
+.dc-badge { padding: 2px 10px; border-radius: 999px; font-size: .8rem; font-weight: 700; background: var(--bg-soft); }
+.dc-badge.excellent { background: #d9f2e4; color: #11633a; }
+.dc-badge.good { background: #dcebfb; color: #1f5a99; }
+.dc-badge.acceptable { background: #fdebd3; color: #8a4b08; }
+.dc-note { margin: 8px 0 0; color: var(--muted); font-size: .85rem; line-height: 1.7; }
+.dc-list { margin: 0; padding-inline-start: 20px; line-height: 2; }
+.dc-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.dc-actions .tp-btn { flex: 1; }
+.tp-page[data-theme='dark'] .dc-badge.excellent { background: #12402a; color: #7be0aa; }
+.tp-page[data-theme='dark'] .dc-badge.good { background: #17324f; color: #8cc0f5; }
+.tp-page[data-theme='dark'] .dc-badge.acceptable { background: #4a3417; color: #f3c27c; }
+.tp-main > .dc { margin-inline: auto; max-width: 720px; width: 100%; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+
+/* تورها */
+.tour-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tour-grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .tour-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); } }
+.tour-card { display: flex; flex-direction: column; padding: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink); font: inherit; text-align: start; cursor: pointer; }
+.tour-card .dest-img { aspect-ratio: 16 / 9; }
+.tour-body { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px 14px; }
+.tour-title { font-size: 1.1rem; }
+.tour-dest { color: var(--muted); font-size: .9rem; }
+.tour-meta { margin: 4px 0 0; display: flex; flex-direction: column; gap: 4px; font-size: .9rem; }
+.tour-meta div { display: flex; justify-content: space-between; gap: 10px; }
+.tour-meta dt { color: var(--muted); }
+.tour-meta dd { margin: 0; text-align: end; }
+@media (hover: hover) { .tour-card:hover { background: var(--bg-soft); } }
+
 @media (prefers-reduced-motion: reduce) {
-  .dr, .dr-backdrop, .dr-content, .np, .af, .af-backdrop, .cal-switch, .cal-switch::before { transition: none; }
+  .dr, .dr-backdrop, .dr-content, .np, .af, .af-backdrop, .cm-root, .cm, .cal-switch, .cal-switch::before { transition: none; }
 }

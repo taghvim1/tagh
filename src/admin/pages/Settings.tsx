@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Section from '../components/Section'
+import { useDarkMode } from '../../lib/theme'
 
 // تنظیمات فقط نمایشی‌اند: با Refresh به مقدار اولیه برمی‌گردند.
 const INITIAL = { siteName: 'تقویم سفر', showEvents: true, showHolidays: false }
@@ -18,6 +19,7 @@ function Switch({ label, description, checked, onChange }: { label: string; desc
 
 export default function Settings() {
   const [settings, setSettings] = useState(INITIAL)
+  const [dark, setDark] = useDarkMode()
   const [saved, setSaved] = useState(false)
   const timer = useRef<number>()
 
@@ -50,6 +52,7 @@ export default function Settings() {
               </label>
             </div>
 
+            <Switch label="حالت تاریک" description="برای صفحه‌های تقویم، پیشنهاد سفر و تورها (بلافاصله ذخیره می‌شود)." checked={dark} onChange={setDark} />
             <Switch label="نمایش مناسبت‌ها" description="مناسبت‌ها در تقویم نمایش داده شوند." checked={settings.showEvents} onChange={(v) => update('showEvents', v)} />
             <Switch label="نمایش تعطیلات" description="روزهای تعطیل در تقویم مشخص شوند." checked={settings.showHolidays} onChange={(v) => update('showHolidays', v)} />
 

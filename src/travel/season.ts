@@ -1,6 +1,6 @@
-import type { Season } from '../data/destinations'
+import type { Season, SeasonKey } from '../data/destinations'
 
-export interface SeasonInfo { id: 'spring' | 'summer' | 'autumn' | 'winter'; title: Season; months: [number, number, number] }
+export interface SeasonInfo { id: SeasonKey; title: Season; months: [number, number, number] }
 
 /** چهار فصل و ماه‌های شمسی آن‌ها: ۱–۳ بهار، ۴–۶ تابستان، ۷–۹ پاییز، ۱۰–۱۲ زمستان */
 export const SEASONS: SeasonInfo[] = [
@@ -11,3 +11,4 @@ export const SEASONS: SeasonInfo[] = [
 ]
 
 export const seasonOfMonth = (month: number): Season => (SEASONS.find((s) => s.months.includes(month as never)) ?? SEASONS[0]).title
+export const seasonKey = (season: Season): SeasonKey => (SEASONS.find((s) => s.title === season) ?? SEASONS[0]).id

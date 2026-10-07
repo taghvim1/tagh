@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import CalendarPage from './pages/CalendarPage'
 import DestinationDetails from './pages/DestinationDetails'
+import Tours from './pages/Tours'
 import TravelSuggestions from './pages/TravelSuggestions'
 import { usePath } from './lib/router'
 
@@ -19,6 +20,7 @@ export default function App() {
   }
 
   if (path === '/travel-suggestions') return <TravelSuggestions />
+  if (path === '/tours') return <Tours />
   const details = path.match(/^\/travel-suggestions\/destination\/(\d+)$/)
   if (details) return <DestinationDetails id={Number(details[1])} />
 

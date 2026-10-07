@@ -11,7 +11,7 @@ import { useDarkMode, useThemeColorMeta } from '../lib/theme'
 export default function CalendarPage() {
   const now = useMemo(() => new Date(), [])
   const today = useMemo(() => fromGregorian(now), [now])
-  const [dark, setDark] = useDarkMode()
+  const [dark] = useDarkMode()
   useThemeColorMeta(dark)
   useCalendarData() // با رسیدن داده‌های جدید تقویم دوباره رندر می‌شود
 
@@ -30,7 +30,7 @@ export default function CalendarPage() {
       <section className="cal-top"><DateHeader today={now} /></section>
       <OccasionRow view={view} selected={selected} onPrev={() => setView((v) => shiftMonth(v, -1))} onNext={() => setView((v) => shiftMonth(v, 1))} />
       <section className="cal-bottom"><Calendar today={today} view={view} selected={selected} onSelect={select} /></section>
-      <AppChrome overlay dark={dark} onDarkChange={setDark} onToday={() => select(today)} />
+      <AppChrome home overlay onToday={() => select(today)} />
     </div>
   )
 }
