@@ -1,38 +1,57 @@
-import { useMemo, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import AdvancedFilter from '../components/AdvancedFilter'
 import AppChrome from '../components/AppChrome'
-import ChipGroup from '../components/ChipGroup'
 import DestinationCard from '../components/DestinationCard'
-import TripDate from '../components/TripDate'
-import { MOCK_DESTINATIONS, type Destination } from '../data/destinations'
+import SeasonPicker from '../components/SeasonPicker'
+import { MOCK_DESTINATIONS, type Destination, type Season } from '../data/destinations'
+import { faNum, fromGregorian } from '../lib/jalali'
+import { useOverlay } from '../lib/overlay'
 import { BackLink } from '../lib/router'
-import { fromGregorian } from '../lib/jalali'
-import { setSelectedDate, useSelectedDate } from '../lib/selection'
+import { useSelectedDate } from '../lib/selection'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
-import { getSavedFilters, saveFilters } from '../lib/travelFilterStore'
-import { BUDGET_OPTIONS, DURATION_OPTIONS, EMPTY_FILTERS, SCOPE_OPTIONS, TYPE_OPTIONS, summarize, type TravelFilters } from '../travel/filters'
+import { getSaved, saveState } from '../lib/travelFilterStore'
+import { activeFilterCount, EMPTY_FILTERS, summarize, type TravelFilters } from '../travel/filters'
 import { recommend } from '../travel/recommend'
-import { faNum } from '../lib/jalali'
+import { seasonOfMonth } from '../travel/season'
 
-// تاریخ (از تقویم یا امروز) + فیلترها → موتور پیشنهاد؛ هر تغییر بلافاصله اعمال می‌شود.
+// فصل نقطهٔ شروع است: پیش‌فرض فصل تاریخ انتخاب‌شده در تقویم (یا امروز)؛ فیلترهای کامل فقط در «فیلتر پیشرفته».
 export default function TravelSuggestions() {
   const [dark, setDark] = useDarkMode()
   useThemeColorMeta(dark)
 
   const today = useMemo(() => fromGregorian(new Date()), [])
-  const date = useSelectedDate() ?? today // ورود مستقیم: تاریخ جاری
+  const date = useSelectedDate() ?? today
+  const baseSeason = seasonOfMonth(date.month)
 
-  const [filters, setFilters] = useState<TravelFilters>(getSavedFilters)
-  const update = (next: TravelFilters) => { setFilters(next); saveFilters(next) }
-  const set = <K extends keyof TravelFilters>(key: K, value: TravelFilters[K]) => update({ ...filters, [key]: value })
-  const reset = () => update(EMPTY_FILTERS)
+  // انتخاب دستی فصل تا وقتی معتبر است که فصلِ تاریخ تقویم عوض نشده باشد
+  const [chosen, setChosen] = useState<Season | null>(() => {
+    const s = getSaved()
+    return s.season && s.baseSeason === baseSeason ? s.season : null
+  })
+  const prevBase = useRef(baseSeason)
+  useEffect(() => {
+    if (prevBase.current !== baseSeason) { prevBase.current = baseSeason; setChosen(null); saveState({ season: null, baseSeason }) }
+  }, [baseSeason])
+  const season = chosen ?? baseSeason
+  const pick = (s: Season) => { setChosen(s); saveState({ season: s, baseSeason }) }
 
-  const { season, suitable, others } = useMemo(() => recommend(MOCK_DESTINATIONS, { date, filters }), [date, filters])
-  const total = suitable.length + others.length
+  const [filters, setFilters] = useState<TravelFilters>(() => getSaved().filters)
+  const apply = (f: TravelFilters) => { setFilters(f); saveState({ filters: f }) }
+  const filterSheet = useOverlay('filters')
+
+  const result = useMemo(() => recommend(MOCK_DESTINATIONS, { season, filters }), [season, filters])
+  const count = activeFilterCount(filters)
   const active = summarize(filters)
-  const results = useRef<HTMLElement>(null)
 
-  const cards = (list: Destination[]) => (
-    <div className="dest-grid">{list.map((d) => <DestinationCard key={d.id} destination={d} season={season} />)}</div>
+  const section = (title: string, list: Destination[]) => (
+    <div className="tp-section">
+      <h3>{title}</h3>
+      {list.length > 0 ? (
+        <div className="dest-grid">{list.map((d) => <DestinationCard key={d.id} destination={d} season={season} />)}</div>
+      ) : (
+        <p className="tp-empty">برای {season} مقصدی در این بخش پیدا نشد{count > 0 ? '؛ فیلترها را تغییر دهید.' : '.'}</p>
+      )}
+    </div>
   )
 
   return (
@@ -43,58 +62,32 @@ export default function TravelSuggestions() {
 
         <header className="tp-head">
           <h1>پیشنهاد سفر</h1>
-          <p className="tp-lead">بر اساس زمان سفر و انتخاب‌های شما، مقصدهای مناسب را پیدا کنید.</p>
+          <p className="tp-lead">بهترین مقصدها را بر اساس فصل انتخاب کن.</p>
         </header>
 
-        <TripDate date={date} season={season} onChange={setSelectedDate} />
+        <section className="tp-step" aria-labelledby="season-title">
+          <h2 id="season-title" className="tp-step-title">چه فصلی سفر می‌کنی؟</h2>
+          <SeasonPicker value={season} onChange={pick} />
+        </section>
 
-        <form className="tp-form" onSubmit={(e: FormEvent) => e.preventDefault()} noValidate>
-          <label className="tp-field">
-            <span className="tp-label">مقصد</span>
-            <input className="tp-input" value={filters.destination} onChange={(e) => set('destination', e.target.value)} placeholder="نام شهر یا کشور" />
-          </label>
-          <ChipGroup label="نوع مقصد" options={SCOPE_OPTIONS} value={filters.scope} onChange={(v) => set('scope', v)} />
-          <ChipGroup label="نوع سفر" options={TYPE_OPTIONS} value={filters.type} onChange={(v) => set('type', v)} />
-          <ChipGroup label="مدت سفر" options={DURATION_OPTIONS} value={filters.duration} onChange={(v) => set('duration', v)} />
-          <ChipGroup label="بودجه" options={BUDGET_OPTIONS} value={filters.budget} onChange={(v) => set('budget', v)} />
-          <div className="tp-actions">
-            {/* نتایج با هر تغییر به‌روز می‌شوند؛ این دکمه فقط به بخش نتایج می‌برد */}
-            <button type="button" className="tp-btn primary" onClick={() => results.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>نمایش پیشنهادها</button>
-            <button type="button" className="tp-btn" onClick={reset}>پاک کردن فیلترها</button>
-          </div>
-        </form>
-
-        <section className="tp-results" ref={results} aria-label="نتایج">
-          <div className="tp-results-head">
-            <h2>پیشنهادهای سفر</h2>
-            <span className="tp-count" aria-live="polite">{faNum(total)} مقصد</span>
-          </div>
-          {active.length > 0 && <p className="tp-active">{active.map(([label, value]) => `${label}: ${value}`).join(' · ')}</p>}
-
-          {total === 0 ? (
-            <div className="tp-placeholder">
-              <strong>مقصد مناسبی پیدا نشد</strong>
-              <p>فیلترها را تغییر دهید یا همه فیلترها را پاک کنید.</p>
-              <button type="button" className="tp-btn" onClick={reset}>پاک کردن فیلترها</button>
-            </div>
-          ) : (
-            <>
-              <div className="tp-section">
-                <h3>پیشنهادهای مناسب برای شما</h3>
-                <p className="tp-sub">مقصدهایی که با زمان سفر و انتخاب‌های شما هماهنگی بیشتری دارند.</p>
-                {suitable.length > 0 ? cards(suitable) : <p className="tp-empty">برای فصل {season} مقصد مناسبی با این فیلترها پیدا نشد.</p>}
-              </div>
-              {others.length > 0 && (
-                <div className="tp-section">
-                  <h3>پیشنهادهای دیگر</h3>
-                  <p className="tp-sub">مقصدهای دیگری که می‌توانید بررسی کنید.</p>
-                  {cards(others)}
-                </div>
-              )}
-            </>
+        <section className="tp-results" aria-label="نتایج">
+          <h2 className="tp-results-title">پیشنهادهای سفر در {season}</h2>
+          {active.length > 0 && (
+            <p className="tp-active">
+              {active.map(([label, value]) => `${label}: ${value}`).join(' · ')}{' '}
+              <button type="button" className="tp-link" onClick={() => apply(EMPTY_FILTERS)}>پاک کردن</button>
+            </p>
           )}
+          {filters.scope !== 'خارجی' && section('پیشنهادهای داخلی', result.domestic)}
+          {filters.scope !== 'داخلی' && section('پیشنهادهای خارجی', result.international)}
+
+          <button type="button" className="tp-btn adv-btn" aria-haspopup="dialog" onClick={filterSheet.show}>
+            فیلتر پیشرفته{count > 0 ? ` (${faNum(count)})` : ''}
+          </button>
         </section>
       </main>
+
+      <AdvancedFilter open={filterSheet.open} onClose={filterSheet.hide} value={filters} onApply={apply} season={season} />
     </div>
   )
 }

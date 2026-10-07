@@ -1,4 +1,4 @@
-import { locationLabel, type Destination, type Season } from '../data/destinations'
+import { type Destination, type Season } from '../data/destinations'
 import { Link } from '../lib/router'
 import { reasonFor } from '../travel/recommend'
 
@@ -15,13 +15,13 @@ export default function DestinationCard({ destination: d, season }: Props) {
       <span className="dest-body">
         <span className="dest-head">
           <strong className="dest-name">{d.name}</strong>
-          <span className="dest-province">{locationLabel(d)}</span>
+          <span className="dest-province">{d.country}</span>
         </span>
         <dl className="dest-meta">
-          <div><dt>نوع سفر</dt><dd>{d.type}</dd></div>
+          <div><dt>نوع سفر</dt><dd>{d.type.slice(0, 2).join('، ')}</dd></div>
           <div><dt>مدت پیشنهادی</dt><dd>{d.duration}</dd></div>
           <div><dt>بودجه</dt><dd>{d.budget}</dd></div>
-          <div><dt>فصل مناسب</dt><dd>{d.best_seasons.join('، ')}</dd></div>
+          <div><dt>میانگین دما</dt><dd>{d.average_temperature}</dd></div>
         </dl>
         <span className="dest-reason">{reasonFor(d, season)}</span>
       </span>

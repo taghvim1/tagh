@@ -113,22 +113,14 @@
 .tp-head h1 { font-size: clamp(1.8rem, 6vw, 2.4rem); font-weight: 700; }
 .tp-lead { font-size: 1.1rem; }
 .tp-sub { color: var(--muted); }
-.tp-date { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 14px; border-block: 1px solid var(--line); }
-.tp-date-text { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
-.tp-month-btn { flex: none; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: none; color: var(--accent); font: inherit; font-size: 1.4rem; line-height: 1; cursor: pointer; }
-.tp-month-btn:hover { background: var(--bg-soft); }
-.tp-month-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .tp-label { color: var(--muted); font-size: .9rem; }
-.tp-date strong { font-size: clamp(1.6rem, 6vw, 2.2rem); color: var(--accent); }
 .tp-placeholder { padding: 28px 20px; border: 1px dashed var(--line); border-radius: 12px; text-align: center; display: flex; flex-direction: column; gap: 8px; }
 .tp-placeholder h2 { font-size: 1.1rem; }
 .tp-placeholder p { color: var(--muted); line-height: 1.8; }
 
 /* نتایج و کارت مقصدها */
-.tp-head, .tp-date, .tp-form { max-width: 640px; }
+
 .tp-results { display: flex; flex-direction: column; gap: 14px; }
-.tp-results-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.tp-results-head h2 { font-size: 1.2rem; }
 .tp-section { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .tp-section h3 { margin: 0; font-size: 1.05rem; }
 .tp-section .tp-sub { margin: 0 0 6px; font-size: .9rem; }
@@ -136,8 +128,6 @@
 .dd-meta { max-width: 640px; padding: 8px 0; border-block: 1px solid var(--line); }
 .dd-meta div { padding: 6px 0; }
 .tp-empty { margin: 0; padding: 18px 0; color: var(--muted); }
-.tp-season { color: var(--muted); font-size: .9rem; }
-.tp-count, .tp-active { color: var(--muted); font-size: .9rem; }
 .tp-active { margin: 0; }
 .dest-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
 .dest-card { display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--ink); text-decoration: none; }
@@ -160,7 +150,6 @@
 .dd-attractions ul { margin: 0; padding-inline-start: 20px; line-height: 2; }
 
 /* فیلترهای پیشنهاد سفر */
-.tp-form { display: flex; flex-direction: column; gap: 22px; }
 .tp-field { display: flex; flex-direction: column; gap: 8px; }
 .tp-input { width: 100%; min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); font: inherit; }
 .tp-input::placeholder { color: var(--muted); }
@@ -175,6 +164,44 @@
 .tp-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
 @media (max-width: 420px) { .tp-actions .tp-btn { flex: 1; } }
 
+/* انتخاب فصل */
+.tp-head { max-width: 640px; }
+.tp-step { display: flex; flex-direction: column; gap: 14px; }
+.tp-step-title, .tp-results-title { margin: 0; font-size: 1.25rem; }
+.season-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+@media (min-width: 640px) { .season-grid { grid-template-columns: repeat(4, 1fr); } }
+.season-btn { --sc: #2e9e6b; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 104px; padding: 12px; border: 2px solid transparent; border-radius: 16px; background: color-mix(in srgb, var(--sc) 12%, var(--bg)); color: var(--sc); font: inherit; font-size: 1.1rem; font-weight: 700; cursor: pointer; }
+.season-btn.summer { --sc: #e8830c; }
+.season-btn.autumn { --sc: #c2571a; }
+.season-btn.winter { --sc: #2f7fd1; }
+.tp-page[data-theme='dark'] .season-btn { --sc: #4cc38a; }
+.tp-page[data-theme='dark'] .season-btn.summer { --sc: #f5a243; }
+.tp-page[data-theme='dark'] .season-btn.autumn { --sc: #ee8a4f; }
+.tp-page[data-theme='dark'] .season-btn.winter { --sc: #6aa9ec; }
+.season-btn.on { background: var(--sc); border-color: var(--sc); color: #fff; }
+.tp-page[data-theme='dark'] .season-btn.on { color: #0f1720; }
+.season-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.tp-link { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; text-decoration: underline; }
+.adv-btn { align-self: flex-start; }
+
+/* فیلتر پیشرفته (پایین‌برگه در موبایل، پنجرهٔ وسط در دسکتاپ) */
+.af-backdrop { position: fixed; inset: 0; z-index: 60; border: 0; background: rgba(0, 0, 0, .4); opacity: 0; transition: opacity .25s ease-out; }
+.af-backdrop.open { opacity: 1; }
+.af { position: fixed; z-index: 61; inset-inline: 0; bottom: 0; max-height: 88vh; max-height: 88dvh; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); border-top: 1px solid var(--line); border-radius: 16px 16px 0 0; transform: translateY(100%); transition: transform .25s ease-out; font-family: inherit; }
+.af.open { transform: none; }
+.af-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 8px; }
+.af-head h2 { margin: 0; font-size: 1.15rem; }
+.af-close { width: 44px; height: 44px; border: 0; background: none; color: var(--ink); font-size: 1.6rem; cursor: pointer; }
+.af-body { overflow-y: auto; display: flex; flex-direction: column; gap: 20px; padding: 8px 16px 16px; }
+.af-season { margin: 0; color: var(--muted); font-size: .9rem; }
+.af-season strong { color: var(--accent); }
+.af-foot { display: flex; gap: 10px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+.af-foot .tp-btn { flex: 1; }
+@media (min-width: 768px) {
+  .af { inset-inline: auto; left: 50%; top: 50%; bottom: auto; width: min(640px, 92vw); max-height: 85vh; border: 1px solid var(--line); border-radius: 12px; transform: translate(-50%, -46%); opacity: 0; transition: transform .25s ease-out, opacity .25s ease-out; }
+  .af.open { transform: translate(-50%, -50%); opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .dr, .dr-backdrop, .dr-content, .np, .cal-switch, .cal-switch::before { transition: none; }
+  .dr, .dr-backdrop, .dr-content, .np, .af, .af-backdrop, .cal-switch, .cal-switch::before { transition: none; }
 }

@@ -22,7 +22,7 @@ export default function DestinationDetails({ id }: { id: number }) {
     <div className="tp-page" data-theme={dark ? 'dark' : 'light'}>
       <AppChrome title="تقویم سفر" dark={dark} onDarkChange={setDark} />
       <main className="tp-main">
-        <BackLink fallback="/travel-suggestions" className="tp-back"><span aria-hidden="true">›</span> بازگشت به پیشنهادها</BackLink>
+        <BackLink fallback="/travel-suggestions" className="tp-back"><span aria-hidden="true">›</span> بازگشت به پیشنهاد سفر</BackLink>
         {!d ? (
           <header className="tp-head"><h1>مقصد پیدا نشد</h1><p className="tp-lead">این مقصد وجود ندارد.</p></header>
         ) : (
@@ -40,6 +40,7 @@ export default function DestinationDetails({ id }: { id: number }) {
               <div><dt>میانگین دما (تقریبی)</dt><dd>{d.average_temperature}</dd></div>
               <div><dt>وضعیت آب‌وهوا</dt><dd>{d.weather}</dd></div>
               <div><dt>میزان بارندگی</dt><dd>{d.rainfall}</dd></div>
+              <div><dt>نوع سفر</dt><dd>{d.type.join('، ')}</dd></div>
               <div><dt>مدت پیشنهادی سفر</dt><dd>{d.duration}</dd></div>
               <div><dt>هزینهٔ تقریبی</dt><dd>سطح {d.budget}</dd></div>
               {d.visa_required !== null && <div><dt>نیاز به ویزا</dt><dd>{d.visa_required ? 'بله' : 'خیر'}</dd></div>}
