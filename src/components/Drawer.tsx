@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useEscape } from '../lib/useAnimatedMount'
 import { Link, navigate, usePath } from '../lib/router'
 
@@ -13,6 +14,7 @@ const ICONS = {
   date: 'M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z',
   travel: 'M21 3 3 10.5l7 2.5 2.5 7L21 3ZM21 3 10 13',
   tours: 'M4 6h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4V6ZM12 6v12',
+  favorites: 'M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2Z',
   settings: 'M4 7h10M18 7h2M4 17h2M10 17h10M16 4v6M8 14v6',
   exit: 'M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M16 8l4 4-4 4M20 12H9',
 }
@@ -23,6 +25,12 @@ const Icon = ({ name }: { name: keyof typeof ICONS }) => (
 // منوی راست (۱/۳ عرض صفحه) با Overlay؛ فقط در صفحهٔ اصلی در دسترس است
 export default function Drawer({ open, onClose, onLeave, onToday }: Props) {
   const path = usePath()
+  const [exitHint, setExitHint] = useState(false)
+  // مرورگر اجازهٔ بستن تبی را که اسکریپت باز نکرده نمی‌دهد؛ در آن صورت راهنمای دستی نشان داده می‌شود
+  const exitApp = () => {
+    window.close()
+    setTimeout(() => setExitHint(true), 300)
+  }
   useEscape(open, onClose)
   const link = (to: string, icon: keyof typeof ICONS, label: string) => (
     <Link to={to} className="dr-item" onClick={onLeave}><Icon name={icon} /><span>{label}</span></Link>
@@ -38,8 +46,10 @@ export default function Drawer({ open, onClose, onLeave, onToday }: Props) {
             {link('/travel-suggestions', 'travel', 'پیشنهاد سفر')}
             {link('/tours', 'tours', 'تورهای پیش‌رو')}
             <span className="dr-spacer" />
+            {link('/favorites', 'favorites', 'علاقه‌مندی‌ها')}
             {link('/admin/settings', 'settings', 'تنظیمات')}
-            <button className="dr-item" aria-disabled="true" title="پس از افزودن ورود به سامانه فعال می‌شود" onClick={(e) => e.preventDefault()}><Icon name="exit" /><span>خروج</span><small>به‌زودی</small></button>
+            <button className="dr-item" onClick={exitApp}><Icon name="exit" /><span>خروج</span></button>
+            {exitHint && <p className="dr-hint" role="status">برای خروج، برنامه را از مرورگر یا فهرست برنامه‌های دستگاه ببندید.</p>}
           </nav>
         </div>
       </aside>

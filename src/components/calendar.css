@@ -80,7 +80,7 @@
 .dr-item:hover { background: var(--bg-soft); }
 .dr-item.active { color: var(--accent); font-weight: 700; }
 .dr-item[aria-disabled='true'] { color: var(--muted); cursor: not-allowed; }
-.dr-item small { font-size: .7rem; }
+.dr-hint { margin: 4px 8px 0; color: var(--muted); font-size: .75rem; line-height: 1.7; text-align: center; }
 .dr-item:focus-visible, .cal-switch:focus-visible, .np :is(button):focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .dr-switch-row { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 4px; font-size: clamp(.75rem, 2.8vw, .9rem); text-align: center; cursor: pointer; }
 @media (min-width: 640px) {

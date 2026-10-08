@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import CalendarPage from './pages/CalendarPage'
+import Favorites from './pages/Favorites'
 import DestinationDetails from './pages/DestinationDetails'
 import TourDetails from './pages/TourDetails'
 import Tours from './pages/Tours'
@@ -21,6 +22,7 @@ export default function App() {
   }
 
   if (path === '/travel-suggestions') return <TravelSuggestions />
+  if (path === '/favorites') return <Favorites />
   if (path === '/tours') return <Tours />
   const tour = path.match(/^\/tours\/(\d+)$/)
   if (tour) return <TourDetails id={Number(tour[1])} />
