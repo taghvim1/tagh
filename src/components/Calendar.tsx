@@ -1,6 +1,8 @@
 import { useMemo, type CSSProperties } from 'react'
 import { getOccasion } from '../lib/calendarData'
-import { WEEKDAYS, buildMonthGrid, faNum, formatLongDate, isSameDate, type JalaliDate, type MonthRef } from '../lib/jalali'
+import { WEEKDAYS, buildMonthGrid, faNum, formatLongDate, isSameDate, toGregorianDate, type JalaliDate, type MonthRef } from '../lib/jalali'
+import type { TourDayMap } from '../tours/calendar'
+import { toISO } from '../tours/logic'
 
 interface CalendarProps {
   today: JalaliDate
@@ -8,9 +10,11 @@ interface CalendarProps {
   view: MonthRef
   selected: JalaliDate | null
   onSelect: (date: JalaliDate) => void
+  /** روزهای دارای تور (از روی تورها محاسبه می‌شود)؛ هر روز با حلقهٔ بنفش توخالی مشخص می‌شود */
+  tourDays?: TourDayMap
 }
 
-export default function Calendar({ today, view, selected, onSelect }: CalendarProps) {
+export default function Calendar({ today, view, selected, onSelect, tourDays }: CalendarProps) {
   const days = useMemo(() => buildMonthGrid(view, today), [view, today])
 
   return (
@@ -23,8 +27,10 @@ export default function Calendar({ today, view, selected, onSelect }: CalendarPr
         {days.map(({ date, inMonth, isFriday, isToday }) => {
           const occ = inMonth ? getOccasion(date.month, date.day) : undefined
           const isSelected = !!selected && isSameDate(date, selected)
-          const label = occ ? `${formatLongDate(date)} — ${occ.title}${occ.holiday ? ' (تعطیل)' : ''}` : formatLongDate(date)
-          const cls = ['cell', isFriday && 'off', !inMonth && 'adjacent', isToday && 'now', isSelected && 'selected', occ?.holiday && 'holiday'].filter(Boolean).join(' ')
+          const tours = tourDays?.get(toISO(toGregorianDate(date)))
+          const base = occ ? `${formatLongDate(date)} — ${occ.title}${occ.holiday ? ' (تعطیل)' : ''}` : formatLongDate(date)
+          const label = tours ? `${base} — دارای تور` : base
+          const cls = ['cell', isFriday && 'off', !inMonth && 'adjacent', isToday && 'now', isSelected && 'selected', occ?.holiday && 'holiday', tours && 'has-tour'].filter(Boolean).join(' ')
           return (
             <button key={`${date.month}-${date.day}`} type="button" className={cls} aria-pressed={isSelected} aria-current={isToday ? 'date' : undefined}
               aria-label={label} title={label} onClick={() => onSelect(date)}>

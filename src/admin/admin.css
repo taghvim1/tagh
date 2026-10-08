@@ -199,3 +199,6 @@
 .adm-seasonal input, .adm-seasonal select { min-height: 36px; padding: 0 8px; border: 1px solid #cdd3da; border-radius: 8px; background: var(--bg); color: var(--ink); font: inherit; width: 100%; min-width: 90px; }
 .adm-seasonal td:last-child input { min-width: 220px; }
 .adm-seasonal td:nth-child(3) input, .adm-seasonal td:nth-child(4) input { min-width: 70px; max-width: 90px; }
+
+.adm-group { margin: 10px 12px 2px; color: var(--muted); font-size: .8rem; }
+.adm-logo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #eef1f4; vertical-align: middle; }

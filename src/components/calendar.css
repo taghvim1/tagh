@@ -49,6 +49,7 @@
 .cell.off .cell-num { color: var(--accent); }
 .cell.adjacent .cell-num { color: var(--muted); opacity: .55; }
 .cell.now .cell-num { color: var(--accent); font-weight: 700; }
+.cell.has-tour::after { content: ''; position: absolute; inset: 3%; border-radius: 50%; border: 2px solid #8B5CF6; background: transparent; pointer-events: none; }
 .cell.holiday::before { border-color: var(--holiday); }
 .cell.selected::before { background: var(--accent); }
 .cell.selected .cell-num { color: var(--accent-ink); font-weight: 700; opacity: 1; }
@@ -245,3 +246,12 @@
 @media (prefers-reduced-motion: reduce) {
   .dr, .dr-backdrop, .dr-content, .np, .af, .af-backdrop, .cm-root, .cm, .cal-switch, .cal-switch::before { transition: none; }
 }
+
+/* پنجرهٔ تورهای یک روز در تقویم */
+.td-head { text-align: center; }
+.td-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.dc.td > .td-list { margin-inline: 18px; }
+.td-card { display: flex; gap: 12px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; }
+.td-img { flex: none; width: 96px; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: var(--bg-soft); }
+.td-info { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; font-size: .92rem; }
+.td-info .tp-btn { min-height: 38px; padding: 0 14px; margin-top: 4px; }
