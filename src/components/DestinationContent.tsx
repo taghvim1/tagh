@@ -2,6 +2,8 @@ import { LEVEL_LABEL, RATING_LABEL, locationLabel, type Destination, type Season
 import { toggleFavorite, useFavorites } from '../lib/favorites'
 import { faNum } from '../lib/jalali'
 import { seasonKey } from '../travel/season'
+import { weatherCodeText } from '../weather/codes'
+import { useHistoricalClimate } from '../weather/history/store'
 
 interface Props {
   destination: Destination
@@ -16,6 +18,7 @@ export default function DestinationContent({ destination: d, season, onClose }: 
   const favs = useFavorites()
   const fav = favs.destination.includes(d.id)
   const c = d.season_suitability[seasonKey(season)]
+  const real = useHistoricalClimate()[d.id]?.stats.seasons[seasonKey(season)]
   return (
     <article className="dc">
       <img className="dc-hero" src={d.image} alt={d.name} />
@@ -36,6 +39,20 @@ export default function DestinationContent({ destination: d, season, onClose }: 
           <div><dt>تناسب با فصل</dt><dd><span className={`dc-badge ${c.rating}`}>{RATING_LABEL[c.rating]}</span></dd></div>
         </dl>
       </section>
+
+      {real && real.tempMean !== null && (
+        <section className="dc-block">
+          <h3>آمار واقعی ۵ سال اخیر <span className="dc-season">({season})</span></h3>
+          <dl className="dc-grid">
+            <div><dt>میانگین دما</dt><dd>{deg(Math.round(real.tempMean))}</dd></div>
+            {real.tempMin !== null && real.tempMax !== null && <div><dt>میانگین کمینه تا بیشینه</dt><dd>{faNum(Math.round(real.tempMin))} تا {faNum(Math.round(real.tempMax))} درجه</dd></div>}
+            {real.precipitationMm !== null && <div><dt>بارش فصل</dt><dd>{faNum(Math.round(real.precipitationMm))} میلی‌متر</dd></div>}
+            {real.rainyDays !== null && <div><dt>روزهای بارانی</dt><dd>{faNum(Math.round(real.rainyDays))} روز</dd></div>}
+            {weatherCodeText(real.dominantCode) && <div><dt>وضعیت غالب</dt><dd>{weatherCodeText(real.dominantCode)}</dd></div>}
+          </dl>
+          <p className="dc-note">میانگین داده‌های ثبت‌شدهٔ گذشته است، نه پیش‌بینی. روز بارانی = بارش حداقل ۱ میلی‌متر.</p>
+        </section>
+      )}
 
       <section className="dc-block">
         <h3>اطلاعات سفر</h3>

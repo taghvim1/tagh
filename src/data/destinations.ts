@@ -50,6 +50,9 @@ export interface Destination {
   /** کیفیت/محبوبیت نمونه (۰ تا ۱۰) برای ترتیب نهایی */
   quality: number
   enabled: boolean
+  /** مختصات مقصد (درجه) برای دریافت آب‌وهوای تاریخی؛ اگر نباشد، آب‌وهوای تاریخی آن مقصد دریافت نمی‌شود */
+  latitude?: number
+  longitude?: number
   // --- فیلدهای مشتق از season_suitability (با withDerived محاسبه می‌شوند) ---
   best_seasons: Season[]
   best_months: number[]
@@ -94,8 +97,25 @@ const c = (rating: R, avg: number, min: number, max: number, cond: string, rain:
 const seasons = (spring: SeasonClimate, summer: SeasonClimate, autumn: SeasonClimate, winter: SeasonClimate) => ({ spring, summer, autumn, winter })
 
 type Base = Omit<DestinationInput, 'id' | 'image' | 'scope' | 'country' | 'visa_required' | 'enabled'>
+/** مختصات مرکز شهر/محل مقصدها (۲ رقم اعشار). «کردستان» (استان) و «کویر مصر» نقطهٔ مشخصی ندارند و عمداً خالی‌اند. */
+export const SEED_COORDINATES: Record<number, { name: string; latitude: number; longitude: number }> = {
+  1: { name: 'یزد', latitude: 31.9, longitude: 54.36 },
+  2: { name: 'اصفهان', latitude: 32.65, longitude: 51.67 },
+  3: { name: 'شیراز', latitude: 29.59, longitude: 52.58 },
+  4: { name: 'کاشان', latitude: 33.98, longitude: 51.44 },
+  5: { name: 'کرمان', latitude: 30.28, longitude: 57.08 },
+  6: { name: 'چابهار', latitude: 25.29, longitude: 60.64 },
+  7: { name: 'هرمز', latitude: 27.06, longitude: 56.46 },
+  8: { name: 'ماسوله', latitude: 37.16, longitude: 48.98 },
+  9: { name: 'رامسر', latitude: 36.9, longitude: 50.66 },
+  12: { name: 'ابیانه', latitude: 33.64, longitude: 51.59 },
+  13: { name: 'استانبول', latitude: 41.01, longitude: 28.98 },
+  14: { name: 'تفلیس', latitude: 41.72, longitude: 44.83 },
+  15: { name: 'دبی', latitude: 25.2, longitude: 55.27 },
+  16: { name: 'باکو', latitude: 40.41, longitude: 49.87 },
+}
 const make = (id: number, country: string, visa: boolean | null, b: Base): Destination =>
-  withDerived({ id, country, scope: country === 'ایران' ? 'domestic' : 'international', visa_required: visa, image: `/images/destinations/${id}.svg`, enabled: true, ...b })
+  withDerived({ id, ...(SEED_COORDINATES[id]?.name === b.name ? { latitude: SEED_COORDINATES[id].latitude, longitude: SEED_COORDINATES[id].longitude } : {}), country, scope: country === 'ایران' ? 'domestic' : 'international', visa_required: visa, image: `/images/destinations/${id}.svg`, enabled: true, ...b })
 
 export const MOCK_DESTINATIONS: Destination[] = [
   make(1, 'ایران', null, { name: 'یزد', province_or_city: 'یزد', type: ['تاریخی', 'فرهنگی'], duration: '۲ تا ۳ روز', budget: 'متوسط', companions: ['زوج', 'دوستان', 'سفر انفرادی'], quality: 9, recommended_for: ['دوستداران معماری و تاریخ', 'عکاسان'], attractions: ['مسجد جامع یزد', 'بافت تاریخی شهر', 'باغ دولت‌آباد'], description: 'شهر خشت و بادگیر؛ کوچه‌های گلی، خانه‌های تاریخی و غروب‌های کویری که با یک قدم‌زدن آرام در بافت قدیم به یاد ماندنی می‌شوند.',

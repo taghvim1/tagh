@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 import Calendar from '../components/Calendar'
+import WeatherCard from '../components/WeatherCard'
 import DateHeader from '../components/DateHeader'
 import AppChrome from '../components/AppChrome'
 import OccasionRow from '../components/OccasionRow'
 import CenterModal from '../components/CenterModal'
 import { useCalendarData } from '../lib/calendarData'
 import { fromGregorian, shiftMonth, toGregorianDate, type JalaliDate, type MonthRef } from '../lib/jalali'
-import { useAncientCelebrations } from '../lib/settings'
+import { useAncientCelebrations, useWeatherCard } from '../lib/settings'
 import { useOverlay } from '../lib/overlay'
 import { navigate } from '../lib/router'
 import { getSelectedDate, setSelectedDate } from '../lib/selection'
@@ -21,6 +22,7 @@ export default function CalendarPage() {
   const today = useMemo(() => fromGregorian(now), [now])
   const [dark] = useDarkMode()
   useThemeColorMeta(dark)
+  const weatherOn = useWeatherCard()
   useAncientCelebrations() // تغییر تنظیم آیین‌های باستانی بلافاصله روی تقویم اعمال می‌شود
   useCalendarData() // با رسیدن داده‌های جدید تقویم دوباره رندر می‌شود
 
@@ -47,7 +49,7 @@ export default function CalendarPage() {
 
   return (
     <div className="cal-page" data-theme={dark ? 'dark' : 'light'}>
-      <section className="cal-top"><DateHeader today={now} /></section>
+      <section className={`cal-top${weatherOn ? ' has-wx' : ''}`}>{weatherOn && <WeatherCard />}<DateHeader today={now} /></section>
       <OccasionRow view={view} selected={selected} onPrev={() => setView((v) => shiftMonth(v, -1))} onNext={() => setView((v) => shiftMonth(v, 1))} />
       <section className="cal-bottom"><Calendar today={today} view={view} selected={selected} onSelect={tapDay} tourDays={tourDays} /></section>
       <AppChrome home overlay onToday={() => select(today)} />

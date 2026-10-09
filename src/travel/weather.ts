@@ -13,7 +13,7 @@ export const isSeasonSuitable = (c: SeasonClimate) => c.rating !== 'not_recommen
 export const temperatureScore = (c: SeasonClimate) => Math.max(0, 100 - Math.abs(c.average_temperature - 23) * 6)
 
 const RAIN: Record<Level, number> = { low: 100, medium: 70, high: 40 }
-const HUMID: Record<Level, number> = { low: 100, medium: 70, high: 40 }
+export const HUMID: Record<Level, number> = { low: 100, medium: 70, high: 40 }
 /** بارندگی و رطوبت کمتر برای سفر راحت‌تر است */
 export const rainHumidityScore = (c: SeasonClimate) => RAIN[c.rainfall] * 0.6 + HUMID[c.humidity] * 0.4
 

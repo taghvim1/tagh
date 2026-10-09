@@ -15,6 +15,7 @@ import { activeFilterCount, EMPTY_FILTERS, summarize, type TravelFilters } from 
 import { recommend } from '../travel/recommend'
 import { useDestinations } from '../travel/repository'
 import { seasonOfMonth } from '../travel/season'
+import { useHistoricalClimate } from '../weather/history/store'
 
 // فصل نقطهٔ شروع است: پیش‌فرض فصل تاریخ انتخاب‌شده در تقویم (یا فصل جاری)؛ فقط مقصدهای واقعاً مناسب آن فصل نمایش داده می‌شوند.
 export default function TravelSuggestions() {
@@ -41,7 +42,8 @@ export default function TravelSuggestions() {
   const apply = (f: TravelFilters) => { setFilters(f); saveState({ filters: f }) }
 
   const all = useDestinations()
-  const result = useMemo(() => recommend(all, { season, filters }), [all, season, filters])
+  const climate = useHistoricalClimate()
+  const result = useMemo(() => recommend(all, { season, filters, climate }), [all, season, filters, climate])
   const count = activeFilterCount(filters)
   const active = summarize(filters)
 

@@ -32,6 +32,10 @@ export default function DestinationForm({ initial, nextId, onSave, onClose }: Pr
           <TextField label="استان یا شهر" value={f.province_or_city} onChange={(v) => set('province_or_city', v)} />
           <SelectField label="نوع مقصد" value={f.scope} onChange={(v) => set('scope', v as 'domestic' | 'international')} options={[['domestic', 'داخلی'], ['international', 'خارجی']]} />
         </Row>
+        <Row>
+          <TextField label="عرض جغرافیایی (برای آمار آب‌وهوا)" type="number" value={f.latitude} onChange={(v) => set('latitude', v)} />
+          <TextField label="طول جغرافیایی" type="number" value={f.longitude} onChange={(v) => set('longitude', v)} />
+        </Row>
         <CheckGroup label="نوع سفر" options={TRAVEL_TYPES} value={f.type} onChange={(v) => set('type', v)} />
         <TextField label="تصویر (مسیر فایل)" value={f.image} onChange={(v) => set('image', v)} placeholder="/images/destinations/1.svg" />
         <AreaField label="توضیحات" value={f.description} onChange={(v) => set('description', v)} />
