@@ -6,6 +6,7 @@ import OccasionRow from '../components/OccasionRow'
 import CenterModal from '../components/CenterModal'
 import { useCalendarData } from '../lib/calendarData'
 import { fromGregorian, shiftMonth, toGregorianDate, type JalaliDate, type MonthRef } from '../lib/jalali'
+import { useAncientCelebrations } from '../lib/settings'
 import { useOverlay } from '../lib/overlay'
 import { navigate } from '../lib/router'
 import { getSelectedDate, setSelectedDate } from '../lib/selection'
@@ -20,6 +21,7 @@ export default function CalendarPage() {
   const today = useMemo(() => fromGregorian(now), [now])
   const [dark] = useDarkMode()
   useThemeColorMeta(dark)
+  useAncientCelebrations() // تغییر تنظیم آیین‌های باستانی بلافاصله روی تقویم اعمال می‌شود
   useCalendarData() // با رسیدن داده‌های جدید تقویم دوباره رندر می‌شود
 
   // اگر کاربر از صفحهٔ دیگری برگشته، همان روز انتخاب‌شده قبلی باز می‌ماند؛ در غیر این صورت امروز

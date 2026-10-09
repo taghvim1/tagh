@@ -3,6 +3,7 @@ import CalendarPage from './pages/CalendarPage'
 import Favorites from './pages/Favorites'
 import DestinationDetails from './pages/DestinationDetails'
 import TourDetails from './pages/TourDetails'
+import SettingsPage from './pages/SettingsPage'
 import Tours from './pages/Tours'
 import TravelSuggestions from './pages/TravelSuggestions'
 import { usePath } from './lib/router'
@@ -22,6 +23,7 @@ export default function App() {
   }
 
   if (path === '/travel-suggestions') return <TravelSuggestions />
+  if (path === '/settings') return <SettingsPage />
   if (path === '/favorites') return <Favorites />
   if (path === '/tours') return <Tours />
   const tour = path.match(/^\/tours\/(\d+)$/)

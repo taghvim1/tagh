@@ -255,3 +255,9 @@
 .td-img { flex: none; width: 96px; aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: var(--bg-soft); }
 .td-info { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; font-size: .92rem; }
 .td-info .tp-btn { min-height: 38px; padding: 0 14px; margin-top: 4px; }
+
+/* صفحهٔ تنظیمات کاربر (با تم تاریک/روشن مشترک صفحه‌های اپ) */
+.st-list { width: 100%; max-width: 640px; margin-inline: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); overflow: hidden; }
+.st-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; padding: 8px 18px; cursor: pointer; font-size: 1.05rem; }
+.st-row + .st-row { border-top: 1px solid var(--line); }
+.st-row:has(.cal-switch:focus-visible) { background: var(--bg-soft); }

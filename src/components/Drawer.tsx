@@ -47,7 +47,7 @@ export default function Drawer({ open, onClose, onLeave, onToday }: Props) {
             {link('/tours', 'tours', 'تورهای پیش‌رو')}
             <span className="dr-spacer" />
             {link('/favorites', 'favorites', 'علاقه‌مندی‌ها')}
-            {link('/admin/settings', 'settings', 'تنظیمات')}
+            {link('/settings', 'settings', 'تنظیمات')}
             <button className="dr-item" onClick={exitApp}><Icon name="exit" /><span>خروج</span></button>
             {exitHint && <p className="dr-hint" role="status">برای خروج، برنامه را از مرورگر یا فهرست برنامه‌های دستگاه ببندید.</p>}
           </nav>

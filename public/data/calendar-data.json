@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "occasions": {
     "1-1": {
       "title": "نوروز",
@@ -48,7 +48,8 @@
     },
     "9-30": {
       "title": "شب یلدا",
-      "holiday": false
+      "holiday": false,
+      "ancient": true
     },
     "11-22": {
       "title": "پیروزی انقلاب اسلامی",
@@ -57,6 +58,36 @@
     "12-29": {
       "title": "ملی شدن صنعت نفت",
       "holiday": true
+    },
+    "4-13": {
+      "title": "تیرگان",
+      "holiday": false,
+      "ancient": true
+    },
+    "7-16": {
+      "title": "مهرگان",
+      "holiday": false,
+      "ancient": true
+    },
+    "9-9": {
+      "title": "آذرجشن",
+      "holiday": false,
+      "ancient": true
+    },
+    "11-2": {
+      "title": "بهمنجشن",
+      "holiday": false,
+      "ancient": true
+    },
+    "11-10": {
+      "title": "جشن سده",
+      "holiday": false,
+      "ancient": true
+    },
+    "12-5": {
+      "title": "اسفندگان",
+      "holiday": false,
+      "ancient": true
     }
   }
 }

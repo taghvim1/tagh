@@ -2,11 +2,12 @@ import { useSyncExternalStore } from 'react'
 import bundled from '../../public/data/calendar-data.json'
 import { idbGet, idbSet } from './idb'
 import { addNotification } from './notifications'
+import { showAncientCelebrations } from './settings'
 
 // داده‌های تقویم (مناسبت‌ها): Offline-First.
 // ۱) فوراً از نسخهٔ همراه برنامه (و در صورت وجود نسخهٔ جدیدتر در IndexedDB از آن) نمایش داده می‌شود.
 // ۲) در صورت اتصال، نسخهٔ تازه در پس‌زمینه از /data/calendar-data.json گرفته و با زمان به‌روزرسانی در IndexedDB ذخیره می‌شود.
-export interface Occasion { title: string; holiday: boolean; hypothetical?: boolean }
+export interface Occasion { title: string; holiday: boolean; hypothetical?: boolean; /** آیین یا جشن باستانی؛ با خاموش‌بودن تنظیم مربوط پنهان می‌شود (تعطیلات رسمی هرگز پنهان نمی‌شوند) */ ancient?: boolean }
 export interface CalendarData { version: number; occasions: Record<string, Occasion> }
 interface Snapshot { data: CalendarData; updatedAt: number | null }
 
@@ -25,7 +26,10 @@ const isValid = (x: unknown): x is CalendarData => {
   return !!d && typeof d.version === 'number' && !!d.occasions && typeof d.occasions === 'object'
 }
 
-export const getOccasion = (month: number, day: number): Occasion | undefined => snapshot.data.occasions[`${month}-${day}`]
+export const getOccasion = (month: number, day: number): Occasion | undefined => {
+  const occ = snapshot.data.occasions[`${month}-${day}`]
+  return occ?.ancient && !occ.holiday && !showAncientCelebrations() ? undefined : occ
+}
 
 const subscribe = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l) } }
 export const useCalendarData = () => useSyncExternalStore(subscribe, () => snapshot, () => snapshot)
