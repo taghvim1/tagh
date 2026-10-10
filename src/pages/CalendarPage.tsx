@@ -5,7 +5,6 @@ import DateHeader from '../components/DateHeader'
 import AppChrome from '../components/AppChrome'
 import OccasionRow from '../components/OccasionRow'
 import CenterModal from '../components/CenterModal'
-import Dock from '../components/Dock'
 import NotePopup from '../components/NotePopup'
 import { useCalendarData } from '../lib/calendarData'
 import { fromGregorian, shiftMonth, toGregorianDate, type JalaliDate, type MonthRef } from '../lib/jalali'
@@ -50,7 +49,7 @@ export default function CalendarPage() {
     select(date)
     if (tourDays.has(toISO(toGregorianDate(date)))) popup.show()
   }
-  // نگه‌داشتن ۲ ثانیه‌ای روی یک روز: همان روز انتخاب می‌شود و یادداشتش باز می‌شود
+  // نگه‌داشتن ۱ ثانیه‌ای روی یک روز: همان روز انتخاب می‌شود و یادداشتش باز می‌شود
   const longPress = (date: JalaliDate) => { select(date); note.show() }
   const openTour = (t: Tour) => { popup.hideSilently(); navigate(`/tours/${t.id}`) }
 
@@ -59,7 +58,6 @@ export default function CalendarPage() {
       <section className={`cal-top${weatherOn ? ' has-wx' : ''}`}>{weatherOn && <WeatherCard />}<DateHeader today={now} /></section>
       <OccasionRow view={view} selected={selected} onPrev={() => setView((v) => shiftMonth(v, -1))} onNext={() => setView((v) => shiftMonth(v, 1))} />
       <section className="cal-bottom"><Calendar today={today} view={view} selected={selected} onSelect={tapDay} tourDays={tourDays} notes={notes} onLongPress={longPress} /></section>
-      <Dock onNote={note.show} />
       <AppChrome home overlay onToday={() => select(today)} />
       <NotePopup open={note.open} onClose={note.hide} date={selected} />
       <CenterModal open={popup.open && dayTours.length > 0} onClose={popup.hide} label="تورهای این روز">

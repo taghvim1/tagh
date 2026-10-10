@@ -19,7 +19,7 @@ interface CalendarProps {
   onLongPress?: (date: JalaliDate) => void
 }
 
-export const LONG_PRESS_MS = 2000
+export const LONG_PRESS_MS = 1000
 const MOVE_TOLERANCE = 12
 
 export default function Calendar({ today, view, selected, onSelect, tourDays, notes, onLongPress }: CalendarProps) {

@@ -31,5 +31,6 @@ export function trackRoute(path: string) {
   else if (path === '/tours') tracker.track('view_tours')
   else if (path === '/settings') tracker.track('feature_use', { category: 'settings' })
   else if (path === '/favorites') tracker.track('feature_use', { category: 'favorites' })
+  else if (path === '/notes') tracker.track('feature_use', { category: 'notes' })
   else { const m = path.match(/^\/tours\/(\d+)$/); if (m) tracker.track('view_tour', { tour_id: Number(m[1]) }) }
 }

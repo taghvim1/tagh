@@ -22,3 +22,11 @@ export function setNote(key: string, text: string) {
 
 const subscribe = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l) } }
 export const useNotes = () => useSyncExternalStore(subscribe, () => notes, () => notes)
+
+/** تاریخ شمسی از کلید یادداشت (سال-ماه-روز) */
+export const dateOfKey = (key: string): JalaliDate | null => {
+  const [year, month, day] = key.split('-').map(Number)
+  return year && month && day ? { year, month, day } : null
+}
+/** عنوان یادداشت = اولین خط غیرخالی */
+export const noteTitle = (text: string) => text.split('\n').map((l) => l.trim()).find(Boolean) ?? ''
