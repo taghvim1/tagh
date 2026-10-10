@@ -2,17 +2,19 @@ import { useState, type FormEvent } from 'react'
 import { BUDGETS, COMPANIONS, DURATIONS, LEVEL_LABEL, RATING_LABEL, TRAVEL_TYPES, type Destination, type Level, type Rating, type SeasonKey } from '../../data/destinations'
 import { SEASONS } from '../../travel/season'
 import { fromDraft, toDraft, type DestinationDraft, type SeasonDraft } from '../destinationDraft'
+import { fileToDataUrl } from '../imageFile'
 import { AreaField, CheckGroup, Row, SelectField, TextField } from './fields'
 import Modal from './Modal'
 
-interface Props { initial?: Destination; nextId: number; onSave: (d: Destination) => void; onClose: () => void }
+interface Props { initial?: Destination; nextId: number; onSave: (d: Destination) => void; onClose: () => void; /** پیش‌نویس AI: تصویر خالی به عکس پیش‌فرض تبدیل نشود */ keepEmptyImage?: boolean }
 
 const ratingOpts = (Object.keys(RATING_LABEL) as Rating[]).map((k): [string, string] => [k, RATING_LABEL[k]])
 const levelOpts = (Object.keys(LEVEL_LABEL) as Level[]).map((k): [string, string] => [k, LEVEL_LABEL[k]])
 
-export default function DestinationForm({ initial, nextId, onSave, onClose }: Props) {
+export default function DestinationForm({ initial, nextId, onSave, onClose, keepEmptyImage }: Props) {
   const [f, setF] = useState<DestinationDraft>(() => toDraft(initial))
   const [errors, setErrors] = useState<string[]>([])
+  const [imgErr, setImgErr] = useState('')
   const set = <K extends keyof DestinationDraft>(k: K, v: DestinationDraft[K]) => setF((x) => ({ ...x, [k]: v }))
   const setSeason = (key: SeasonKey, patch: Partial<SeasonDraft>) => setF((x) => ({ ...x, seasons: { ...x.seasons, [key]: { ...x.seasons[key], ...patch } } }))
 
@@ -20,7 +22,7 @@ export default function DestinationForm({ initial, nextId, onSave, onClose }: Pr
     e.preventDefault()
     const r = fromDraft(f, initial?.id ?? nextId)
     if (!r.ok) { setErrors(r.errors); return }
-    onSave(r.value)
+    onSave(keepEmptyImage && !f.image.trim() ? { ...r.value, image: '' } : r.value)
   }
 
   return (
@@ -37,7 +39,19 @@ export default function DestinationForm({ initial, nextId, onSave, onClose }: Pr
           <TextField label="طول جغرافیایی" type="number" value={f.longitude} onChange={(v) => set('longitude', v)} />
         </Row>
         <CheckGroup label="نوع سفر" options={TRAVEL_TYPES} value={f.type} onChange={(v) => set('type', v)} />
-        <TextField label="تصویر (مسیر فایل)" value={f.image} onChange={(v) => set('image', v)} placeholder="/images/destinations/1.svg" />
+        <TextField label="تصویر (آدرس یا مسیر فایل)" value={f.image.startsWith('data:') ? '(تصویر بارگذاری‌شده)' : f.image} onChange={(v) => set('image', v)} placeholder="https://… یا /images/destinations/1.svg" />
+        <div className="adm-img-row">
+          {f.image && <img src={f.image} alt="" className="adm-thumb" />}
+          <label className="adm-btn">بارگذاری تصویر از دستگاه
+            <input type="file" accept="image/*" hidden onChange={async (e) => {
+              const file = e.target.files?.[0]; e.target.value = ''
+              if (!file) return
+              try { set('image', await fileToDataUrl(file)); setImgErr('') } catch (err) { setImgErr((err as Error).message) }
+            }} />
+          </label>
+          {f.image && <button type="button" className="adm-btn" onClick={() => set('image', '')}>حذف تصویر</button>}
+        </div>
+        {imgErr && <p role="alert" className="adm-note">{imgErr}</p>}
         <AreaField label="توضیحات" value={f.description} onChange={(v) => set('description', v)} />
         <Row>
           <SelectField label="مدت پیشنهادی" value={f.duration} onChange={(v) => set('duration', v as Destination['duration'])} options={DURATIONS} />

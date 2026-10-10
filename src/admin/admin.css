@@ -209,3 +209,13 @@
 .adm-detail h3 { margin: 0 0 6px; font-size: 1rem; }
 .adm-dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; }
 .adm-dl dt { color: var(--adm-muted); } .adm-dl dd { margin: 0; word-break: break-all; }
+
+/* پیشنهاد با هوش مصنوعی */
+.adm-img-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.adm-thumb { width: 96px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: #eef1f4; }
+.adm-img-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.adm-img-pick { padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); cursor: pointer; display: flex; flex-direction: column; gap: 4px; font: inherit; }
+.adm-img-pick img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; }
+.adm-pre { white-space: pre-wrap; font-size: .8rem; background: #f6f8fa; border: 1px solid var(--line); border-radius: 10px; padding: 12px; max-height: 320px; overflow: auto; }
+.adm-draft-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+.adm-draft-list > .adm-card { display: flex; flex-direction: column; gap: 10px; }
