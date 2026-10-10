@@ -5,6 +5,8 @@ import DateHeader from '../components/DateHeader'
 import AppChrome from '../components/AppChrome'
 import OccasionRow from '../components/OccasionRow'
 import CenterModal from '../components/CenterModal'
+import Dock from '../components/Dock'
+import NotePopup from '../components/NotePopup'
 import { useCalendarData } from '../lib/calendarData'
 import { fromGregorian, shiftMonth, toGregorianDate, type JalaliDate, type MonthRef } from '../lib/jalali'
 import { useAncientCelebrations, useWeatherCard } from '../lib/settings'
@@ -32,6 +34,7 @@ export default function CalendarPage() {
 
   const tourDays = useTourDays()
   const popup = useOverlay('tour-day')
+  const note = useOverlay('note')
   const selectedIso = toISO(toGregorianDate(selected))
   const dayTours = tourDays.get(selectedIso) ?? []
 
@@ -52,7 +55,9 @@ export default function CalendarPage() {
       <section className={`cal-top${weatherOn ? ' has-wx' : ''}`}>{weatherOn && <WeatherCard />}<DateHeader today={now} /></section>
       <OccasionRow view={view} selected={selected} onPrev={() => setView((v) => shiftMonth(v, -1))} onNext={() => setView((v) => shiftMonth(v, 1))} />
       <section className="cal-bottom"><Calendar today={today} view={view} selected={selected} onSelect={tapDay} tourDays={tourDays} /></section>
+      <Dock onNote={note.show} />
       <AppChrome home overlay onToday={() => select(today)} />
+      <NotePopup open={note.open} onClose={note.hide} date={selected} />
       <CenterModal open={popup.open && dayTours.length > 0} onClose={popup.hide} label="تورهای این روز">
         {dayTours.length > 0 && <TourDayPopup dateIso={selectedIso} tours={dayTours} onOpenTour={openTour} />}
       </CenterModal>

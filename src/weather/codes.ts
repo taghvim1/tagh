@@ -10,17 +10,23 @@ const TEXT: Record<number, string> = {
 
 export const weatherCodeText = (code: number | null | undefined): string | null => (code == null ? null : TEXT[code] ?? null)
 
-export function weatherCodeIcon(code: number | null | undefined, isDay: boolean | null = true): string {
-  if (code == null || !(code in TEXT)) return '🌡️'
-  if (code === 0 || code === 1) return isDay === false ? '🌙' : code === 0 ? '☀️' : '🌤️'
-  if (code === 2) return isDay === false ? '☁️' : '⛅'
-  if (code === 3) return '☁️'
-  if (code === 45 || code === 48) return '🌫️'
-  if (code >= 51 && code <= 57) return '🌦️'
-  if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return '🌧️'
-  if (code === 85 || code === 86) return '🌨️'
-  if (code >= 71 && code <= 77) return '❄️'
-  return '⛈️'
+/** نام آیکون خطی هر وضعیت هوا (فایل‌های src/weather/icons)؛ کد ناشناخته = null و آیکونی نمایش داده نمی‌شود */
+export type WeatherIconName = 'sun' | 'clouds' | 'moon-cloud' | 'moon-stars' | 'rain' | 'drizzle' | 'showers' | 'snow' | 'snowflakes' | 'thunder' | 'thunder-rain' | 'fog'
+
+export function weatherIconName(code: number | null | undefined, isDay: boolean | null = true): WeatherIconName | null {
+  if (code == null || !(code in TEXT)) return null
+  const night = isDay === false
+  if (code === 0 || code === 1) return night ? 'moon-stars' : 'sun'
+  if (code === 2) return night ? 'moon-cloud' : 'clouds'
+  if (code === 3) return 'clouds'
+  if (code === 45 || code === 48) return 'fog'
+  if (code >= 51 && code <= 57) return 'drizzle'
+  if (code === 65 || code === 67 || (code >= 80 && code <= 82)) return 'showers'
+  if (code >= 61 && code <= 66) return 'rain'
+  if (code === 75 || code === 85 || code === 86) return 'snowflakes'
+  if (code >= 71 && code <= 77) return 'snow'
+  if (code === 96 || code === 99) return 'thunder-rain'
+  return 'thunder'
 }
 
 export class WeatherError extends Error {

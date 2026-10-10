@@ -19,7 +19,7 @@
 .cal-page { height: 100vh; height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow: hidden; display: flex; flex-direction: column; }
 
 /* بالا: تاریخ امروز */
-.cal-top { flex: 0 0 38vh; flex-basis: 38dvh; display: flex; align-items: center; justify-content: center; text-align: center; padding-inline: 12px; }
+.cal-top { flex: 0 0 35vh; flex-basis: 35dvh; display: flex; align-items: center; justify-content: center; text-align: center; padding-inline: 12px; }
 .dh { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .dh-main { display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1.15; }
 .dh-weekday, .dh-month { font-size: clamp(1.5rem, min(7vw, 4.6dvh), 2.8rem); font-weight: 700; }
@@ -37,7 +37,7 @@
 
 /* پایین: تقویم بدون خط و کادر */
 .cal-bottom { flex: 1 1 0; min-height: 0; display: flex; justify-content: center; align-items: flex-start; padding: 0 3vw 12px; }
-.calendar { display: flex; flex-direction: column; gap: 6px; width: min(100%, 640px, max(260px, calc((62dvh - var(--info) - 60px) * 7 / var(--rows, 6)))); }
+.calendar { display: flex; flex-direction: column; gap: 6px; width: min(100%, 640px, max(260px, calc((65dvh - var(--info) - 138px) * 7 / var(--rows, 6)))); }
 .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .weekdays { text-align: center; color: var(--muted); font-size: clamp(.62rem, 2.6vw, .95rem); }
 .weekdays div { padding: 6px 0; white-space: nowrap; }
@@ -267,16 +267,34 @@
 .st-row:has(.cal-switch:focus-visible) { background: var(--bg-soft); }
 
 /* کارت آب‌وهوا: بین دو دکمهٔ هدر در بالای صفحهٔ اصلی؛ تاریخ امروز کمی پایین‌تر و کوچک‌تر می‌شود */
-.cal-top.has-wx { padding-top: 66px; }
-.has-wx .dh-weekday, .has-wx .dh-month { font-size: clamp(1.2rem, min(5.6vw, 3.4dvh), 2.2rem); }
-.has-wx .dh-day { font-size: clamp(3.4rem, min(19vw, 11dvh), 6.5rem); }
-.has-wx .dh-sub { font-size: clamp(.78rem, min(2.5vw, 2dvh), 1rem); line-height: 1.5; }
-.wx { position: fixed; z-index: 25; top: calc(env(safe-area-inset-top) + 6px); inset-inline: 0; margin-inline: auto; width: min(calc(100vw - 128px), 360px); min-height: 56px; padding: 6px 12px; display: flex; align-items: center; justify-content: center; gap: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-soft); color: var(--ink); font-size: .8rem; line-height: 1.5; }
-.wx-icon { flex: none; font-size: 1.7rem; line-height: 1; }
-.wx-temp { font-size: 1.25rem; font-weight: 700; }
-.wx-clock { color: var(--ink); font-weight: 700; font-size: 1rem; }
-.wx-range { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.35; color: var(--muted); font-size: .8rem; }
-.wx-note, .wx-stale { color: var(--muted); font-size: .72rem; }
-.wx-compact { justify-content: space-between; }
+.cal-top.has-wx { gap: clamp(18px, 7vw, 44px); }
+.has-wx .dh-weekday, .has-wx .dh-month { font-size: clamp(1.3rem, min(6vw, 3.8dvh), 2.4rem); }
+.has-wx .dh-day { font-size: clamp(3.8rem, min(21vw, 13dvh), 7rem); }
+.has-wx .dh-sub { font-size: clamp(.76rem, min(2.5vw, 2dvh), 1rem); line-height: 1.5; }
+/* کارت آب‌وهوا کنار تاریخ (در صفحهٔ راست‌چین سمت راستِ تاریخ) */
+.wx { flex: none; width: clamp(104px, 29vw, 128px); min-height: 104px; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border-radius: 18px; background: var(--bg-soft); color: var(--ink); font-size: .78rem; line-height: 1.4; text-align: center; }
+.wx-icon { display: block; width: 44px; height: 44px; color: var(--ink); }
+.wx-icon svg { display: block; width: 100%; height: 100%; }
+.wx-temp { font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+.wx-meta { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 0 8px; color: var(--muted); font-size: .76rem; }
+.wx-clock { color: var(--ink); font-weight: 700; }
+.wx-range { display: inline-flex; gap: 6px; }
+.wx-note { color: var(--muted); font-size: .72rem; }
+.wx-stale { padding: 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: .68rem; cursor: pointer; }
 .wx-btn { flex: none; min-height: 32px; padding: 0 12px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 700; cursor: pointer; }
 .wx-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* سه دکمهٔ گرد پایین صفحهٔ اصلی */
+.dock { flex: 0 0 auto; width: min(100%, 700px); margin-inline: auto; display: flex; align-items: center; justify-content: space-between; padding: 6px max(6vw, 22px) 14px; }
+.dock-btn { width: 56px; height: 56px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--bg-soft); color: var(--ink); cursor: pointer; text-decoration: none; }
+@media (hover: hover) { .dock-btn:hover { background: var(--line); } }
+.dock-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* پنجرهٔ یادداشت */
+.nt { display: flex; flex-direction: column; gap: 12px; padding: 56px 18px 18px; }
+.nt h2 { font-size: 1.3rem; }
+.nt-date { color: var(--muted); }
+.nt-text { width: 100%; min-height: 160px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink); font: inherit; line-height: 1.9; resize: vertical; }
+.nt-text:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.nt-actions { display: flex; gap: 10px; }
+.nt-actions .tp-btn { flex: 1; }
