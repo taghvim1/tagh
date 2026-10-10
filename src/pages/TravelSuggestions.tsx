@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { trackDestinationView, trackSeason } from '../analytics'
 import AdvancedFilter from '../components/AdvancedFilter'
 import AppChrome from '../components/AppChrome'
 import CenterModal from '../components/CenterModal'
@@ -36,7 +37,7 @@ export default function TravelSuggestions() {
     if (prevBase.current !== baseSeason) { prevBase.current = baseSeason; setChosen(null); saveState({ season: null, baseSeason }) }
   }, [baseSeason])
   const season = chosen ?? baseSeason
-  const pick = (s: Season | null) => { setChosen(s); saveState({ season: s, baseSeason }) }
+  const pick = (s: Season | null) => { if (s) trackSeason(s); setChosen(s); saveState({ season: s, baseSeason }) }
 
   const [filters, setFilters] = useState<TravelFilters>(() => getSaved().filters)
   const apply = (f: TravelFilters) => { setFilters(f); saveState({ filters: f }) }
@@ -51,7 +52,7 @@ export default function TravelSuggestions() {
   const popup = useOverlay('dest')
   const [openId, setOpenId] = useState<number | null>(null)
   const current = all.find((d) => d.id === openId)
-  const open = (d: Destination) => { setOpenId(d.id); popup.show() }
+  const open = (d: Destination) => { trackDestinationView(d.id, season); setOpenId(d.id); popup.show() }
 
   const section = (title: string, list: Destination[]) => (
     <div className="tp-section">

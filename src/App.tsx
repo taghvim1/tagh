@@ -1,4 +1,5 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
+import { trackRoute } from './analytics'
 import CalendarPage from './pages/CalendarPage'
 import Favorites from './pages/Favorites'
 import DestinationDetails from './pages/DestinationDetails'
@@ -13,6 +14,7 @@ const AdminApp = lazy(() => import('./admin/AdminApp'))
 
 export default function App() {
   const path = usePath()
+  useEffect(() => { if (!path.startsWith('/admin')) trackRoute(path) }, [path])
 
   if (path === '/admin' || path.startsWith('/admin/')) {
     return (

@@ -299,3 +299,10 @@
 .nt-text:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .nt-actions { display: flex; gap: 10px; }
 .nt-actions .tp-btn { flex: 1; }
+
+/* تنظیمات: بخش حریم خصوصی */
+.st-sub, .st-hint, .st-actions, .st-data { width: 100%; max-width: 640px; margin-inline: auto; box-sizing: border-box; }
+.st-sub { font-size: 1rem; margin: 22px 0 8px; }
+.st-hint { font-size: .85rem; line-height: 1.8; opacity: .75; margin: 8px 0; }
+.st-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.st-data { max-height: 240px; overflow: auto; font-size: .72rem; padding: 10px; border-radius: 10px; background: rgba(127,127,127,.12); white-space: pre-wrap; word-break: break-all; }

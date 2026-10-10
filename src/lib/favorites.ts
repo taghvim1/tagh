@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { trackFavorite } from '../analytics'
 
 // علاقه‌مندی‌ها فقط در localStorage (بدون حساب کاربری یا سرور)
 export type FavoriteKind = 'destination' | 'tour'
@@ -16,6 +17,7 @@ export function toggleFavorite(kind: FavoriteKind, id: number) {
   store = { ...store, [kind]: has ? store[kind].filter((x) => x !== id) : [...store[kind], id] }
   try { localStorage.setItem(KEY, JSON.stringify(store)) } catch { /* فقط حافظه */ }
   listeners.forEach((l) => l())
+  trackFavorite(kind, id, !has) // فقط با رضایت کاربر ثبت می‌شود
 }
 
 export const isFavorite = (kind: FavoriteKind, id: number) => store[kind].includes(id)
