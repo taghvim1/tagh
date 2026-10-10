@@ -1,26 +1,21 @@
 import { LEVEL_LABEL, RATING_LABEL, locationLabel, type Destination, type Season } from '../data/destinations'
-import { toggleFavorite, useFavorites } from '../lib/favorites'
+import FavButton from './FavButton'
 import { faNum } from '../lib/jalali'
 import { seasonKey } from '../travel/season'
-import { weatherCodeText } from '../weather/codes'
-import { useHistoricalClimate } from '../weather/history/store'
 
 interface Props {
   destination: Destination
   season: Season
-  onClose?: () => void
 }
 
 const deg = (n: number) => `${faNum(n)} درجه`
 
 // محتوای جزئیات مقصد (هم در پنجرهٔ مرکزی و هم در صفحهٔ جزئیات)
-export default function DestinationContent({ destination: d, season, onClose }: Props) {
-  const favs = useFavorites()
-  const fav = favs.destination.includes(d.id)
+export default function DestinationContent({ destination: d, season }: Props) {
   const c = d.season_suitability[seasonKey(season)]
-  const real = useHistoricalClimate()[d.id]?.stats.seasons[seasonKey(season)]
   return (
     <article className="dc">
+      <FavButton kind="destination" id={d.id} />
       <img className="dc-hero" src={d.image} alt={d.name} />
       <header className="dc-head">
         <h2>{d.name}</h2>
@@ -40,20 +35,6 @@ export default function DestinationContent({ destination: d, season, onClose }: 
         </dl>
       </section>
 
-      {real && real.tempMean !== null && (
-        <section className="dc-block">
-          <h3>آمار واقعی ۵ سال اخیر <span className="dc-season">({season})</span></h3>
-          <dl className="dc-grid">
-            <div><dt>میانگین دما</dt><dd>{deg(Math.round(real.tempMean))}</dd></div>
-            {real.tempMin !== null && real.tempMax !== null && <div><dt>میانگین کمینه تا بیشینه</dt><dd>{faNum(Math.round(real.tempMin))} تا {faNum(Math.round(real.tempMax))} درجه</dd></div>}
-            {real.precipitationMm !== null && <div><dt>بارش فصل</dt><dd>{faNum(Math.round(real.precipitationMm))} میلی‌متر</dd></div>}
-            {real.rainyDays !== null && <div><dt>روزهای بارانی</dt><dd>{faNum(Math.round(real.rainyDays))} روز</dd></div>}
-            {weatherCodeText(real.dominantCode) && <div><dt>وضعیت غالب</dt><dd>{weatherCodeText(real.dominantCode)}</dd></div>}
-          </dl>
-          <p className="dc-note">میانگین داده‌های ثبت‌شدهٔ گذشته است، نه پیش‌بینی. روز بارانی = بارش حداقل ۱ میلی‌متر.</p>
-        </section>
-      )}
-
       <section className="dc-block">
         <h3>اطلاعات سفر</h3>
         <dl className="dc-grid">
@@ -71,11 +52,6 @@ export default function DestinationContent({ destination: d, season, onClose }: 
         <h3>جاذبه‌های اصلی</h3>
         <ul className="dc-list">{d.attractions.map((a) => <li key={a}>{a}</li>)}</ul>
       </section>
-
-      <div className="dc-actions">
-        <button type="button" className={`tp-btn${fav ? ' primary' : ''}`} aria-pressed={fav} onClick={() => toggleFavorite('destination', d.id)}>{fav ? '♥ در علاقه‌مندی‌ها' : '♡ افزودن به علاقه‌مندی‌ها'}</button>
-        {onClose && <button type="button" className="tp-btn" onClick={onClose}>بستن</button>}
-      </div>
     </article>
   )
 }

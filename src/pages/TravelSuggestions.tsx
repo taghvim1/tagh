@@ -99,7 +99,7 @@ export default function TravelSuggestions() {
       <AdvancedFilter open={sheet.open} onClose={sheet.hide} value={filters} season={season} defaultSeason={baseSeason}
         onApply={(f, s) => { apply(f); pick(s === baseSeason ? null : s) }} />
       <CenterModal open={popup.open && !!current} onClose={popup.hide} label={current?.name ?? 'جزئیات مقصد'}>
-        {current && <DestinationContent destination={current} season={season} onClose={popup.hide} />}
+        {current && <DestinationContent destination={current} season={season} />}
       </CenterModal>
     </div>
   )

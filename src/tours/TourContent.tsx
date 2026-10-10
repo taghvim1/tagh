@@ -1,4 +1,4 @@
-import { toggleFavorite, useFavorites } from '../lib/favorites'
+import FavButton from '../components/FavButton'
 import { faNum } from '../lib/jalali'
 import type { TourOrganizer } from '../tour-organizers/types'
 import { formatDate, formatPrice } from './logic'
@@ -9,9 +9,9 @@ const list = (title: string, items: string[]) => items.length > 0 && <section cl
 
 // جزئیات کامل تور (صفحهٔ /tours/:id). فقط معرفی تور؛ ثبت‌نام یا پرداخت وجود ندارد.
 export default function TourContent({ tour: t, organizer }: { tour: Tour; organizer?: TourOrganizer }) {
-  const fav = useFavorites().tour.includes(t.id)
   return (
     <article className="dc">
+      <FavButton kind="tour" id={t.id} />
       <img className="dc-hero" src={t.image} alt={t.title} />
       <header className="dc-head">
         <h2>{t.title}</h2>
@@ -64,10 +64,6 @@ export default function TourContent({ tour: t, organizer }: { tour: Tour; organi
           <div><dt>وضعیت ثبت‌نام</dt><dd>{t.remainingCapacity === 0 ? 'ظرفیت تکمیل است' : REGISTRATION_OFF}</dd></div>
         </dl>
       </section>
-
-      <div className="dc-actions">
-        <button type="button" className={`tp-btn${fav ? ' primary' : ''}`} aria-pressed={fav} onClick={() => toggleFavorite('tour', t.id)}>{fav ? '♥ در علاقه‌مندی‌ها' : '♡ افزودن به علاقه‌مندی‌ها'}</button>
-      </div>
     </article>
   )
 }

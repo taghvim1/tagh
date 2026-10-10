@@ -169,27 +169,26 @@ test('URL و پارس پیش‌بینی با پارامترهای خواسته�
 
 type Pos = { lat: number; lon: number }
 function makeDeps(over: Partial<WeatherDeps> = {}) {
-  const log = { positions: 0, forecasts: 0, geocodes: 0, saved: null as unknown }
+  const log = { positions: 0, forecasts: 0, saved: null as unknown }
   let t = 1_000_000
   const deps: WeatherDeps = {
     getPosition: async () => { log.positions++; return { lat: 32.65, lon: 51.67 } as Pos },
     permission: async () => 'granted',
     fetchForecast: async () => { log.forecasts++; return parseForecast(sample) as CurrentWeather },
-    reverseGeocode: async () => { log.geocodes++; return 'اصفهان' },
     now: () => t, online: () => true, load: () => null, save: (p) => { log.saved = p },
     ...over,
   }
   return { deps, log, advance: (ms: number) => { t += ms } }
 }
 
-test('موفقیت: موقعیت، آب‌وهوا، نام شهر و ذخیره محلی', async () => {
+test('موفقیت: موقعیت، آب‌وهوا و ذخیره محلی', async () => {
   const { deps, log } = makeDeps()
   const st = createWeatherStore(deps)
   assert.equal(st.getState().status, 'idle')
   assert.equal(log.positions, 0)                      // بدون اقدام کاربر موقعیت درخواست نمی‌شود
   await st.request()
   const s = st.getState()
-  assert.equal(s.status, 'ready'); assert.equal(s.city, 'اصفهان'); assert.equal(s.weather?.temperature, 21.4); assert.ok(log.saved)
+  assert.equal(s.status, 'ready'); assert.equal(s.weather?.temperature, 21.4); assert.ok(log.saved)
 })
 
 test('خطاهای GPS: رد مجوز، در دسترس نبودن، timeout و عدم پشتیبانی؛ با امکان تلاش مجدد', async () => {
@@ -227,12 +226,6 @@ test('آفلاین: درخواستی ارسال نمی‌شود و آخرین د
   await st.request(); const n = log.forecasts
   online = false; await st.retry()
   assert.equal(log.forecasts, n); assert.equal(st.getState().error, 'network'); assert.equal(st.getState().status, 'ready')
-})
-
-test('نام شهر نبود: city = null (حدس زده نمی‌شود)', async () => {
-  const { deps } = makeDeps({ reverseGeocode: async () => null })
-  const st = createWeatherStore(deps)
-  await st.request(); assert.equal(st.getState().city, null)
 })
 
 test('درخواست هم‌زمان تکراری ارسال نمی‌شود و clear همه‌چیز را پاک می‌کند', async () => {

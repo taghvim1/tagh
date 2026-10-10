@@ -73,7 +73,7 @@ export default function Favorites() {
       </main>
 
       <CenterModal open={popup.open && !!opened} onClose={popup.hide} label={opened?.kind === 'tour' ? opened.item.title : opened?.item.name ?? 'جزئیات'}>
-        {opened?.kind === 'destination' && <DestinationContent destination={opened.item} season={season} onClose={popup.hide} />}
+        {opened?.kind === 'destination' && <DestinationContent destination={opened.item} season={season} />}
         {opened?.kind === 'tour' && <TourContent tour={opened.item} organizer={findOrganizer(organizers, opened.item.organizerId)} />}
       </CenterModal>
     </div>

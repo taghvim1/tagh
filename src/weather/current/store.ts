@@ -3,8 +3,10 @@
 import { useSyncExternalStore } from 'react'
 import { WeatherError } from '../codes'
 import { fetchForecast } from './client'
-import { reverseGeocode, roundCoord } from './geocode'
 import type { CurrentWeather, CurrentWeatherError } from './types'
+
+/** مختصات به ۲ رقم اعشار (حدود ۱ کیلومتر) گرد می‌شود؛ دقت بیشتر لازم نیست */
+export const roundCoord = (n: number) => Math.round(n * 100) / 100
 
 export const REFRESH_MS = 30 * 60_000
 const MIN_AUTO_GAP_MS = 60_000
@@ -14,19 +16,17 @@ export interface WeatherState {
   /** idle = هنوز اجازه/اقدامی از کاربر نیست؛ ready با error = آخرین داده نمایش داده می‌شود ولی به‌روزرسانی ناموفق بود */
   status: 'idle' | 'locating' | 'loading' | 'ready' | 'error'
   weather: CurrentWeather | null
-  city: string | null
   updatedAt: number | null
   error: CurrentWeatherError | null
 }
 
-interface Persisted { coords: { lat: number; lon: number }; city: string | null; weather: CurrentWeather | null; updatedAt: number | null }
+interface Persisted { coords: { lat: number; lon: number }; weather: CurrentWeather | null; updatedAt: number | null }
 type Coords = { lat: number; lon: number }
 
 export interface WeatherDeps {
   getPosition: (opts: { silent: boolean }) => Promise<Coords>
   permission: () => Promise<'granted' | 'denied' | 'prompt' | 'unknown'>
   fetchForecast: (lat: number, lon: number) => Promise<CurrentWeather>
-  reverseGeocode: (lat: number, lon: number) => Promise<string | null>
   now: () => number
   online: () => boolean
   load: () => Persisted | null
@@ -48,7 +48,6 @@ export const browserDeps: WeatherDeps = {
     try { return (await navigator.permissions.query({ name: 'geolocation' })).state } catch { return 'unknown' }
   },
   fetchForecast: (la, lo) => fetchForecast(la, lo),
-  reverseGeocode: (la, lo) => reverseGeocode(la, lo),
   now: () => Date.now(),
   online: () => navigator.onLine !== false,
   load: () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') } catch { return null } },
@@ -59,14 +58,14 @@ export function createWeatherStore(deps: WeatherDeps = browserDeps) {
   const saved = deps.load()
   let coords: Coords | null = saved?.coords ?? null
   let state: WeatherState = saved && coords
-    ? { status: saved.weather ? 'ready' : 'idle', weather: saved.weather, city: saved.city, updatedAt: saved.updatedAt, error: null }
-    : { status: 'idle', weather: null, city: null, updatedAt: null, error: null }
+    ? { status: saved.weather ? 'ready' : 'idle', weather: saved.weather, updatedAt: saved.updatedAt, error: null }
+    : { status: 'idle', weather: null, updatedAt: null, error: null }
   const listeners = new Set<() => void>()
   let inFlight = false
   let lastAttempt = 0
 
   const set = (patch: Partial<WeatherState>) => { state = { ...state, ...patch }; listeners.forEach((l) => l()) }
-  const persist = () => { if (coords) deps.save({ coords, city: state.city, weather: state.weather, updatedAt: state.updatedAt }) }
+  const persist = () => { if (coords) deps.save({ coords, weather: state.weather, updatedAt: state.updatedAt }) }
   const failure = (kind: CurrentWeatherError) => set(state.weather ? { status: 'ready', error: kind } : { status: 'error', error: kind })
 
   async function fetchFor(c: Coords) {
@@ -74,8 +73,7 @@ export function createWeatherStore(deps: WeatherDeps = browserDeps) {
     set({ status: state.weather ? 'ready' : 'loading', error: null })
     try {
       const weather = await deps.fetchForecast(c.lat, c.lon)
-      const city = await deps.reverseGeocode(c.lat, c.lon)
-      set({ status: 'ready', weather, city, updatedAt: deps.now(), error: null })
+      set({ status: 'ready', weather, updatedAt: deps.now(), error: null })
       persist()
     } catch (e) {
       failure(e instanceof WeatherError && e.kind === 'network' ? 'network' : 'api')
@@ -107,7 +105,7 @@ export function createWeatherStore(deps: WeatherDeps = browserDeps) {
     request: () => run({ reposition: true, silent: false }),
     /** تلاش مجدد پس از خطا */
     retry: () => run({ reposition: !state.weather || state.error === 'denied' || state.error === 'unavailable' || state.error === 'timeout', silent: false }),
-    clear: () => { coords = null; deps.save(null); state = { status: 'idle', weather: null, city: null, updatedAt: null, error: null }; listeners.forEach((l) => l()) },
+    clear: () => { coords = null; deps.save(null); state = { status: 'idle', weather: null, updatedAt: null, error: null }; listeners.forEach((l) => l()) },
     /** شروع به‌روزرسانی خودکار؛ تا وقتی کاربر موقعیت را فعال نکرده (مختصاتی نیست) هیچ درخواستی نمی‌فرستد. مقدار برگشتی توقف است */
     start(): () => void {
       const stale = () => state.updatedAt === null || deps.now() - state.updatedAt >= REFRESH_MS

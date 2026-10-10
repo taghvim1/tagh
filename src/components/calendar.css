@@ -221,12 +221,16 @@
 .dc-badge.acceptable { background: #fdebd3; color: #8a4b08; }
 .dc-note { margin: 8px 0 0; color: var(--muted); font-size: .85rem; line-height: 1.7; }
 .dc-list { margin: 0; padding-inline-start: 20px; line-height: 2; }
-.dc-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-.dc-actions .tp-btn { flex: 1; }
+/* دکمهٔ علاقه‌مندی ثابت روی تصویر: با اسکرول محتوا جابه‌جا نمی‌شود (مثل دکمهٔ بستن پنجره) */
+.dc > .dc-float { position: sticky; top: 10px; z-index: 3; height: 0; margin: 0 0 -16px; pointer-events: none; }
+.tp-main > .dc > .dc-float { top: 74px; }
+.fav-btn { pointer-events: auto; position: absolute; top: 0; inset-inline-end: 10px; height: 40px; padding: 0 14px 0 12px; display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 20px; background: rgba(0, 0, 0, .45); color: #fff; font: inherit; font-size: .9rem; cursor: pointer; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.fav-btn.on svg { color: #ff453a; }
+.fav-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .tp-page[data-theme='dark'] .dc-badge.excellent { background: #12402a; color: #7be0aa; }
 .tp-page[data-theme='dark'] .dc-badge.good { background: #17324f; color: #8cc0f5; }
 .tp-page[data-theme='dark'] .dc-badge.acceptable { background: #4a3417; color: #f3c27c; }
-.tp-main > .dc { margin-inline: auto; max-width: 720px; width: 100%; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.tp-main > .dc { margin-inline: auto; max-width: 720px; width: 100%; border: 1px solid var(--line); border-radius: 16px; overflow: clip; }
 
 /* تورها */
 .tour-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -267,17 +271,12 @@
 .has-wx .dh-weekday, .has-wx .dh-month { font-size: clamp(1.2rem, min(5.6vw, 3.4dvh), 2.2rem); }
 .has-wx .dh-day { font-size: clamp(3.4rem, min(19vw, 11dvh), 6.5rem); }
 .has-wx .dh-sub { font-size: clamp(.78rem, min(2.5vw, 2dvh), 1rem); line-height: 1.5; }
-.wx { position: fixed; z-index: 25; top: calc(env(safe-area-inset-top) + 6px); inset-inline: 0; margin-inline: auto; width: min(calc(100vw - 128px), 360px); min-height: 56px; padding: 6px 10px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-soft); color: var(--ink); font-size: .74rem; line-height: 1.5; }
-.wx-icon { flex: none; font-size: 1.5rem; line-height: 1; }
-.wx-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.wx-row1, .wx-row2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
-.wx-row2, .wx-note, .wx-stale { color: var(--muted); }
-.wx-temp { font-size: 1rem; }
-.wx-city { font-weight: 700; }
-.wx-when { flex: none; display: flex; flex-direction: column; align-items: center; color: var(--muted); text-align: center; }
-.wx-clock { color: var(--ink); font-weight: 700; font-size: .95rem; }
+.wx { position: fixed; z-index: 25; top: calc(env(safe-area-inset-top) + 6px); inset-inline: 0; margin-inline: auto; width: min(calc(100vw - 128px), 360px); min-height: 56px; padding: 6px 12px; display: flex; align-items: center; justify-content: center; gap: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-soft); color: var(--ink); font-size: .8rem; line-height: 1.5; }
+.wx-icon { flex: none; font-size: 1.7rem; line-height: 1; }
+.wx-temp { font-size: 1.25rem; font-weight: 700; }
+.wx-clock { color: var(--ink); font-weight: 700; font-size: 1rem; }
+.wx-range { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.35; color: var(--muted); font-size: .8rem; }
+.wx-note, .wx-stale { color: var(--muted); font-size: .72rem; }
 .wx-compact { justify-content: space-between; }
 .wx-btn { flex: none; min-height: 32px; padding: 0 12px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 700; cursor: pointer; }
 .wx-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-.wx-stale { font-size: .68rem; }
-@media (max-width: 380px) { .wx-when span:not(.wx-clock) { display: none; } }
