@@ -1,14 +1,15 @@
 /* صفحه‌های تقویم و پیشنهاد سفر؛ توکن‌ها روی کلاس خود صفحه‌اند تا پنل مدیریت تحت‌تأثیر قرار نگیرد */
 .cal-page, .tp-page {
   --bg: #ffffff; --bg-soft: #f2f2f7; --ink: #1c1c1e; --muted: #8e8e93; --line: #d1d1d6;
-  --accent: #ff3b30; --accent-ink: #ffffff; --holiday: #ff3b30; --dot: #8e8e93;
+  --accent: #ff3b30; --accent-ink: #ffffff; --holiday: #ff3b30; --dot: #8e8e93; --tour: #e3e3e8;
+  --btn: clamp(72px, min(27vw, 12.5dvh), 112px);
   --info: clamp(64px, 9dvh, 96px);
   font-family: 'B Yekan', Tahoma, sans-serif;
   background: var(--bg); color: var(--ink); color-scheme: light;
 }
 .cal-page[data-theme='dark'], .tp-page[data-theme='dark'] {
   --bg: #0f1720; --bg-soft: #1b2733; --ink: #f2f4f7; --muted: #9aa6b2; --line: #2e3c4a;
-  --accent: #ff453a; --holiday: #ff453a; --dot: #9aa6b2;
+  --accent: #ff453a; --holiday: #ff453a; --dot: #9aa6b2; --tour: #2d3b4a;
   color-scheme: dark;
 }
 .cal-page h1, .cal-page h2, .cal-page p, .tp-page h1, .tp-page h2, .tp-page p { margin: 0; }
@@ -19,7 +20,7 @@
 .cal-page { height: 100vh; height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow: hidden; display: flex; flex-direction: column; }
 
 /* بالا: تاریخ امروز */
-.cal-top { flex: 0 0 35vh; flex-basis: 35dvh; display: flex; align-items: center; justify-content: center; text-align: center; padding-inline: 12px; }
+.cal-top { flex: 0 0 32vh; flex-basis: 32dvh; display: flex; align-items: center; justify-content: center; text-align: center; padding-inline: 12px; }
 .dh { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .dh-main { display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1.15; }
 .dh-weekday, .dh-month { font-size: clamp(1.5rem, min(7vw, 4.6dvh), 2.8rem); font-weight: 700; }
@@ -37,19 +38,20 @@
 
 /* پایین: تقویم بدون خط و کادر */
 .cal-bottom { flex: 1 1 0; min-height: 0; display: flex; justify-content: center; align-items: flex-start; padding: 0 3vw 12px; }
-.calendar { display: flex; flex-direction: column; gap: 6px; width: min(100%, 640px, max(260px, calc((65dvh - var(--info) - 138px) * 7 / var(--rows, 6)))); }
+.calendar { display: flex; flex-direction: column; gap: 6px; width: min(100%, 640px, max(240px, calc((68dvh - var(--info) - var(--btn) - 100px) * 7 / var(--rows, 6)))); }
 .grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .weekdays { text-align: center; color: var(--muted); font-size: clamp(.62rem, 2.6vw, .95rem); }
 .weekdays div { padding: 6px 0; white-space: nowrap; }
 
-.cell { position: relative; aspect-ratio: 1 / 1; min-width: 0; min-height: 0; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 0; background: none; color: var(--ink); font: inherit; cursor: pointer; }
+.cell { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; position: relative; aspect-ratio: 1 / 1; min-width: 0; min-height: 0; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 0; background: none; color: var(--ink); font: inherit; cursor: pointer; }
 .cell::before { content: ''; position: absolute; inset: 9%; border-radius: 50%; border: 2px solid transparent; }
 @media (hover: hover) { .cell:hover::before { background: var(--bg-soft); } }
 .cell-num { position: relative; font-size: clamp(1.05rem, 5vw, 1.9rem); line-height: 1; }
 .cell.off .cell-num { color: var(--accent); }
 .cell.adjacent .cell-num { color: var(--muted); opacity: .55; }
 .cell.now .cell-num { color: var(--accent); font-weight: 700; }
-.cell.has-tour::after { content: ''; position: absolute; inset: 3%; border-radius: 50%; border: 2px solid #8B5CF6; background: transparent; pointer-events: none; }
+.cell.has-tour::before { background: var(--tour); }
+.cell.has-note .cell-num { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
 .cell.holiday::before { border-color: var(--holiday); }
 .cell.selected::before { background: var(--accent); }
 .cell.selected .cell-num { color: var(--accent-ink); font-weight: 700; opacity: 1; }
@@ -272,21 +274,20 @@
 .has-wx .dh-day { font-size: clamp(3.8rem, min(21vw, 13dvh), 7rem); }
 .has-wx .dh-sub { font-size: clamp(.76rem, min(2.5vw, 2dvh), 1rem); line-height: 1.5; }
 /* کارت آب‌وهوا کنار تاریخ (در صفحهٔ راست‌چین سمت راستِ تاریخ) */
-.wx { flex: none; width: clamp(104px, 29vw, 128px); min-height: 104px; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border-radius: 18px; background: var(--bg-soft); color: var(--ink); font-size: .78rem; line-height: 1.4; text-align: center; }
-.wx-icon { display: block; width: 44px; height: 44px; color: var(--ink); }
+.wx { flex: none; width: clamp(108px, 30vw, 150px); padding: 4px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: none; color: var(--ink); line-height: 1.3; text-align: center; }
+.wx-icon { display: block; width: clamp(56px, 17vw, 84px); height: clamp(56px, 17vw, 84px); color: var(--ink); }
 .wx-icon svg { display: block; width: 100%; height: 100%; }
-.wx-temp { font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
-.wx-meta { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 0 8px; color: var(--muted); font-size: .76rem; }
-.wx-clock { color: var(--ink); font-weight: 700; }
-.wx-range { display: inline-flex; gap: 6px; }
+.wx-temp { font-size: clamp(2.6rem, min(13vw, 8dvh), 4.6rem); font-weight: 700; line-height: 1; }
+.wx-range { display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--muted); font-size: clamp(.95rem, min(3.8vw, 2.6dvh), 1.3rem); }
 .wx-note { color: var(--muted); font-size: .72rem; }
-.wx-stale { padding: 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: .68rem; cursor: pointer; }
+.wx-stale { padding: 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: .68rem; line-height: 1.5; cursor: pointer; }
 .wx-btn { flex: none; min-height: 32px; padding: 0 12px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 700; cursor: pointer; }
 .wx-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 /* سه دکمهٔ گرد پایین صفحهٔ اصلی */
-.dock { flex: 0 0 auto; width: min(100%, 700px); margin-inline: auto; display: flex; align-items: center; justify-content: space-between; padding: 6px max(6vw, 22px) 14px; }
-.dock-btn { width: 56px; height: 56px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--bg-soft); color: var(--ink); cursor: pointer; text-decoration: none; }
+.dock { flex: 0 0 auto; width: min(100%, 700px); margin-inline: auto; display: flex; align-items: center; justify-content: space-between; padding: 6px max(3vw, 12px) clamp(14px, 4dvh, 34px); }
+.dock-btn { width: var(--btn); height: var(--btn); display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: var(--bg-soft); color: var(--ink); cursor: pointer; text-decoration: none; }
+.dock-btn svg { width: 46%; height: 46%; }
 @media (hover: hover) { .dock-btn:hover { background: var(--line); } }
 .dock-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 

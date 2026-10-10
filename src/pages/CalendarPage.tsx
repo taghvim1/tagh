@@ -11,6 +11,7 @@ import { useCalendarData } from '../lib/calendarData'
 import { fromGregorian, shiftMonth, toGregorianDate, type JalaliDate, type MonthRef } from '../lib/jalali'
 import { useAncientCelebrations, useWeatherCard } from '../lib/settings'
 import { useOverlay } from '../lib/overlay'
+import { useNotes } from '../lib/notes'
 import { navigate } from '../lib/router'
 import { getSelectedDate, setSelectedDate } from '../lib/selection'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
@@ -35,6 +36,7 @@ export default function CalendarPage() {
   const tourDays = useTourDays()
   const popup = useOverlay('tour-day')
   const note = useOverlay('note')
+  const notes = useNotes()
   const selectedIso = toISO(toGregorianDate(selected))
   const dayTours = tourDays.get(selectedIso) ?? []
 
@@ -48,13 +50,15 @@ export default function CalendarPage() {
     select(date)
     if (tourDays.has(toISO(toGregorianDate(date)))) popup.show()
   }
+  // نگه‌داشتن ۲ ثانیه‌ای روی یک روز: همان روز انتخاب می‌شود و یادداشتش باز می‌شود
+  const longPress = (date: JalaliDate) => { select(date); note.show() }
   const openTour = (t: Tour) => { popup.hideSilently(); navigate(`/tours/${t.id}`) }
 
   return (
     <div className="cal-page" data-theme={dark ? 'dark' : 'light'}>
       <section className={`cal-top${weatherOn ? ' has-wx' : ''}`}>{weatherOn && <WeatherCard />}<DateHeader today={now} /></section>
       <OccasionRow view={view} selected={selected} onPrev={() => setView((v) => shiftMonth(v, -1))} onNext={() => setView((v) => shiftMonth(v, 1))} />
-      <section className="cal-bottom"><Calendar today={today} view={view} selected={selected} onSelect={tapDay} tourDays={tourDays} /></section>
+      <section className="cal-bottom"><Calendar today={today} view={view} selected={selected} onSelect={tapDay} tourDays={tourDays} notes={notes} onLongPress={longPress} /></section>
       <Dock onNote={note.show} />
       <AppChrome home overlay onToday={() => select(today)} />
       <NotePopup open={note.open} onClose={note.hide} date={selected} />
