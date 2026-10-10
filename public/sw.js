@@ -26,6 +26,8 @@ self.addEventListener('fetch', (e) => {
   const req = e.request
   const url = new URL(req.url)
   if (req.method !== 'GET' || url.origin !== location.origin) return
+  // API (اطلاعات شخصی/مدیریتی): هرگز از کش عمومی سرو یا در آن ذخیره نمی‌شود؛ مستقیم به شبکه می‌رود
+  if (url.pathname === '/api' || url.pathname.startsWith('/api/')) return
 
   // داده‌های تقویم: اول شبکه (برای نسخهٔ جدید)، در نبود اینترنت آخرین نسخهٔ ذخیره‌شده
   if (url.pathname.startsWith('/data/')) {

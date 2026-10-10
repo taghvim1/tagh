@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
+import { lazyWithRetry, RouteBoundary, SlowLoading } from './components/LazyBoundary'
 import { trackRoute } from './analytics'
 import CalendarPage from './pages/CalendarPage'
 import Favorites from './pages/Favorites'
@@ -10,7 +11,7 @@ import TravelSuggestions from './pages/TravelSuggestions'
 import { usePath } from './lib/router'
 
 // پنل مدیریت جدا بارگذاری می‌شود و روی بستهٔ تقویم اثری ندارد
-const AdminApp = lazy(() => import('./admin/AdminApp'))
+const AdminApp = lazyWithRetry(() => import('./admin/AdminApp'))
 
 export default function App() {
   const path = usePath()
@@ -18,9 +19,11 @@ export default function App() {
 
   if (path === '/admin' || path.startsWith('/admin/')) {
     return (
-      <Suspense fallback={null}>
-        <AdminApp path={path} />
-      </Suspense>
+      <RouteBoundary>
+        <Suspense fallback={<SlowLoading />}>
+          <AdminApp path={path} />
+        </Suspense>
+      </RouteBoundary>
     )
   }
 

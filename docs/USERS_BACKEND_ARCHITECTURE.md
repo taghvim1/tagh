@@ -1,6 +1,13 @@
 # معماری پیشنهادی بک‌اند کاربران و تحلیل رفتار
 
-وضعیت: **بک‌اند وجود ندارد.** کلاینت (`src/analytics/*`) برای اتصال به آن آماده است؛ پنل `/admin/users` فعلاً فقط داده‌ی ساختگی نشان می‌دهد.
+وضعیت (مرحله ۲ از ۷): **اسکلت سرور Fastify در `server/` ساخته شده؛ فقط `/api/health` و `/api/ready` دارد.** هنوز جدول، احراز هویت، دریافت رویداد یا ادغام وجود ندارد. کلاینت (`src/analytics/*`) برای اتصال آماده است و پنل `/admin/users` فعلاً فقط داده‌ی ساختگی نشان می‌دهد.
+
+## سرور (`server/`)
+- Fastify 5 + zod (پیکربندی) + `postgres` (اتصال تنبل) + rate limit؛ تست با Vitest (`npm run test:server`).
+- یک سرویس هم `dist/` و هم `/api/*` را سرو می‌کند (همدامنه). `assets/` کش بلند، `index.html` و `sw.js` همیشه revalidate؛ فایل ناموجود با پسوند 404 واقعی می‌دهد (نه HTML).
+- متغیرها (فقط نام): `PORT` (Railway می‌دهد)، `DATABASE_URL` (اختیاری تا مرحله ۳)، `STATIC_DIR`، `RATE_LIMIT_PER_MIN`.
+- **`npm start` هنوز `serve` است و استقرار فعلی تغییر نکرده.** برای سوئیچ (پس از تأیید): در `railway.json` مقدار `buildCommand` را `npm run build && npm run build:server` و `startCommand` را `npm run start:api` بگذارید؛ در صورت مشکل، برگرداندن همین دو خط کافی است. پیشنهاد healthcheck: `/api/health`.
+- افزودن PostgreSQL (پس از تأیید شما): در همان پروژهٔ Railway: New → Database → PostgreSQL؛ سپس در سرویس برنامه متغیر `DATABASE_URL` را با Variable Reference به سرویس Postgres وصل کنید (مقدار را کپی نکنید).
 
 ## اجزا
 - **API (Node/TS یا هر چارچوب)**: `POST /api/events` (دریافت دستهٔ رویدادها)، `POST /api/auth/*` (ثبت‌نام/ورود)، `POST /api/account/merge` (ادغام مهمان)، `GET/POST /api/admin/*` (قرارداد در `src/analytics/admin/api.ts`)، `DELETE /api/me/data` (حذف داده).
