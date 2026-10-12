@@ -15,7 +15,7 @@ import { useTours } from '../tours/repository'
 import TourCard from '../tours/TourCard'
 import TourContent from '../tours/TourContent'
 import type { Tour } from '../tours/types'
-import { useDestinations } from '../travel/repository'
+import { useAllDestinations } from '../travel/remote'
 import { seasonOfMonth } from '../travel/season'
 
 type Opened = { kind: 'destination'; item: Destination } | { kind: 'tour'; item: Tour } | null
@@ -25,7 +25,7 @@ export default function Favorites() {
   const [dark] = useDarkMode()
   useThemeColorMeta(dark)
   const favs = useFavorites()
-  const destinations = useDestinations()
+  const destinations = useAllDestinations()
   const tours = useTours()
   const organizers = useOrganizers()
   const today = useMemo(() => fromGregorian(new Date()), [])

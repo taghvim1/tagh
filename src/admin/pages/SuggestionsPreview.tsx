@@ -8,13 +8,13 @@ import { faNum, fromGregorian } from '../../lib/jalali'
 import { useOverlay } from '../../lib/overlay'
 import { EMPTY_FILTERS } from '../../travel/filters'
 import { recommend } from '../../travel/recommend'
-import { useDestinations } from '../../travel/repository'
+import { useAllDestinations } from '../../travel/remote'
 import { seasonOfMonth } from '../../travel/season'
 import { useHistoricalClimate } from '../../weather/history/store'
 
 // همان فهرستی که کاربر در «پیشنهاد سفر» می‌بیند، با همان موتور پیشنهاد؛ فقط برای مشاهدهٔ مدیر.
 export default function SuggestionsPreview() {
-  const all = useDestinations()
+  const all = useAllDestinations()
   const climate = useHistoricalClimate()
   const [season, setSeason] = useState<Season>(() => seasonOfMonth(fromGregorian(new Date()).month))
   const result = useMemo(() => recommend(all, { season, filters: EMPTY_FILTERS, climate }), [all, season, climate])

@@ -33,7 +33,7 @@ export function buildDemoProfiles(now = new Date(), count = 80, dests: Destinati
       const d = r() < 0.6 && preferred.length ? pick(preferred) : pick(dests)
       const types: EventType[] = ['view_destination', 'view_destination', 'destination_dwell', 'select_season', 'search', 'favorite_add', 'view_tour', 'offer_click', 'notification_open', 'use_filter']
       const t = pick(types)
-      const base: ActivityEvent = { event_id: `demo_e_${n}_${k}`, anonymous_id: anon, ...(registered ? { user_id: id } : {}), event_type: t, occurred_at: when.toISOString(), session_id: sess, app_version: '1.0.0', platform: 'pwa', consent_context: { analytics: true, marketing: false, location: false } }
+      const base: ActivityEvent = { event_id: `demo_e_${n}_${k}`, anonymous_id: anon, ...(registered ? { user_id: id } : {}), event_type: t, occurred_at: when.toISOString(), session_id: sess, app_version: '1.0.0', platform: 'pwa', consent_context: { analytics: true, marketing: false, notifications: false, location: false } }
       if (t === 'view_destination' || t === 'destination_dwell' || t === 'favorite_add') Object.assign(base, { destination_id: d.id, category: d.type[0], budget_range: d.budget, domestic_or_international: d.scope, season: r() < 0.5 ? favSeason : pick(SEASONS) })
       if (t === 'destination_dwell') base.duration_sec = 5 + Math.floor(r() * 120)
       if (t === 'select_season') base.season = r() < 0.6 ? favSeason : pick(SEASONS)
@@ -53,7 +53,7 @@ export function buildDemoProfiles(now = new Date(), count = 80, dests: Destinati
       first_seen_at: new Date(first).toISOString(), ...(registered ? { registered_at: new Date(first + 3600_000).toISOString() } : {}), last_active_at: last,
       events, favorites: { destination: [...new Set(favs)], tour: [] },
       interests: computeInterests(events, undefined, { now }),
-      consent: { analytics: true, marketing, location: false },
+      consent: { analytics: true, marketing, notifications: false, location: false },
       notifications: { subject_id: id, operational: true, promotional: marketing, updated_at: now.toISOString(), ...(marketing && r() < 0.2 ? { last_promotional_sent_at: new Date(now.getTime() - 2 * 86400_000).toISOString() } : {}) },
       ...(registered ? { contact: { email: `demo${n}@example.invalid` } } : {}),
       merge_logs: registered && r() < 0.5 ? [{ merge_id: `demo_m_${n}`, user_id: id, anonymous_id: anon, status: 'success', events_linked: events.length, events_skipped_duplicates: 0, favorites_added: favs.length, created_at: new Date(first + 3600_000).toISOString() }] : [],

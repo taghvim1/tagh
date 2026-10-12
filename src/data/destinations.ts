@@ -52,6 +52,8 @@ export interface Destination {
   enabled: boolean
   /** مختصات مقصد (درجه) برای دریافت آب‌وهوای تاریخی؛ اگر نباشد، آب‌وهوای تاریخی آن مقصد دریافت نمی‌شود */
   latitude?: number
+  /** اعتبار تصویر (نام عکاس و مجوز) برای پیشنهادهای منتشرشده از سرور */
+  image_credit?: string
   longitude?: number
   // --- فیلدهای مشتق از season_suitability (با withDerived محاسبه می‌شوند) ---
   best_seasons: Season[]

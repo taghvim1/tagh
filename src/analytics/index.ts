@@ -9,7 +9,7 @@ const standalone = typeof window !== 'undefined' && !!window.matchMedia?.('(disp
 export const tracker = createTracker({ kv: safeKV(), platform: standalone ? 'pwa' : 'web' })
 
 export function useAnalytics() {
-  const read = () => ({ consent: tracker.consent(), pending: tracker.pending(), deletion: tracker.deletionRequest(), id: tracker.installation().anonymous_id })
+  const read = () => ({ consent: tracker.consent(), decisions: tracker.decisions(), pending: tracker.pending(), deletion: tracker.deletionRequest(), id: tracker.installation().anonymous_id })
   const [s, set] = useState(read)
   useEffect(() => tracker.subscribe(() => set(read())), [])
   return s

@@ -9,12 +9,19 @@ import TourDetails from './pages/TourDetails'
 import SettingsPage from './pages/SettingsPage'
 import Tours from './pages/Tours'
 import TravelSuggestions from './pages/TravelSuggestions'
+import PrivacyPage from './pages/PrivacyPage'
+import { ConsentGate } from './components/ConsentDialog'
 import { usePath } from './lib/router'
 
 // پنل مدیریت جدا بارگذاری می‌شود و روی بستهٔ تقویم اثری ندارد
 const AdminApp = lazyWithRetry(() => import('./admin/AdminApp'))
 
 export default function App() {
+  const path0 = usePath()
+  return <>{path0.startsWith('/admin') ? null : <ConsentGate />}<Routes /></>
+}
+
+function Routes() {
   const path = usePath()
   useEffect(() => { if (!path.startsWith('/admin')) trackRoute(path) }, [path])
 
@@ -30,6 +37,7 @@ export default function App() {
 
   if (path === '/travel-suggestions') return <TravelSuggestions />
   if (path === '/settings') return <SettingsPage />
+  if (path === '/privacy') return <PrivacyPage />
   if (path === '/notes') return <NotesPage />
   if (path === '/favorites') return <Favorites />
   if (path === '/tours') return <Tours />

@@ -14,7 +14,7 @@ import { useDarkMode, useThemeColorMeta } from '../lib/theme'
 import { getSaved, saveState } from '../lib/travelFilterStore'
 import { activeFilterCount, EMPTY_FILTERS, summarize, type TravelFilters } from '../travel/filters'
 import { recommend } from '../travel/recommend'
-import { useDestinations } from '../travel/repository'
+import { useAllDestinations } from '../travel/remote'
 import { seasonOfMonth } from '../travel/season'
 import { useHistoricalClimate } from '../weather/history/store'
 
@@ -42,7 +42,7 @@ export default function TravelSuggestions() {
   const [filters, setFilters] = useState<TravelFilters>(() => getSaved().filters)
   const apply = (f: TravelFilters) => { setFilters(f); saveState({ filters: f }) }
 
-  const all = useDestinations()
+  const all = useAllDestinations()
   const climate = useHistoricalClimate()
   const result = useMemo(() => recommend(all, { season, filters, climate }), [all, season, filters, climate])
   const count = activeFilterCount(filters)

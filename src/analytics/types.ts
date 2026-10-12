@@ -114,7 +114,8 @@ export interface InterestScore {
   updated_at: ISODate
 }
 
-export type ConsentKind = 'analytics' | 'marketing' | 'location'
+/** marketing = «پیشنهادها و تبلیغات شخصی‌سازی‌شده»؛ notifications = رضایت داخلی اعلان (جدا از مجوز فنی مرورگر) */
+export type ConsentKind = 'analytics' | 'marketing' | 'notifications' | 'location'
 export type ConsentSummary = Record<ConsentKind, boolean>
 
 /** ۷) consent_records — فقط‌الحاقی؛ آخرین رکورد هر نوع وضعیت جاری است */
@@ -125,7 +126,7 @@ export interface ConsentRecord {
   granted: boolean
   recorded_at: ISODate
   policy_version: string
-  source: 'settings' | 'prompt' | 'server'
+  source: 'settings' | 'prompt' | 'privacy_page' | 'server'
 }
 
 /** ۸) account_merge_logs — فقط شمارش و کد؛ بدون محتوای رویداد */

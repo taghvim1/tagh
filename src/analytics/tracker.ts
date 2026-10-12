@@ -1,7 +1,7 @@
-import { CONSENT_KINDS, clearConsent, consentSummary, loadConsentRecords, recordConsent } from './consent'
+import { CONSENT_KINDS, clearConsent, consentDecisions, consentSummary, kindsToAsk, loadConsentRecords, recordConsent } from './consent'
 import { APP_VERSION, clearInstallation, getOrCreateInstallation } from './installation'
 import { nowISO, randomId, type KV } from './ids'
-import { EVENT_TYPES, type ActivityEvent, type ConsentKind, type ConsentSummary, type EventType } from './types'
+import { EVENT_TYPES, type ActivityEvent, type ConsentKind, type ConsentRecord, type ConsentSummary, type EventType } from './types'
 
 export class BackendNotConnectedError extends Error { constructor() { super('BACKEND_NOT_CONNECTED') } }
 export interface Transport { send(events: ActivityEvent[]): Promise<void> }
@@ -105,11 +105,16 @@ export function createTracker(deps: TrackerDeps) {
     } finally { flushing = false }
   }
 
-  function setConsent(kind: ConsentKind, granted: boolean) {
-    recordConsent(kv, installation().anonymous_id, kind, granted, now())
-    if (kind === 'analytics' && !granted) kv.removeItem(OUTBOX_KEY) // لغو رضایت: صف ارسال‌نشده پاک می‌شود
+  /** ثبت چند رضایت با هم (هر نوع مستقل از بقیه) و فقط یک اعلان تغییر */
+  function setConsents(values: Partial<Record<ConsentKind, boolean>>, source: ConsentRecord['source'] = 'settings') {
+    const id = installation().anonymous_id
+    for (const [kind, granted] of Object.entries(values) as [ConsentKind, boolean][]) {
+      recordConsent(kv, id, kind, granted, now(), source)
+      if (kind === 'analytics' && !granted) kv.removeItem(OUTBOX_KEY) // لغو رضایت: صف ارسال‌نشده پاک می‌شود
+    }
     emit()
   }
+  const setConsent = (kind: ConsentKind, granted: boolean, source: ConsentRecord['source'] = 'settings') => setConsents({ [kind]: granted }, source)
 
   /** نسخهٔ قابل‌مشاهده از داده‌های همین دستگاه (حق مشاهده) */
   const exportMyData = () => ({ installation: installation(), consent: loadConsentRecords(kv), pending_events: loadOutbox() })
@@ -128,7 +133,10 @@ export function createTracker(deps: TrackerDeps) {
   const deletionRequest = () => { try { return JSON.parse(kv.getItem(DELETION_KEY) ?? 'null') as { anonymous_id: string; requested_at: string; status: string } | null } catch { return null } }
 
   return {
-    track, flush, setConsent, consent, exportMyData, deleteMyData, deletionRequest,
+    track, flush, setConsent, setConsents, consent,
+    decisions: () => consentDecisions(loadConsentRecords(kv)),
+    toAsk: () => kindsToAsk(loadConsentRecords(kv)),
+    exportMyData, deleteMyData, deletionRequest,
     pending: () => loadOutbox().length, installation,
     subscribe: (l: () => void) => { listeners.add(l); return () => { listeners.delete(l) } },
     consentKinds: CONSENT_KINDS,

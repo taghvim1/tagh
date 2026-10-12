@@ -17,6 +17,7 @@ export default function DestinationContent({ destination: d, season }: Props) {
     <article className="dc">
       <FavButton kind="destination" id={d.id} />
       <img className="dc-hero" src={d.image} alt={d.name} />
+      {d.image_credit && <p className="dc-credit">تصویر: {d.image_credit}</p>}
       <header className="dc-head">
         <h2>{d.name}</h2>
         <p className="dc-loc">{locationLabel(d)}</p>

@@ -4,7 +4,8 @@ import DestinationContent from '../components/DestinationContent'
 import { fromGregorian } from '../lib/jalali'
 import { useSelectedDate } from '../lib/selection'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
-import { findDestination, useDestinations } from '../travel/repository'
+import { findDestination } from '../travel/repository'
+import { useAllDestinations } from '../travel/remote'
 import { seasonOfMonth } from '../travel/season'
 
 // مسیر مستقیم جزئیات (برای لینک‌های قدیمی/مستقیم)؛ محتوا همان پنجرهٔ جزئیات است.
@@ -13,7 +14,7 @@ export default function DestinationDetails({ id }: { id: number }) {
   useThemeColorMeta(dark)
   const today = useMemo(() => fromGregorian(new Date()), [])
   const season = seasonOfMonth((useSelectedDate() ?? today).month)
-  const d = findDestination(useDestinations(), id)
+  const d = findDestination(useAllDestinations(), id)
   return (
     <div className="tp-page" data-theme={dark ? 'dark' : 'light'}>
       <AppChrome title="تقویم سفر" backFallback="/travel-suggestions" />

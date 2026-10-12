@@ -1,0 +1,43 @@
+import type { Status, SuggestionContent } from '../domain/schema.js'
+
+export interface AiMeta { model?: string; prompt_version?: number; used_fallback?: boolean; sources: { title: string; url: string; snippet?: string }[]; generated_at?: string; warnings?: string[] }
+export interface SuggestionRow {
+  id: number; status: Status; source: 'manual' | 'ai' | 'import'
+  name: string; country: string; content: SuggestionContent; version: number
+  cover_image_id: number | null; reject_reason: string | null; ai_meta: AiMeta | null
+  created_at: string; updated_at: string; published_at: string | null
+}
+export interface VersionRow { id: number; suggestion_id: number; version: number; content: SuggestionContent; note: string; created_at: string }
+export type ImageStatus = 'candidate' | 'approved' | 'rejected'
+export interface ImageRow {
+  id: number; suggestion_id: number; url: string; thumb_url: string | null; provider: string
+  source_url: string | null; author: string | null; license: string | null; license_url: string | null; attribution: string | null
+  status: ImageStatus; created_at: string; decided_at: string | null
+}
+export interface PromptRow { id: number; version: number; text: string; note: string; active: boolean; created_at: string }
+
+export interface SuggestionQuery { status?: Status; q?: string; scope?: 'domestic' | 'international'; sort?: 'updated' | 'created' | 'name'; order?: 'asc' | 'desc'; limit: number; offset: number }
+
+/** رابط ذخیره‌سازی (همه async تا پیاده‌سازی PostgreSQL بدون تغییر در سرویس‌ها جایگزین شود؛ طرح جدول‌ها در migrations/001_init.sql است) */
+export interface Store {
+  listSuggestions(q: SuggestionQuery): Promise<{ items: SuggestionRow[]; total: number; counts: Record<string, number> }>
+  allSuggestions(): Promise<SuggestionRow[]>
+  getSuggestion(id: number): Promise<SuggestionRow | null>
+  insertSuggestion(row: Omit<SuggestionRow, 'id'>): Promise<SuggestionRow>
+  updateSuggestion(id: number, patch: Partial<Omit<SuggestionRow, 'id'>>): Promise<SuggestionRow | null>
+  deleteSuggestion(id: number): Promise<boolean>
+  addVersion(row: Omit<VersionRow, 'id'>): Promise<VersionRow>
+  listVersions(suggestionId: number): Promise<VersionRow[]>
+  addImage(row: Omit<ImageRow, 'id'>): Promise<ImageRow>
+  listImages(suggestionId: number): Promise<ImageRow[]>
+  getImage(id: number): Promise<ImageRow | null>
+  updateImage(id: number, patch: Partial<Omit<ImageRow, 'id'>>): Promise<ImageRow | null>
+  deleteImage(id: number): Promise<boolean>
+  listPrompts(): Promise<PromptRow[]>
+  addPrompt(row: Omit<PromptRow, 'id' | 'version' | 'active'>): Promise<PromptRow>
+  activatePrompt(id: number): Promise<PromptRow | null>
+  getKV(key: string): Promise<string | null>
+  setKV(key: string, value: string): Promise<void>
+  deleteKV(key: string): Promise<void>
+  close(): Promise<void>
+}

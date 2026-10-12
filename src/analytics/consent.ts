@@ -2,9 +2,11 @@ import { nowISO, randomId, type KV } from './ids'
 import type { ConsentKind, ConsentRecord, ConsentSummary } from './types'
 
 // رضایت‌ها جدا از هم مدیریت می‌شوند و پیش‌فرض همه «عدم رضایت» است (opt-in).
-export const POLICY_VERSION = '2026-10-v1'
-export const CONSENT_KINDS: ConsentKind[] = ['analytics', 'marketing', 'location']
-export const NO_CONSENT: ConsentSummary = { analytics: false, marketing: false, location: false }
+export const POLICY_VERSION = '2026-10-v2'
+export const CONSENT_KINDS: ConsentKind[] = ['analytics', 'marketing', 'notifications', 'location']
+/** سه رضایتی که در پنجرهٔ رضایت از کاربر پرسیده می‌شود (location جدا و فقط با اقدام خود کاربر در آب‌وهوا است) */
+export const ASKED_KINDS: ConsentKind[] = ['analytics', 'marketing', 'notifications']
+export const NO_CONSENT: ConsentSummary = { analytics: false, marketing: false, notifications: false, location: false }
 const KEY = 'taghvim-consent-v1'
 
 export function loadConsentRecords(kv: KV): ConsentRecord[] {
@@ -23,3 +25,13 @@ export function recordConsent(kv: KV, subjectId: string, kind: ConsentKind, gran
   return next
 }
 export const clearConsent = (kv: KV) => kv.removeItem(KEY)
+
+export type ConsentDecision = 'granted' | 'declined' | 'undecided'
+/** وضعیت تصمیم هر رضایت: «ردشده» یعنی کاربر صریحاً نپذیرفته؛ «بی‌تصمیم» یعنی هنوز رکوردی ندارد */
+export function consentDecisions(records: ConsentRecord[]): Record<ConsentKind, ConsentDecision> {
+  const d = { analytics: 'undecided', marketing: 'undecided', notifications: 'undecided', location: 'undecided' } as Record<ConsentKind, ConsentDecision>
+  for (const r of records) d[r.kind] = r.granted ? 'granted' : 'declined'
+  return d
+}
+/** رضایت‌هایی که باید پرسیده شوند: فقط ردشده/بی‌تصمیم؛ پذیرفته‌شده‌ها هرگز دوباره پرسیده نمی‌شوند */
+export const kindsToAsk = (records: ConsentRecord[]): ConsentKind[] => { const d = consentDecisions(records); return ASKED_KINDS.filter((k) => d[k] !== 'granted') }

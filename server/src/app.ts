@@ -5,13 +5,23 @@ import fastifyStatic from '@fastify/static'
 import Fastify, { type FastifyInstance } from 'fastify'
 import type { Config } from './config.js'
 import type { Db } from './db.js'
+import { createAiService } from './ai/service.js'
+import { adminRoutes } from './routes/admin.js'
+import { publicRoutes } from './routes/public.js'
+import { createSecrets } from './secrets.js'
+import { createJsonStore } from './store/jsonStore.js'
+import type { Store } from './store/types.js'
 
-export interface AppDeps { config: Config; db?: Db | null }
+export interface AppDeps { config: Config; db?: Db | null; store?: Store; fetchImpl?: typeof fetch }
 
-export async function buildApp({ config, db = null }: AppDeps): Promise<FastifyInstance> {
+export async function buildApp({ config, db = null, store: injected, fetchImpl }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({ logger: config.NODE_ENV === 'test' ? false : { level: 'info', redact: ['req.headers.authorization', 'req.headers.cookie'] }, trustProxy: true, bodyLimit: 64 * 1024 })
 
   await app.register(rateLimit, { global: false })
+  const store = injected ?? await createJsonStore(config.NODE_ENV === 'test' ? undefined : resolve(config.DATA_DIR, 'store.json'))
+  app.addHook('onClose', async () => { await store.close() })
+  const secrets = createSecrets(config, store)
+  const ai = createAiService({ store, secrets, fetch: fetchImpl ?? ((...a) => fetch(...a)) })
 
   app.addHook('onSend', async (req, reply) => {
     reply.header('X-Content-Type-Options', 'nosniff').header('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -23,6 +33,8 @@ export async function buildApp({ config, db = null }: AppDeps): Promise<FastifyI
     await api.register(rateLimit, { max: config.RATE_LIMIT_PER_MIN, timeWindow: '1 minute' })
     // زنده‌بودن پردازش؛ به دیتابیس وابسته نیست (برای healthcheck پلتفرم)
     api.get('/health', async () => ({ status: 'ok' }))
+    publicRoutes(api, store)
+    adminRoutes(api, { config, store, secrets, ai })
     // آمادگی: وضعیت دیتابیس بدون افشای جزئیات اتصال
     api.get('/ready', async (_req, reply) => {
       if (!db) return reply.code(503).send({ status: 'degraded', db: 'not_configured' })

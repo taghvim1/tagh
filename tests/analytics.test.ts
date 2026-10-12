@@ -42,9 +42,9 @@ test('بدون رضایت تحلیل چیزی ثبت نمی‌شود؛ با رض
 
 test('رضایت‌ها جدا از هم‌اند و پیش‌فرض همه خاموش است', () => {
   const { tr } = mk()
-  assert.deepEqual(tr.consent(), { analytics: false, marketing: false, location: false })
+  assert.deepEqual(tr.consent(), { analytics: false, marketing: false, notifications: false, location: false })
   tr.setConsent('marketing', true)
-  assert.deepEqual(tr.consent(), { analytics: false, marketing: true, location: false })
+  assert.deepEqual(tr.consent(), { analytics: false, marketing: true, notifications: false, location: false })
 })
 
 test('رویداد تکراری پشت‌سرهم ثبت نمی‌شود و داده غیرمجاز دور ریخته می‌شود', () => {
@@ -106,7 +106,7 @@ test('درخواست حذف داده: پاک‌سازی محلی، لغو رضا
   const req = tr.deleteMyData()
   assert.equal(req.anonymous_id, id)
   assert.equal(tr.pending(), 0)
-  assert.deepEqual(tr.consent(), { analytics: false, marketing: false, location: false })
+  assert.deepEqual(tr.consent(), { analytics: false, marketing: false, notifications: false, location: false })
   assert.equal(tr.deletionRequest()?.status, 'pending_server')
   assert.notEqual(tr.installation().anonymous_id, id)
   assert.equal(kv.getItem('taghvim-outbox-v1'), null)
@@ -114,7 +114,7 @@ test('درخواست حذف داده: پاک‌سازی محلی، لغو رضا
 
 const ev = (id: string, anon: string, extra: Partial<ActivityEvent> = {}): ActivityEvent => ({
   event_id: id, anonymous_id: anon, event_type: 'view_destination', occurred_at: '2026-10-09T10:00:00Z', session_id: 's1', app_version: '1', platform: 'web',
-  consent_context: { analytics: true, marketing: false, location: false }, ...extra })
+  consent_context: { analytics: true, marketing: false, notifications: false, location: false }, ...extra })
 const prefs = (id: string, fav: number[] = [], explicit: string[] = [], hidden: string[] = []) => ({ subject_id: id, explicit_interests: explicit, hidden_interests: hidden, favorites: { destination: fav, tour: [] as number[] }, updated_at: 'x' })
 const account = (uid = 'u1', over: Partial<AccountState> = {}): AccountState => ({ user_id: uid, events: [], preferences: prefs(uid), linked_installations: [], merge_logs: [], ...over })
 const guest = (anon = 'anon_1', over: Partial<GuestBundle> = {}): GuestBundle => ({
@@ -235,4 +235,26 @@ test('API واقعی: بدون سرور خطای شفاف می‌دهد و دا�
   await assert.rejects(html.stats(actor), (e: ApiUnavailableError) => e.code === 'BACKEND_NOT_CONNECTED')
   const nf = createRemoteApi('/api/admin', (async () => new Response('', { status: 404 })) as typeof fetch)
   await assert.rejects(nf.stats(actor), ApiUnavailableError)
+})
+
+test('رضایت‌ها مستقل‌اند؛ هیچ‌کدام پیش‌فرض روشن نیست و پذیرفته‌شده‌ها دوباره پرسیده نمی‌شوند', () => {
+  const { tr } = mk()
+  assert.deepEqual(tr.toAsk(), ['analytics', 'marketing', 'notifications'])
+  assert.deepEqual(tr.decisions(), { analytics: 'undecided', marketing: 'undecided', notifications: 'undecided', location: 'undecided' })
+  tr.setConsents({ analytics: true, marketing: false, notifications: false }, 'prompt')
+  assert.deepEqual(tr.toAsk(), ['marketing', 'notifications']) // ردشده‌ها دوباره پرسیده می‌شوند
+  assert.equal(tr.decisions().marketing, 'declined')
+  tr.setConsent('marketing', true, 'privacy_page'); tr.setConsent('notifications', true)
+  assert.deepEqual(tr.toAsk(), [])
+  tr.setConsent('analytics', false) // لغو: دوباره پرسیده می‌شود و ارسال متوقف
+  assert.deepEqual(tr.toAsk(), ['analytics'])
+  assert.equal(tr.track('app_open'), null)
+  assert.deepEqual(tr.consent(), { analytics: false, marketing: true, notifications: true, location: false })
+})
+
+test('رکورد رضایت نسخهٔ سیاست، زمان و منبع را نگه می‌دارد', () => {
+  const { tr } = mk()
+  tr.setConsent('notifications', true, 'prompt')
+  const r = tr.exportMyData().consent.at(-1)!
+  assert.equal(r.policy_version, '2026-10-v2'); assert.equal(r.source, 'prompt'); assert.ok(r.recorded_at)
 })
