@@ -1,6 +1,8 @@
+import { useState } from 'react'
+import { disableDateNotification, enableDateNotification, notificationState, type EnableResult } from '../lib/dateNotification'
 import { navigate } from '../lib/router'
 import AppChrome from '../components/AppChrome'
-import { setAncientCelebrations, setWeatherCard, useAncientCelebrations, useWeatherCard } from '../lib/settings'
+import { setAncientCelebrations, setWeatherCard, useAncientCelebrations, useDateNotification, useWeatherCard } from '../lib/settings'
 import { weatherStore } from '../weather/current/store'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
 
@@ -10,6 +12,18 @@ export default function SettingsPage() {
   useThemeColorMeta(dark)
   const ancient = useAncientCelebrations()
   const weather = useWeatherCard()
+  const dateNotif = useDateNotification()
+  const [notifMsg, setNotifMsg] = useState('')
+  const NOTIF_MSG: Record<EnableResult, string> = {
+    ok: '', denied: 'اجازهٔ اعلان در مرورگر مسدود است. از تنظیمات مرورگر (یا برنامهٔ نصب‌شده) بخش «اعلان‌ها»ی این سایت را روی «اجازه» بگذارید و دوباره روشن کنید.',
+    unsupported: 'این مرورگر یا حالت اجرا اعلان را پشتیبانی نمی‌کند. برنامه را نصب کنید (افزودن به صفحهٔ اصلی) و دوباره امتحان کنید.',
+    insecure: 'اعلان فقط در اتصال امن (HTTPS) کار می‌کند.', dismissed: 'اجازه داده نشد؛ هر وقت خواستید دوباره روشن کنید.',
+  }
+  const toggleDate = async (on: boolean) => {
+    setNotifMsg('')
+    if (!on) { await disableDateNotification(); return }
+    const r = await enableDateNotification(); setNotifMsg(NOTIF_MSG[r])
+  }
 
   return (
     <div className="tp-page" data-theme={dark ? 'dark' : 'light'}>
@@ -29,7 +43,13 @@ export default function SettingsPage() {
             <span>کارت آب‌وهوا</span>
             <input type="checkbox" role="switch" className="cal-switch" checked={weather} onChange={(e) => { setWeatherCard(e.target.checked); if (!e.target.checked) weatherStore.clear() }} />
           </label>
+          <label className="st-row">
+            <span>نمایش تاریخ در نوار اعلان</span>
+            <input type="checkbox" role="switch" className="cal-switch" checked={dateNotif && notificationState() === 'granted'} onChange={(e) => void toggleDate(e.target.checked)} />
+          </label>
         </div>
+        {notifMsg && <p className="st-hint" role="alert">{notifMsg}</p>}
+        <p className="st-hint">مرورگر اجازهٔ اعلانِ «غیرقابل‌حذف» به وب‌اپ نمی‌دهد: ممکن است کنار زده شود و اگر چند روز برنامه را باز نکنید تاریخ قدیمی بماند (به‌روزرسانی پس‌زمینه به مرورگر بستگی دارد). اعلان واقعاً دائمی به نسخهٔ اندرویدی نیاز دارد.</p>
         <div className="st-list">
           <button type="button" className="st-row st-link" onClick={() => navigate('/privacy')}>
             <span>حریم خصوصی و رضایت</span><span aria-hidden="true">‹</span>

@@ -126,7 +126,7 @@ export interface ConsentRecord {
   granted: boolean
   recorded_at: ISODate
   policy_version: string
-  source: 'settings' | 'prompt' | 'privacy_page' | 'server'
+  source: 'default' | 'settings' | 'prompt' | 'privacy_page' | 'server'
 }
 
 /** ۸) account_merge_logs — فقط شمارش و کد؛ بدون محتوای رویداد */

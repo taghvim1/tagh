@@ -27,24 +27,29 @@ test('شناسه مهمان در اولین اجرا ساخته و در مراج
   assert.notEqual(getOrCreateInstallation(memoryKV(), T0).anonymous_id, a.anonymous_id)
 })
 
-test('بدون رضایت تحلیل چیزی ثبت نمی‌شود؛ با رضایت ثبت می‌شود و لغو، صف را پاک می‌کند', () => {
+test('پیش‌فرض: تحلیل ثبت می‌شود (روشن)؛ لغو، صف را پاک می‌کند و ثبت متوقف می‌شود؛ روشن‌کردن دوباره ثبت را برمی‌گرداند', () => {
   const { tr } = mk()
-  assert.equal(tr.track('app_open'), null)
-  assert.equal(tr.pending(), 0)
-  optIn(tr)
   const e = tr.track('view_destination', { destination_id: 3, category: 'جنگل' })
   assert.ok(e && e.event_id && e.occurred_at.endsWith('Z') && e.session_id)
   assert.equal(tr.pending(), 1)
   tr.setConsent('analytics', false)
   assert.equal(tr.pending(), 0)
   assert.equal(tr.track('app_open'), null)
+  tr.setConsent('analytics', true)
+  assert.ok(tr.track('app_open'))
 })
 
-test('رضایت‌ها جدا از هم‌اند و پیش‌فرض همه خاموش است', () => {
+test('پیش‌فرض‌ها: تحلیل و تبلیغات روشن، اعلان و موقعیت خاموش؛ هر نوع مستقل است و پیش‌فرض‌ها با نسخهٔ سیاست ثبت می‌شوند', () => {
   const { tr } = mk()
-  assert.deepEqual(tr.consent(), { analytics: false, marketing: false, notifications: false, location: false })
-  tr.setConsent('marketing', true)
-  assert.deepEqual(tr.consent(), { analytics: false, marketing: true, notifications: false, location: false })
+  assert.deepEqual(tr.consent(), { analytics: true, marketing: true, notifications: false, location: false })
+  const recs = tr.exportMyData().consent
+  assert.deepEqual(recs.map((r) => [r.kind, r.granted, r.source]).sort(), [['analytics', true, 'default'], ['marketing', true, 'default']])
+  assert.ok(recs.every((r) => r.policy_version === '2026-10-v3' && r.recorded_at))
+  tr.setConsent('marketing', false, 'privacy_page')
+  assert.deepEqual(tr.consent(), { analytics: true, marketing: false, notifications: false, location: false })
+  tr.setConsent('notifications', true)
+  assert.deepEqual(tr.consent(), { analytics: true, marketing: false, notifications: true, location: false })
+  assert.equal(tr.exportMyData().consent.at(-1)!.source, 'settings')
 })
 
 test('رویداد تکراری پشت‌سرهم ثبت نمی‌شود و داده غیرمجاز دور ریخته می‌شود', () => {
@@ -83,7 +88,7 @@ test('قطع ارتباط با سرور: رویدادها حفظ می‌شوند
   assert.equal((await tr.flush()).status, 'failed')
   assert.equal(tr.pending(), 1)
   up = true
-  assert.equal((await tr.flush()).status, 'sent')
+  assert.equal((await tr.flush({ force: true })).status, 'sent')
   assert.equal(tr.pending(), 0)
   assert.equal(sent.length, 1)
   const nc = mk(); optIn(nc.tr); nc.tr.track('app_open')
@@ -106,7 +111,7 @@ test('درخواست حذف داده: پاک‌سازی محلی، لغو رضا
   const req = tr.deleteMyData()
   assert.equal(req.anonymous_id, id)
   assert.equal(tr.pending(), 0)
-  assert.deepEqual(tr.consent(), { analytics: false, marketing: false, notifications: false, location: false })
+  assert.deepEqual(tr.consent(), { analytics: true, marketing: true, notifications: false, location: false }) // پس از حذف دوباره پیش‌فرض‌ها
   assert.equal(tr.deletionRequest()?.status, 'pending_server')
   assert.notEqual(tr.installation().anonymous_id, id)
   assert.equal(kv.getItem('taghvim-outbox-v1'), null)
@@ -237,24 +242,26 @@ test('API واقعی: بدون سرور خطای شفاف می‌دهد و دا�
   await assert.rejects(nf.stats(actor), ApiUnavailableError)
 })
 
-test('رضایت‌ها مستقل‌اند؛ هیچ‌کدام پیش‌فرض روشن نیست و پذیرفته‌شده‌ها دوباره پرسیده نمی‌شوند', () => {
-  const { tr } = mk()
-  assert.deepEqual(tr.toAsk(), ['analytics', 'marketing', 'notifications'])
-  assert.deepEqual(tr.decisions(), { analytics: 'undecided', marketing: 'undecided', notifications: 'undecided', location: 'undecided' })
-  tr.setConsents({ analytics: true, marketing: false, notifications: false }, 'prompt')
-  assert.deepEqual(tr.toAsk(), ['marketing', 'notifications']) // ردشده‌ها دوباره پرسیده می‌شوند
-  assert.equal(tr.decisions().marketing, 'declined')
-  tr.setConsent('marketing', true, 'privacy_page'); tr.setConsent('notifications', true)
-  assert.deepEqual(tr.toAsk(), [])
-  tr.setConsent('analytics', false) // لغو: دوباره پرسیده می‌شود و ارسال متوقف
-  assert.deepEqual(tr.toAsk(), ['analytics'])
-  assert.equal(tr.track('app_open'), null)
-  assert.deepEqual(tr.consent(), { analytics: false, marketing: true, notifications: true, location: false })
+test('ارسال: رکوردهای رضایت همراه رویدادها می‌روند؛ لغو بدون رویداد هم به سرور اعلام می‌شود و فقط یک‌بار', async () => {
+  const sent: { n: number; consents: string[] }[] = []
+  const transport: Transport = { send: async (events, ctx) => { sent.push({ n: events.length, consents: ctx.consents.map((c) => `${c.kind}:${c.granted}`) }) } }
+  const { tr } = mk(memoryKV(), transport)
+  tr.track('app_open'); tr.track('view_calendar')
+  assert.equal((await tr.flush()).status, 'sent'); assert.equal(sent[0].n, 2); assert.deepEqual(sent[0].consents.sort(), ['analytics:true', 'marketing:true'])
+  assert.equal((await tr.flush()).status, 'empty')
+  tr.setConsent('analytics', false)
+  assert.equal((await tr.flush()).status, 'sent'); assert.equal(sent[1].n, 0); assert.ok(sent[1].consents.includes('analytics:false'))
+  assert.equal((await tr.flush()).status, 'empty')
 })
 
-test('رکورد رضایت نسخهٔ سیاست، زمان و منبع را نگه می‌دارد', () => {
-  const { tr } = mk()
-  tr.setConsent('notifications', true, 'prompt')
-  const r = tr.exportMyData().consent.at(-1)!
-  assert.equal(r.policy_version, '2026-10-v2'); assert.equal(r.source, 'prompt'); assert.ok(r.recorded_at)
+test('ارسال ناموفق (آفلاین/بدون سرور): داده می‌ماند، عقب‌نشینی اعمال می‌شود و با force پس از اتصال فوراً ارسال می‌شود', async () => {
+  let up = false, calls = 0
+  const transport: Transport = { send: async () => { calls++; if (!up) throw new Error('offline') } }
+  const { tr, t } = mk(memoryKV(), transport)
+  tr.track('app_open')
+  assert.equal((await tr.flush()).status, 'failed'); assert.equal(tr.pending(), 1)
+  assert.equal((await tr.flush()).status, 'skipped'); assert.equal(calls, 1) // عقب‌نشینی: درخواست بی‌رویه نیست
+  up = true
+  assert.equal((await tr.flush({ force: true })).status, 'sent'); assert.equal(tr.pending(), 0)
+  void t
 })

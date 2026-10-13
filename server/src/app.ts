@@ -7,6 +7,7 @@ import type { Config } from './config.js'
 import type { Db } from './db.js'
 import { createAiService } from './ai/service.js'
 import { adminRoutes } from './routes/admin.js'
+import { eventRoutes } from './routes/events.js'
 import { publicRoutes } from './routes/public.js'
 import { createSecrets } from './secrets.js'
 import { createJsonStore } from './store/jsonStore.js'
@@ -34,6 +35,7 @@ export async function buildApp({ config, db = null, store: injected, fetchImpl }
     // زنده‌بودن پردازش؛ به دیتابیس وابسته نیست (برای healthcheck پلتفرم)
     api.get('/health', async () => ({ status: 'ok' }))
     publicRoutes(api, store)
+    eventRoutes(api, store)
     adminRoutes(api, { config, store, secrets, ai })
     // آمادگی: وضعیت دیتابیس بدون افشای جزئیات اتصال
     api.get('/ready', async (_req, reply) => {

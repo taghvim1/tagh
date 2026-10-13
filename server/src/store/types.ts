@@ -16,6 +16,9 @@ export interface ImageRow {
 }
 export interface PromptRow { id: number; version: number; text: string; note: string; active: boolean; created_at: string }
 
+export interface EventRow { event_id: string; anonymous_id: string; event_type: string; occurred_at: string; session_id: string; props: Record<string, unknown>; app_version: string; platform: string; consent_context: Record<string, boolean>; received_at: string }
+export interface ConsentRow { consent_id: string; subject_id: string; kind: string; granted: boolean; recorded_at: string; policy_version: string; source: string; received_at: string }
+
 export interface SuggestionQuery { status?: Status; q?: string; scope?: 'domestic' | 'international'; sort?: 'updated' | 'created' | 'name'; order?: 'asc' | 'desc'; limit: number; offset: number }
 
 /** رابط ذخیره‌سازی (همه async تا پیاده‌سازی PostgreSQL بدون تغییر در سرویس‌ها جایگزین شود؛ طرح جدول‌ها در migrations/001_init.sql است) */
@@ -36,6 +39,11 @@ export interface Store {
   listPrompts(): Promise<PromptRow[]>
   addPrompt(row: Omit<PromptRow, 'id' | 'version' | 'active'>): Promise<PromptRow>
   activatePrompt(id: number): Promise<PromptRow | null>
+  addConsents(rows: ConsentRow[]): Promise<number>
+  /** آخرین رضایت ثبت‌شدهٔ این نصب برای هر نوع (بر اساس recorded_at) */
+  latestConsents(subjectId: string): Promise<Record<string, boolean>>
+  addEvents(rows: EventRow[]): Promise<{ inserted: number; duplicates: number }>
+  eventStats(): Promise<{ events: number; consents: number }>
   getKV(key: string): Promise<string | null>
   setKV(key: string, value: string): Promise<void>
   deleteKV(key: string): Promise<void>

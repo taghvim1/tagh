@@ -6,11 +6,14 @@ import './styles.css'
 import './components/calendar.css'
 import { initCalendarData } from './lib/calendarData'
 import { addNotification } from './lib/notifications'
-import { tracker } from './analytics'
+import { startAutoFlush, tracker } from './analytics'
+import { startDateNotificationSync } from './lib/dateNotification'
 import { initHistory } from './lib/router'
 import { initHistoricalClimate } from './weather/history/store'
 
 tracker.track('app_open')
+startAutoFlush()
+startDateNotificationSync()
 initHistory() // Back هرگز از صفحهٔ داخلی مستقیم از برنامه خارج نمی‌شود
 void initHistoricalClimate() // آمار تاریخی آب‌وهوای مقصدها: از حافظه می‌آید و فقط موارد جدید/قدیمی دوباره دریافت می‌شوند
 void initCalendarData() // نمایش فوری داده‌های محلی؛ نسخهٔ جدید در پس‌زمینه

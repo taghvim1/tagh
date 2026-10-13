@@ -10,15 +10,13 @@ import SettingsPage from './pages/SettingsPage'
 import Tours from './pages/Tours'
 import TravelSuggestions from './pages/TravelSuggestions'
 import PrivacyPage from './pages/PrivacyPage'
-import { ConsentGate } from './components/ConsentDialog'
 import { usePath } from './lib/router'
 
 // پنل مدیریت جدا بارگذاری می‌شود و روی بستهٔ تقویم اثری ندارد
 const AdminApp = lazyWithRetry(() => import('./admin/AdminApp'))
 
 export default function App() {
-  const path0 = usePath()
-  return <>{path0.startsWith('/admin') ? null : <ConsentGate />}<Routes /></>
+  return <Routes />
 }
 
 function Routes() {

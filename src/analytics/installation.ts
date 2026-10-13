@@ -1,6 +1,6 @@
 import { nowISO, randomId, type KV } from './ids'
 import type { AnonymousInstallation } from './types'
-import { NO_CONSENT } from './consent'
+import { DEFAULT_CONSENT } from './consent'
 
 export const APP_VERSION = '1.0.0'
 const KEY = 'taghvim-installation-v1'
@@ -18,7 +18,7 @@ export function getOrCreateInstallation(kv: KV, now = new Date(), platform: 'web
   const t = nowISO(now)
   const inst: AnonymousInstallation = {
     anonymous_id: randomId('anon'), account_status: 'guest', first_seen_at: t, last_seen_at: t, created_at: t, updated_at: t,
-    app_version: APP_VERSION, platform, consent_status: { ...NO_CONSENT },
+    app_version: APP_VERSION, platform, consent_status: { ...DEFAULT_CONSENT },
   }
   try { kv.setItem(KEY, JSON.stringify(inst)) } catch { /* فقط حافظه */ }
   return inst

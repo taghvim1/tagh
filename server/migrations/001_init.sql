@@ -56,3 +56,29 @@ create unique index if not exists prompt_templates_one_active on prompt_template
 
 -- تنظیمات غیرمحرمانه و کلیدهای رمزنگاری‌شده (AES-256-GCM؛ کلید رمزنگاری فقط در متغیر محیطی است)
 create table if not exists app_settings (key text primary key, value text not null, updated_at timestamptz not null default now());
+
+-- رویدادهای تحلیلی و رضایت‌ها (دریافت از /api/events)؛ event_id/consent_id یکتا برای جلوگیری از ثبت تکراری
+create table if not exists activity_events (
+  event_id text primary key,
+  anonymous_id text not null,
+  event_type text not null,
+  occurred_at timestamptz not null,
+  session_id text not null,
+  props jsonb not null default '{}',
+  app_version text not null,
+  platform text not null,
+  consent_context jsonb not null,
+  received_at timestamptz not null default now()
+);
+create index if not exists activity_events_anon_idx on activity_events (anonymous_id, occurred_at);
+create table if not exists consent_records (
+  consent_id text primary key,
+  subject_id text not null,
+  kind text not null,
+  granted boolean not null,
+  recorded_at timestamptz not null,
+  policy_version text not null,
+  source text not null,
+  received_at timestamptz not null default now()
+);
+create index if not exists consent_records_subject_idx on consent_records (subject_id, kind, recorded_at desc);

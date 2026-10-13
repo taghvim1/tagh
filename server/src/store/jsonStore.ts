@@ -1,9 +1,9 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import type { ImageRow, PromptRow, Store, SuggestionRow, SuggestionQuery, VersionRow } from './types.js'
+import type { ConsentRow, EventRow, ImageRow, PromptRow, Store, SuggestionRow, SuggestionQuery, VersionRow } from './types.js'
 
-interface State { seq: number; suggestions: SuggestionRow[]; versions: VersionRow[]; images: ImageRow[]; prompts: PromptRow[]; kv: Record<string, string> }
-const empty = (): State => ({ seq: 0, suggestions: [], versions: [], images: [], prompts: [], kv: {} })
+interface State { seq: number; suggestions: SuggestionRow[]; versions: VersionRow[]; images: ImageRow[]; prompts: PromptRow[]; kv: Record<string, string>; events: EventRow[]; consents: ConsentRow[] }
+const empty = (): State => ({ seq: 0, suggestions: [], versions: [], images: [], prompts: [], kv: {}, events: [], consents: [] })
 
 /**
  * ذخیره‌سازی آزمایشی: همه‌چیز در حافظه و (اگر مسیر داده شود) روی یک فایل JSON با نوشتن اتمی.
@@ -21,6 +21,8 @@ export async function createJsonStore(file?: string): Promise<Store> {
     chain = chain.then(async () => { await mkdir(dirname(file), { recursive: true }); await writeFile(file + '.tmp', snapshot); await rename(file + '.tmp', file) })
     return chain
   }
+  const EVENT_CAP = 5000 // محیط آزمایشی: فقط آخرین رویدادها؛ در PostgreSQL محدودیت نیست
+  const eventIds = new Set(s.events.map((e) => e.event_id)), consentIds = new Set(s.consents.map((c) => c.consent_id))
   const id = () => ++s.seq
   const clone = <T,>(v: T): T => structuredClone(v)
   const now = () => new Date().toISOString()
@@ -72,6 +74,21 @@ export async function createJsonStore(file?: string): Promise<Store> {
       const r = s.prompts.find((p) => p.id === i); if (!r) return null
       s.prompts.forEach((p) => { p.active = p.id === i }); await save(); return clone(r)
     },
+    async addConsents(rows) {
+      const fresh = rows.filter((r) => !consentIds.has(r.consent_id)); fresh.forEach((r) => consentIds.add(r.consent_id)); s.consents.push(...clone(fresh))
+      if (fresh.length) await save(); return fresh.length
+    },
+    async latestConsents(subject) {
+      const out: Record<string, { at: string; granted: boolean }> = {}
+      for (const c of s.consents) if (c.subject_id === subject && (!out[c.kind] || c.recorded_at >= out[c.kind].at)) out[c.kind] = { at: c.recorded_at, granted: c.granted }
+      return Object.fromEntries(Object.entries(out).map(([k, v]) => [k, v.granted]))
+    },
+    async addEvents(rows) {
+      const fresh = rows.filter((r) => !eventIds.has(r.event_id)); fresh.forEach((r) => eventIds.add(r.event_id)); s.events.push(...clone(fresh))
+      if (s.events.length > EVENT_CAP) { for (const old of s.events.splice(0, s.events.length - EVENT_CAP)) eventIds.delete(old.event_id) }
+      if (fresh.length) await save(); return { inserted: fresh.length, duplicates: rows.length - fresh.length }
+    },
+    eventStats: async () => ({ events: s.events.length, consents: s.consents.length }),
     getKV: async (k) => s.kv[k] ?? null,
     async setKV(k, v) { s.kv[k] = v; await save() },
     async deleteKV(k) { delete s.kv[k]; await save() },

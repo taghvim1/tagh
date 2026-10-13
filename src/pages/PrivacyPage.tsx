@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { tracker, useAnalytics } from '../analytics'
 import AppChrome from '../components/AppChrome'
-import { CONSENT_TEXT } from '../components/ConsentDialog'
+import { CONSENT_TEXT } from '../components/consentText'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
 
 type Perm = 'granted' | 'denied' | 'default' | 'unsupported'
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
             </label>
           ))}
         </div>
-        <p className="st-hint">با لغو هر رضایت، ارسال و ذخیرهٔ داده‌های اختیاری مربوط به آن بلافاصله متوقف می‌شود. اکنون سرویس دریافتی وجود ندارد و چیزی از دستگاه خارج نمی‌شود{an.pending > 0 ? ` (${an.pending} رویداد در صف همین دستگاه)` : ''}.</p>
+        <p className="st-hint">داده‌ها اول روی همین دستگاه ذخیره می‌شوند و با اتصال به اینترنت به سرور ارسال می‌شوند{an.pending > 0 ? ` (${an.pending} رویداد در صف ارسال)` : ''}. با خاموش‌کردن هر مورد، ثبت و ارسال مربوط به آن بلافاصله متوقف می‌شود و انتخاب شما هم به سرور اعلام می‌شود.</p>
 
         <h2 className="st-sub">اجازهٔ اعلان مرورگر</h2>
         <div className="st-list"><div className="cs-row">

@@ -1,10 +1,11 @@
-import { CONSENT_KINDS, clearConsent, consentDecisions, consentSummary, kindsToAsk, loadConsentRecords, recordConsent } from './consent'
+import { CONSENT_KINDS, clearConsent, consentSummary, loadConsentRecords, recordConsent, seedDefaultConsents } from './consent'
 import { APP_VERSION, clearInstallation, getOrCreateInstallation } from './installation'
 import { nowISO, randomId, type KV } from './ids'
 import { EVENT_TYPES, type ActivityEvent, type ConsentKind, type ConsentRecord, type ConsentSummary, type EventType } from './types'
 
 export class BackendNotConnectedError extends Error { constructor() { super('BACKEND_NOT_CONNECTED') } }
-export interface Transport { send(events: ActivityEvent[]): Promise<void> }
+export interface SendContext { anonymous_id: string; platform: 'web' | 'pwa'; app_version: string; consents: ConsentRecord[] }
+export interface Transport { send(events: ActivityEvent[], ctx: SendContext): Promise<void> }
 /** هنوز API امنی وجود ندارد؛ هر ارسال با این خطا رد می‌شود و رویدادها در صف می‌مانند. */
 export const notConnectedTransport: Transport = { send: async () => { throw new BackendNotConnectedError() } }
 
@@ -13,6 +14,7 @@ export type EventProps = Partial<Pick<ActivityEvent, 'destination_id' | 'tour_id
 const OUTBOX_KEY = 'taghvim-outbox-v1'
 const SESSION_KEY = 'taghvim-session-v1'
 const DELETION_KEY = 'taghvim-deletion-request-v1'
+const SYNCED_KEY = 'taghvim-consent-synced-v1'
 export const OUTBOX_MAX = 500
 export const SESSION_GAP_MS = 30 * 60 * 1000
 export const DEDUPE_WINDOW_MS = 2000
@@ -47,7 +49,9 @@ export function createTracker(deps: TrackerDeps) {
   let failures = 0
 
   const installation = () => getOrCreateInstallation(kv, now(), deps.platform ?? 'web')
-  const consent = (): ConsentSummary => consentSummary(loadConsentRecords(kv))
+  const seed = () => seedDefaultConsents(kv, installation().anonymous_id, now())
+  const consent = (): ConsentSummary => consentSummary(seed())
+  const syncedCount = () => Number(kv.getItem(SYNCED_KEY) ?? 0) || 0
   const loadOutbox = (): ActivityEvent[] => { try { const v = JSON.parse(kv.getItem(OUTBOX_KEY) ?? '[]'); return Array.isArray(v) ? v : [] } catch { return [] } }
   const saveOutbox = (list: ActivityEvent[]) => { try { kv.setItem(OUTBOX_KEY, JSON.stringify(list.slice(-OUTBOX_MAX))) } catch { /* فقط حافظه */ } }
 
@@ -86,16 +90,24 @@ export function createTracker(deps: TrackerDeps) {
     return ev
   }
 
-  async function flush(): Promise<FlushResult> {
+  /**
+   * ارسال به سرور: ابتدا همه‌چیز محلی ذخیره می‌شود و فقط با اتصال ارسال می‌شود؛ موفق‌نبودن چیزی را از دست نمی‌دهد.
+   * رکوردهای رضایت (از جمله لغو) همیشه همراه می‌روند؛ رویدادها فقط با رضایت «تحلیل».
+   */
+  async function flush(opts: { force?: boolean } = {}): Promise<FlushResult> {
     if (flushing) return { status: 'skipped', sent: 0 }
-    const batch = loadOutbox()
-    if (!batch.length) return { status: 'empty', sent: 0 }
-    if (!consent().analytics) return { status: 'skipped', sent: 0 }
+    if (!opts.force && now().getTime() < retryAt) return { status: 'skipped', sent: 0 }
+    const records = seed()
+    const batch = consent().analytics ? loadOutbox() : []
+    const consentsDirty = records.length > syncedCount()
+    if (!batch.length && !consentsDirty) return { status: 'empty', sent: 0 }
     flushing = true
     try {
-      await transport.send(batch)
+      const inst = installation()
+      await transport.send(batch, { anonymous_id: inst.anonymous_id, platform: deps.platform ?? 'web', app_version: deps.appVersion ?? APP_VERSION, consents: records })
       const ids = new Set(batch.map((e) => e.event_id))
       saveOutbox(loadOutbox().filter((e) => !ids.has(e.event_id))) // فقط موارد ارسال‌شده حذف می‌شوند
+      try { kv.setItem(SYNCED_KEY, String(records.length)) } catch { /* فقط حافظه */ }
       failures = 0; retryAt = 0; emit()
       return { status: 'sent', sent: batch.length }
     } catch (e) {
@@ -108,6 +120,7 @@ export function createTracker(deps: TrackerDeps) {
   /** ثبت چند رضایت با هم (هر نوع مستقل از بقیه) و فقط یک اعلان تغییر */
   function setConsents(values: Partial<Record<ConsentKind, boolean>>, source: ConsentRecord['source'] = 'settings') {
     const id = installation().anonymous_id
+    seed()
     for (const [kind, granted] of Object.entries(values) as [ConsentKind, boolean][]) {
       recordConsent(kv, id, kind, granted, now(), source)
       if (kind === 'analytics' && !granted) kv.removeItem(OUTBOX_KEY) // لغو رضایت: صف ارسال‌نشده پاک می‌شود
@@ -117,14 +130,14 @@ export function createTracker(deps: TrackerDeps) {
   const setConsent = (kind: ConsentKind, granted: boolean, source: ConsentRecord['source'] = 'settings') => setConsents({ [kind]: granted }, source)
 
   /** نسخهٔ قابل‌مشاهده از داده‌های همین دستگاه (حق مشاهده) */
-  const exportMyData = () => ({ installation: installation(), consent: loadConsentRecords(kv), pending_events: loadOutbox() })
+  const exportMyData = () => ({ installation: installation(), consent: seed(), pending_events: loadOutbox() })
 
   /** درخواست حذف: داده‌های محلی پاک، رضایت‌ها لغو و یک درخواست حذف برای سرور (پس از اتصال) ثبت می‌شود. */
   function deleteMyData() {
     const id = installation().anonymous_id
     const req = { anonymous_id: id, requested_at: nowISO(now()), status: 'pending_server' as const }
     ;[OUTBOX_KEY, SESSION_KEY].forEach((k) => kv.removeItem(k))
-    clearConsent(kv); clearInstallation(kv)
+    clearConsent(kv); clearInstallation(kv); kv.removeItem(SYNCED_KEY)
     try { kv.setItem(DELETION_KEY, JSON.stringify(req)) } catch { /* فقط حافظه */ }
     lastKey = ''
     emit()
@@ -134,10 +147,8 @@ export function createTracker(deps: TrackerDeps) {
 
   return {
     track, flush, setConsent, setConsents, consent,
-    decisions: () => consentDecisions(loadConsentRecords(kv)),
-    toAsk: () => kindsToAsk(loadConsentRecords(kv)),
     exportMyData, deleteMyData, deletionRequest,
-    pending: () => loadOutbox().length, installation,
+    pending: () => loadOutbox().length, retryAt: () => retryAt, installation,
     subscribe: (l: () => void) => { listeners.add(l); return () => { listeners.delete(l) } },
     consentKinds: CONSENT_KINDS,
   }
