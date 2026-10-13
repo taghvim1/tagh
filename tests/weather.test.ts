@@ -154,10 +154,11 @@ const sample = { current: { temperature_2m: 21.4, relative_humidity_2m: 40, appa
 
 test('URL و پارس پیش‌بینی با پارامترهای خواسته‌شده', () => {
   const u = new URL(buildForecastUrl(32.65, 51.67))
-  assert.equal(u.searchParams.get('forecast_days'), '1')
+  assert.equal(u.searchParams.get('forecast_days'), '10')
   assert.equal(u.searchParams.get('timezone'), 'auto')
-  assert.equal(u.searchParams.get('current'), 'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,wind_speed_10m')
-  assert.equal(u.searchParams.get('daily'), 'temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,weather_code')
+  assert.equal(u.searchParams.get('current'), 'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,cloud_cover,pressure_msl')
+  assert.match(u.searchParams.get('hourly')!, /^temperature_2m,/)
+  assert.match(u.searchParams.get('daily')!, /^temperature_2m_max,temperature_2m_min,.*weather_code$/)
   const w = parseForecast(sample)
   assert.equal(w.temperature, 21.4); assert.equal(w.isDay, true); assert.equal(w.tempMax, 27.6); assert.equal(w.precipitationProbability, 10)
   assert.equal(weatherCodeText(w.weatherCode), 'نیمه‌ابری')
@@ -245,4 +246,34 @@ test('تاریخ شمسی از ساعت دستگاه (نه منطقهٔ زمان
   // ۲۱ مارس ۲۰۲۳ ظهر به وقت دستگاه = ۱ فروردین ۱۴۰۲، مستقل از هر منطقهٔ زمانی که API برگرداند
   assert.deepEqual(fromGregorian(new Date(2023, 2, 21, 12)), { year: 1402, month: 1, day: 1 })
   assert.equal(parseForecast({ ...sample, timezone: 'Pacific/Auckland' }).timezone, 'Pacific/Auckland')
+})
+
+import { FORECAST_DAYS } from '../src/weather/current/client'
+import { clockOf, dayLabel, degree, hourLabel, uvLabel, windFrom } from '../src/weather/format'
+
+test('پیش‌بینی ده‌روزه و ساعتی: آدرس و تجزیه (ساعت‌های گذشته حذف، نبودِ مقدار = null)', () => {
+  const u = new URL(buildForecastUrl(32.65, 51.67))
+  assert.equal(FORECAST_DAYS, 10)
+  assert.match(u.searchParams.get('hourly')!, /wind_gusts_10m/)
+  assert.match(u.searchParams.get('daily')!, /precipitation_sum/)
+  const hours = ['2026-10-13T10:00', '2026-10-13T11:00', '2026-10-13T12:00', '2026-10-13T13:00']
+  const w = parseForecast({
+    current: { time: '2026-10-13T11:40', temperature_2m: 18, weather_code: 1, wind_gusts_10m: 30, cloud_cover: 40, pressure_msl: 1015 },
+    daily: { time: ['2026-10-13', '2026-10-14'], temperature_2m_max: [25, 22], temperature_2m_min: [12, 11], weather_code: [0, 61], precipitation_sum: [0, 3.2], sunrise: ['2026-10-13T06:10', '2026-10-14T06:11'] },
+    hourly: { time: hours, temperature_2m: [15, 17, 19, 20], wind_speed_10m: [5, 6, 7, null], is_day: [1, 1, 1, 0] },
+    timezone: 'Asia/Tehran',
+  })
+  assert.equal(w.daily!.length, 2)
+  assert.equal(w.daily![1].precipitationSum, 3.2); assert.equal(w.daily![0].uvMax, null)
+  assert.deepEqual(w.hourly!.map((h) => h.time), hours.slice(1)) // ساعت ۱۰ گذشته است
+  assert.equal(w.hourly![2].windSpeed, null); assert.equal(w.hourly![2].isDay, false)
+  assert.equal(w.windGusts, 30); assert.equal(w.pressure, 1015)
+  assert.deepEqual(parseForecast({ current: { temperature_2m: 5 } }).daily, [])
+})
+test('قالب‌بندی صفحهٔ آب‌وهوا: جهت باد، فرابنفش، تاریخ شمسی روز و ساعت', () => {
+  assert.equal(windFrom(0), 'شمال'); assert.equal(windFrom(270), 'غرب'); assert.equal(windFrom(359), 'شمال'); assert.equal(windFrom(null), null)
+  assert.equal(uvLabel(2), 'کم'); assert.equal(uvLabel(7), 'زیاد'); assert.equal(uvLabel(12), 'شدید')
+  assert.equal(dayLabel('2026-10-13'), 'سه‌شنبه ۲۱ مهر')
+  assert.equal(hourLabel('2026-10-13T09:00'), '۹:۰۰'); assert.equal(clockOf('2026-10-13T06:05'), '۶:۰۵')
+  assert.equal(degree(-2.4), '\u2066−۲°\u2069'); assert.equal(degree(null), '—')
 })

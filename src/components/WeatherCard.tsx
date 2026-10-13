@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { formatClock } from '../lib/clock'
 import { faNum } from '../lib/jalali'
+import { navigate } from '../lib/router'
 import { weatherIconName, weatherCodeText } from '../weather/codes'
 import { weatherStore, useCurrentWeather } from '../weather/current/store'
 import type { CurrentWeatherError } from '../weather/current/types'
@@ -44,15 +45,17 @@ export default function WeatherCard() {
   const hi = deg(w.tempMax), lo = deg(w.tempMin)
   const updated = s.updatedAt ? formatClock(new Date(s.updatedAt)) : null
   return (
-    <div className="wx" aria-label={`آب‌وهوا: ${weatherCodeText(w.weatherCode) ?? 'وضعیت نامشخص'}`}>
-      {icon && <WeatherIcon name={icon} />}
-      <strong className="wx-temp">{deg(w.temperature) ?? '—'}</strong>
-      {(hi || lo) && (
-        <span className="wx-range">
-          {hi && <span aria-label={`بیشینه ${hi}`}>↑ {hi}</span>}
-          {lo && <span aria-label={`کمینه ${lo}`}>↓ {lo}</span>}
-        </span>
-      )}
+    <div className="wx">
+      <button type="button" className="wx-open" aria-label={`آب‌وهوا: ${weatherCodeText(w.weatherCode) ?? 'وضعیت نامشخص'}. باز کردن جزئیات و پیش‌بینی`} onClick={() => navigate('/weather')}>
+        {icon && <WeatherIcon name={icon} />}
+        <strong className="wx-temp">{deg(w.temperature) ?? '—'}</strong>
+        {(hi || lo) && (
+          <span className="wx-range">
+            {hi && <span aria-label={`بیشینه ${hi}`}>↑ {hi}</span>}
+            {lo && <span aria-label={`کمینه ${lo}`}>↓ {lo}</span>}
+          </span>
+        )}
+      </button>
       {s.error && <button type="button" className="wx-stale" title={ERROR_TEXT[s.error]} aria-label={`${ERROR_TEXT[s.error]} آخرین به‌روزرسانی ${updated}. تلاش مجدد`} onClick={() => void weatherStore.retry()}>آخرین به‌روزرسانی {updated} ⟳</button>}
     </div>
   )

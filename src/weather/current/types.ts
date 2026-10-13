@@ -16,6 +16,54 @@ export interface CurrentWeather {
   sunrise: string | null
   sunset: string | null
   timezone: string | null
+  /** جزئیات اضافهٔ فعلی (ممکن است در دادهٔ ذخیره‌شدهٔ قدیمی نباشد) */
+  windGusts?: number | null
+  windDirection?: number | null
+  cloudCover?: number | null
+  pressure?: number | null
+  /** پیش‌بینی ده روز آینده (از امروز) */
+  daily?: DailyForecast[]
+  /** پیش‌بینی ساعتی ۷۲ ساعت آینده */
+  hourly?: HourlyForecast[]
+}
+
+export interface DailyForecast {
+  /** YYYY-MM-DD محلیِ مختصات */
+  date: string
+  weatherCode: number | null
+  tempMax: number | null
+  tempMin: number | null
+  apparentMax: number | null
+  apparentMin: number | null
+  /** میلی‌متر */
+  precipitationSum: number | null
+  precipitationProbability: number | null
+  /** کیلومتر بر ساعت */
+  windMax: number | null
+  gustMax: number | null
+  uvMax: number | null
+  sunrise: string | null
+  sunset: string | null
+}
+
+export interface HourlyForecast {
+  /** YYYY-MM-DDTHH:00 محلیِ مختصات */
+  time: string
+  temperature: number | null
+  apparent: number | null
+  weatherCode: number | null
+  isDay: boolean | null
+  precipitationProbability: number | null
+  /** میلی‌متر */
+  precipitation: number | null
+  humidity: number | null
+  windSpeed: number | null
+  windGusts: number | null
+  windDirection: number | null
+  cloudCover: number | null
+  uv: number | null
+  /** متر */
+  visibility: number | null
 }
 
 export type CurrentWeatherError = 'unsupported' | 'denied' | 'unavailable' | 'timeout' | 'network' | 'api'

@@ -10,6 +10,7 @@ import SettingsPage from './pages/SettingsPage'
 import Tours from './pages/Tours'
 import TravelSuggestions from './pages/TravelSuggestions'
 import PrivacyPage from './pages/PrivacyPage'
+import WeatherPage from './pages/WeatherPage'
 import { usePath } from './lib/router'
 
 // پنل مدیریت جدا بارگذاری می‌شود و روی بستهٔ تقویم اثری ندارد
@@ -35,6 +36,7 @@ function Routes() {
 
   if (path === '/travel-suggestions') return <TravelSuggestions />
   if (path === '/settings') return <SettingsPage />
+  if (path === '/weather') return <WeatherPage />
   if (path === '/privacy') return <PrivacyPage />
   if (path === '/notes') return <NotesPage />
   if (path === '/favorites') return <Favorites />

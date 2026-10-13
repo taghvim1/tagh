@@ -59,14 +59,16 @@ self.addEventListener('fetch', (e) => {
 async function showDateNotification() {
   const cache = await caches.open(FLAGS)
   if (!(await cache.match(DATE_FLAG)) || (self.Notification && Notification.permission !== 'granted')) return
-  const d = self.taghvimDateTitle(new Date()), now = new Date()
-  // آیکون آب‌وهوا فقط اگر برای «امروز» ساخته شده باشد؛ وگرنه بدون آیکون (داده‌ٔ دیروز نشان داده نمی‌شود)
-  let wx = null
-  try { const r = await cache.match('/__flag/date-icon'); const v = r && (await r.json()); if (v && v.day === now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate()) wx = v } catch (e) { /* بدون آیکون */ }
-  const sig = wx ? wx.wx : ''
+  const now = new Date()
+  const pad = (n) => (n < 10 ? '0' : '') + n
+  const key = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate())
+  // طرح ده‌روزه را برنامه می‌سازد (دما + آیکون هر روز)؛ اگر ردیف «امروز» نبود فقط تاریخ نمایش داده می‌شود (دادهٔ کهنه یا ساختگی نه)
+  let day = null
+  try { const r = await cache.match('/__flag/date-plan'); const v = r && (await r.json()); day = (v && v.days && v.days[key]) || null } catch (e) { /* فقط تاریخ */ }
+  const title = self.taghvimNotifTitle(now, day ? day.avg : null), sig = day ? day.wx : ''
   const shown = await self.registration.getNotifications({ tag: DATE_TAG })
-  if (shown.some((n) => n.title === d.title && ((n.data && n.data.wx) || '') === sig)) return // بدون تغییر
-  await self.registration.showNotification(d.title, Object.assign({ tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: '/icons/icon-192.png', data: { url: '/', wx: sig } }, wx ? { icon: wx.icon } : {}))
+  if (shown.some((n) => n.title === title && ((n.data && n.data.wx) || '') === sig)) return // بدون تغییر
+  await self.registration.showNotification(title, Object.assign({ tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: '/icons/icon-192.png', data: { url: '/', wx: sig } }, day && day.icon ? { icon: day.icon } : {}))
 }
 self.addEventListener('periodicsync', (e) => { if (e.tag === DATE_TAG) e.waitUntil(showDateNotification()) })
 self.addEventListener('message', (e) => { if (e.data && e.data.type === 'sync-date-notification') e.waitUntil(showDateNotification()) })
