@@ -1,4 +1,7 @@
 import { tracker } from '../analytics'
+import { weatherStore } from '../weather/current/store'
+import { localDayKey, notificationWeather, weatherSignature } from './dateNotificationData'
+import { renderWeatherIcon } from './dateNotificationIcon'
 import { dateNotificationEnabled, setDateNotificationSetting } from './settings'
 
 // اعلان تاریخ شمسی در نوار اعلان. فقط با کلیک آگاهانهٔ کاربر؛ مجوز مرورگر هرگز در حلقه یا بدون اقدام کاربر درخواست نمی‌شود.
@@ -20,15 +23,25 @@ async function ensureTitleScript() {
   await new Promise<void>((res) => { const s = document.createElement('script'); s.src = '/date-title.js'; s.onload = () => res(); s.onerror = () => res(); document.head.appendChild(s) })
 }
 
+/** فقط «عنوان = تاریخ شمسی» و (در صورت وجود دادهٔ امروز) آیکون وکتور آب‌وهوا با عدد میانگین دما. بدون متن اضافه و بدون دکمه. */
 export async function syncDateNotification(): Promise<boolean> {
   if (!dateNotificationEnabled() || notificationState() !== 'granted') return false
   const reg = await registration(); if (!reg) return false
   await ensureTitleScript(); const { title } = TITLE(); if (!title) return false
+  const wx = notificationWeather(weatherStore.getState()), sig = weatherSignature(wx)
   try {
-    if ((await reg.getNotifications({ tag: DATE_TAG })).some((n) => n.title === title)) return true // تکراری نشان نده
-    await reg.showNotification(title, { body: 'تقویم سفر', tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', data: { url: '/' } } as NotificationOptions)
+    const shown = await reg.getNotifications({ tag: DATE_TAG })
+    if (shown.some((n) => n.title === title && ((n.data as { wx?: string } | null)?.wx ?? '') === sig)) return true // بدون تغییر: دوباره نشان نده
+    const icon = wx ? await renderWeatherIcon(wx) : null
+    await setSwIcon(icon && wx ? { day: localDayKey(), wx: sig, icon } : null)
+    await reg.showNotification(title, { tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: '/icons/icon-192.png', ...(icon ? { icon } : {}), data: { url: '/', wx: icon ? sig : '' } } as NotificationOptions)
     return true
   } catch { return false }
+}
+
+/** برای Service Worker (به‌روزرسانی نیمه‌شب در پس‌زمینه): آخرین آیکون ساخته‌شده فقط برای همان روز معتبر است */
+async function setSwIcon(v: { day: string; wx: string; icon: string } | null) {
+  try { const c = await caches.open(FLAGS); if (v) await c.put('/__flag/date-icon', new Response(JSON.stringify(v))); else await c.delete('/__flag/date-icon') } catch { /* بدون Cache API */ }
 }
 
 async function registerPeriodic(reg: ServiceWorkerRegistration | null, on: boolean) {
@@ -63,6 +76,7 @@ export function startDateNotificationSync() {
   if (!dateNotificationEnabled()) { /* ممکن است بعداً روشن شود؛ شنونده‌ها ارزان‌اند */ }
   const go = () => { void syncDateNotification() }
   document.addEventListener('visibilitychange', () => { if (!document.hidden) go() })
+  weatherStore.subscribe(go) // با به‌روزشدن آب‌وهوا، اعلان هم به‌روز می‌شود
   const schedule = () => { const n = new Date(); const next = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1, 0, 0, 5); window.setTimeout(() => { go(); schedule() }, next.getTime() - n.getTime()) }
   schedule(); go()
 }

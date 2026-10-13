@@ -57,15 +57,16 @@ self.addEventListener('fetch', (e) => {
 // فقط وقتی کاربر خودش از «تنظیمات» روشن کرده و مجوز اعلان داده باشد. وب‌اپ نمی‌تواند اعلان «غیرقابل‌حذف» بسازد؛ کاربر می‌تواند آن را کنار بزند.
 // به‌روزرسانی در پس‌زمینه (periodicsync) به‌صورت بهترین‌تلاش و وابسته به مرورگر است.
 async function showDateNotification() {
-  const flag = await caches.open(FLAGS).then((c) => c.match(DATE_FLAG))
-  if (!flag || (self.Notification && Notification.permission !== 'granted')) return
-  const d = self.taghvimDateTitle(new Date())
+  const cache = await caches.open(FLAGS)
+  if (!(await cache.match(DATE_FLAG)) || (self.Notification && Notification.permission !== 'granted')) return
+  const d = self.taghvimDateTitle(new Date()), now = new Date()
+  // آیکون آب‌وهوا فقط اگر برای «امروز» ساخته شده باشد؛ وگرنه بدون آیکون (داده‌ٔ دیروز نشان داده نمی‌شود)
+  let wx = null
+  try { const r = await cache.match('/__flag/date-icon'); const v = r && (await r.json()); if (v && v.day === now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate()) wx = v } catch (e) { /* بدون آیکون */ }
+  const sig = wx ? wx.wx : ''
   const shown = await self.registration.getNotifications({ tag: DATE_TAG })
-  if (shown.some((n) => n.title === d.title)) return // همان تاریخ قبلاً نمایش داده شده؛ دوباره صدا/هشدار نده
-  await self.registration.showNotification(d.title, {
-    body: 'تقویم سفر', tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true,
-    icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', data: { url: '/' },
-  })
+  if (shown.some((n) => n.title === d.title && ((n.data && n.data.wx) || '') === sig)) return // بدون تغییر
+  await self.registration.showNotification(d.title, Object.assign({ tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: '/icons/icon-192.png', data: { url: '/', wx: sig } }, wx ? { icon: wx.icon } : {}))
 }
 self.addEventListener('periodicsync', (e) => { if (e.tag === DATE_TAG) e.waitUntil(showDateNotification()) })
 self.addEventListener('message', (e) => { if (e.data && e.data.type === 'sync-date-notification') e.waitUntil(showDateNotification()) })
