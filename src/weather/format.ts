@@ -15,5 +15,22 @@ export function dayLabel(iso: string): string {
   const d = parseLocal(iso), j = fromGregorian(d)
   return `${WEEKDAYS[(d.getDay() + 1) % 7]} ${faNum(j.day)} ${MONTHS[j.month - 1]}`
 }
-export const hourLabel = (iso: string) => `${faNum(Number(iso.slice(11, 13)))}:۰۰`
-export const clockOf = (iso: string | null | undefined) => (iso ? `${faNum(Number(iso.slice(11, 13)))}:${faNum(Number(iso.slice(14, 16))).padStart(2, '۰')}` : null)
+const ltr = (t: string) => `\u2066${t}\u2069` // جداسازی جهت تا ترتیب ارقام و «:» و «/» در متن راست‌به‌چپ به‌هم نریزد
+export const hourLabel = (iso: string) => ltr(`${faNum(Number(iso.slice(11, 13))).padStart(2, '۰')}:۰۰`)
+export const clockOf = (iso: string | null | undefined) => (iso ? ltr(`${faNum(Number(iso.slice(11, 13))).padStart(2, '۰')}:${faNum(Number(iso.slice(14, 16))).padStart(2, '۰')}`) : null)
+
+/** مدت روز از طلوع تا غروب: «۱۱ ساعت و ۱۴ دقیقه» */
+export function dayLength(sunrise: string | null | undefined, sunset: string | null | undefined): string | null {
+  if (!sunrise || !sunset) return null
+  const mins = (t: string) => Number(t.slice(11, 13)) * 60 + Number(t.slice(14, 16))
+  const m = mins(sunset) - mins(sunrise)
+  if (!(m > 0)) return null
+  return `${faNum(Math.floor(m / 60))} ساعت و ${faNum(m % 60)} دقیقه`
+}
+/** «۱۳ / ۱۰» (روز / ماه میلادی) */
+export const gregorianShort = (iso: string) => ltr(`${faNum(Number(iso.slice(8, 10)))} / ${faNum(Number(iso.slice(5, 7)))}`)
+/** کیفیت هوا بر اساس US AQI */
+export const aqiLabel = (v: number | null | undefined) => (v == null ? null : v <= 50 ? 'خوب' : v <= 100 ? 'متوسط' : v <= 150 ? 'ناسالم برای گروه‌های حساس' : v <= 200 ? 'ناسالم' : v <= 300 ? 'بسیار ناسالم' : 'خطرناک')
+/** آیکون‌های گرم (خورشیدی) زمینهٔ زرد می‌گیرند، بقیه آبی */
+export const isWarmIcon = (n: string | null) => n === 'sun' || n === 'clouds'
+export const kmValue = (m: number | null | undefined) => (m == null ? null : m / 1000)

@@ -6,7 +6,7 @@ import { dateNotificationEnabled, setDateNotificationSetting } from './settings'
 // اعلان تاریخ شمسی در نوار اعلان. فقط با کلیک آگاهانهٔ کاربر؛ مجوز مرورگر هرگز در حلقه یا بدون اقدام کاربر درخواست نمی‌شود.
 export const DATE_TAG = 'taghvim-date'
 const FLAGS = 'taghvim-flags', FLAG_URL = '/__flag/date-notification'
-const TITLE = (): { title: string } => (self as unknown as { taghvimDateTitle?: (d?: Date) => { title: string } }).taghvimDateTitle?.() ?? { title: '' }
+const TITLE = (): { title: string; day?: number } => (self as unknown as { taghvimDateTitle?: (d?: Date) => { title: string; day: number } }).taghvimDateTitle?.() ?? { title: '' }
 const PLAN_URL = '/__flag/date-plan'
 interface PlanDay { avg: number; wx: string }
 /** آیکون بزرگ اعلان: تصویر شفاف تا کروم به‌جای آن حرف اول دامنه («T») نگذارد */
@@ -40,7 +40,7 @@ async function setSwPlan(plan: Record<string, PlanDay> | null) {
 export async function syncDateNotification(): Promise<boolean> {
   if (!dateNotificationEnabled() || notificationState() !== 'granted') return false
   const reg = await registration(); if (!reg) return false
-  await ensureTitleScript(); const { title: dateTitle } = TITLE(); if (!dateTitle) return false
+  await ensureTitleScript(); const { title: dateTitle, day: dayNumber } = TITLE() as { title: string; day: number }; if (!dateTitle) return false
   const plan = buildPlan(); await setSwPlan(plan)
   const today = plan[isoDay(Date.now())]
   const wx = today ? { avg: today.avg, sig: today.wx } : (() => { const n = notificationWeather(weatherStore.getState()); return n ? { avg: n.avg, sig: weatherSignature(n) } : null })()
@@ -48,7 +48,7 @@ export async function syncDateNotification(): Promise<boolean> {
   try {
     const shown = await reg.getNotifications({ tag: DATE_TAG })
     if (shown.some((n) => n.title === title && ((n.data as { wx?: string } | null)?.wx ?? '') === sig)) return true // بدون تغییر: دوباره نشان نده
-    await reg.showNotification(title, { tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: '/icons/icon-192.png', icon: BLANK_ICON, data: { url: '/', wx: sig } } as NotificationOptions)
+    await reg.showNotification(title, { tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: `/icons/day/${dayNumber}.png`, icon: BLANK_ICON, data: { url: '/', wx: sig } } as NotificationOptions)
     return true
   } catch { return false }
 }

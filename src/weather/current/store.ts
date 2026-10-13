@@ -100,6 +100,7 @@ export function createWeatherStore(deps: WeatherDeps = browserDeps) {
 
   return {
     getState: () => state,
+    getCoords: () => coords,
     subscribe: (l: () => void) => { listeners.add(l); return () => { listeners.delete(l) } },
     /** اقدام صریح کاربر (دکمه): درخواست مجوز موقعیت */
     request: () => run({ reposition: true, silent: false }),

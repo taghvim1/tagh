@@ -21,6 +21,8 @@ export interface CurrentWeather {
   windDirection?: number | null
   cloudCover?: number | null
   pressure?: number | null
+  /** شاخص کیفیت هوا (US AQI)؛ اگر سرویس کیفیت هوا در دسترس نبود نیست */
+  aqi?: number | null
   /** پیش‌بینی ده روز آینده (از امروز) */
   daily?: DailyForecast[]
   /** پیش‌بینی ساعتی ۷۲ ساعت آینده */
@@ -42,6 +44,13 @@ export interface DailyForecast {
   windMax: number | null
   gustMax: number | null
   uvMax: number | null
+  /** میانگین روز از دادهٔ ساعتی (ممکن است در دادهٔ ذخیره‌شدهٔ قدیمی نباشد) */
+  humidity?: number | null
+  pressure?: number | null
+  visibility?: number | null
+  cloudCover?: number | null
+  windDirection?: number | null
+  aqi?: number | null
   sunrise: string | null
   sunset: string | null
 }
@@ -64,6 +73,8 @@ export interface HourlyForecast {
   uv: number | null
   /** متر */
   visibility: number | null
+  pressure?: number | null
+  aqi?: number | null
 }
 
 export type CurrentWeatherError = 'unsupported' | 'denied' | 'unavailable' | 'timeout' | 'network' | 'api'

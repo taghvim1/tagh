@@ -56,7 +56,7 @@ self.addEventListener('fetch', (e) => {
 // ---- اعلان تاریخ ----
 // فقط وقتی کاربر خودش از «تنظیمات» روشن کرده و مجوز اعلان داده باشد. وب‌اپ نمی‌تواند اعلان «غیرقابل‌حذف» بسازد؛ کاربر می‌تواند آن را کنار بزند.
 // به‌روزرسانی در پس‌زمینه (periodicsync) به‌صورت بهترین‌تلاش و وابسته به مرورگر است.
-async function showDateNotification() {
+async function showDateNotification(force) {
   const cache = await caches.open(FLAGS)
   if (!(await cache.match(DATE_FLAG)) || (self.Notification && Notification.permission !== 'granted')) return
   const now = new Date()
@@ -65,15 +65,16 @@ async function showDateNotification() {
   // طرح ده‌روزه را برنامه می‌سازد (دما + آیکون هر روز)؛ اگر ردیف «امروز» نبود فقط تاریخ نمایش داده می‌شود (دادهٔ کهنه یا ساختگی نه)
   let day = null
   try { const r = await cache.match('/__flag/date-plan'); const v = r && (await r.json()); day = (v && v.days && v.days[key]) || null } catch (e) { /* فقط تاریخ */ }
+  const d = self.taghvimDateTitle(now)
   const title = self.taghvimNotifTitle(now, day ? day.avg : null), sig = day ? day.wx : ''
   const shown = await self.registration.getNotifications({ tag: DATE_TAG })
-  if (shown.some((n) => n.title === title && ((n.data && n.data.wx) || '') === sig)) return // بدون تغییر
-  await self.registration.showNotification(title, ({ tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: '/icons/icon-192.png', icon: '/icons/blank.png', data: { url: '/', wx: sig } }))
+  if (!force && shown.some((n) => n.title === title && ((n.data && n.data.wx) || '') === sig)) return // بدون تغییر (در بسته‌شدن اعلان اجباری است: ممکن است هنوز در فهرست باشد)
+  await self.registration.showNotification(title, ({ tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: '/icons/day/' + d.day + '.png', icon: '/icons/blank.png', data: { url: '/', wx: sig } }))
 }
 self.addEventListener('periodicsync', (e) => { if (e.tag === DATE_TAG) e.waitUntil(showDateNotification()) })
 self.addEventListener('message', (e) => { if (e.data && e.data.type === 'sync-date-notification') e.waitUntil(showDateNotification()) })
 // کاربر اعلان را کنار زد یا «Clear all» زد: تا وقتی گزینه روشن است همان لحظه دوباره گذاشته می‌شود (مرورگر اعلان «دائمی» اجازه نمی‌دهد)
-self.addEventListener('notificationclose', (e) => { if (e.notification.tag === DATE_TAG) e.waitUntil(showDateNotification()) })
+self.addEventListener('notificationclose', (e) => { if (e.notification.tag === DATE_TAG) e.waitUntil(showDateNotification(true)) })
 self.addEventListener('notificationclick', (e) => {
   const url = (e.notification.data && e.notification.data.url) || '/'
   if (e.notification.tag !== DATE_TAG) e.notification.close() // اعلان تاریخ با کلیک بسته نمی‌شود

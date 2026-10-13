@@ -249,7 +249,7 @@ test('تاریخ شمسی از ساعت دستگاه (نه منطقهٔ زمان
 })
 
 import { FORECAST_DAYS } from '../src/weather/current/client'
-import { clockOf, dayLabel, degree, hourLabel, uvLabel, windFrom } from '../src/weather/format'
+import { aqiLabel, clockOf, dayLabel, dayLength, degree, gregorianShort, hourLabel, uvLabel, windFrom } from '../src/weather/format'
 
 test('پیش‌بینی ده‌روزه و ساعتی: آدرس و تجزیه (ساعت‌های گذشته حذف، نبودِ مقدار = null)', () => {
   const u = new URL(buildForecastUrl(32.65, 51.67))
@@ -274,6 +274,7 @@ test('قالب‌بندی صفحهٔ آب‌وهوا: جهت باد، فرابن
   assert.equal(windFrom(0), 'شمال'); assert.equal(windFrom(270), 'غرب'); assert.equal(windFrom(359), 'شمال'); assert.equal(windFrom(null), null)
   assert.equal(uvLabel(2), 'کم'); assert.equal(uvLabel(7), 'زیاد'); assert.equal(uvLabel(12), 'شدید')
   assert.equal(dayLabel('2026-10-13'), 'سه‌شنبه ۲۱ مهر')
-  assert.equal(hourLabel('2026-10-13T09:00'), '۹:۰۰'); assert.equal(clockOf('2026-10-13T06:05'), '۶:۰۵')
+  assert.equal(hourLabel('2026-10-13T09:00'), '\u2066۰۹:۰۰\u2069'); assert.equal(hourLabel('2026-10-13T00:00'), '\u2066۰۰:۰۰\u2069'); assert.equal(clockOf('2026-10-13T06:05'), '\u2066۰۶:۰۵\u2069')
+  assert.equal(gregorianShort('2026-10-16'), '\u2066۱۶ / ۱۰\u2069'); assert.equal(dayLength('2026-10-13T06:08', '2026-10-13T17:22'), '۱۱ ساعت و ۱۴ دقیقه'); assert.equal(aqiLabel(42), 'خوب'); assert.equal(aqiLabel(null), null)
   assert.equal(degree(-2.4), '\u2066−۲°\u2069'); assert.equal(degree(null), '—')
 })
