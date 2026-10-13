@@ -1,7 +1,6 @@
 import { tracker } from '../analytics'
 import { weatherStore } from '../weather/current/store'
 import { dailyPlan, isoDay, notificationTitle, notificationWeather, weatherSignature } from './dateNotificationData'
-import { renderWeatherIcon } from './dateNotificationIcon'
 import { dateNotificationEnabled, setDateNotificationSetting } from './settings'
 
 // اعلان تاریخ شمسی در نوار اعلان. فقط با کلیک آگاهانهٔ کاربر؛ مجوز مرورگر هرگز در حلقه یا بدون اقدام کاربر درخواست نمی‌شود.
@@ -9,7 +8,9 @@ export const DATE_TAG = 'taghvim-date'
 const FLAGS = 'taghvim-flags', FLAG_URL = '/__flag/date-notification'
 const TITLE = (): { title: string } => (self as unknown as { taghvimDateTitle?: (d?: Date) => { title: string } }).taghvimDateTitle?.() ?? { title: '' }
 const PLAN_URL = '/__flag/date-plan'
-interface PlanDay { avg: number; wx: string; icon: string | null }
+interface PlanDay { avg: number; wx: string }
+/** آیکون بزرگ اعلان: تصویر شفاف تا کروم به‌جای آن حرف اول دامنه («T») نگذارد */
+export const BLANK_ICON = '/icons/blank.png'
 
 export type EnableResult = 'ok' | 'denied' | 'unsupported' | 'insecure' | 'dismissed'
 export const notificationState = (): 'granted' | 'denied' | 'default' | 'unsupported' => (typeof Notification === 'undefined' || !('serviceWorker' in navigator) ? 'unsupported' : Notification.permission)
@@ -25,16 +26,10 @@ async function ensureTitleScript() {
   await new Promise<void>((res) => { const s = document.createElement('script'); s.src = '/date-title.js'; s.onload = () => res(); s.onerror = () => res(); document.head.appendChild(s) })
 }
 
-const iconCache = new Map<string, string | null>()
-async function iconFor(name: Parameters<typeof renderWeatherIcon>[0]) {
-  if (!iconCache.has(name)) iconCache.set(name, await renderWeatherIcon(name))
-  return iconCache.get(name) ?? null
-}
-
-/** طرح ده روز آینده (دما + آیکون هر روز) برای Service Worker: حتی بدون باز شدن برنامه، نیمه‌شب دمای همان روز را می‌گذارد */
-async function buildPlan(): Promise<Record<string, PlanDay>> {
+/** طرح ده روز آینده (فقط میانگین دما هر روز) برای Service Worker: حتی بدون باز شدن برنامه، نیمه‌شب دمای همان روز را می‌گذارد */
+function buildPlan(): Record<string, PlanDay> {
   const plan: Record<string, PlanDay> = {}
-  for (const { date, weather } of dailyPlan(weatherStore.getState().weather)) plan[date] = { avg: weather.avg, wx: weatherSignature(weather), icon: await iconFor(weather.icon) }
+  for (const { date, weather } of dailyPlan(weatherStore.getState().weather)) plan[date] = { avg: weather.avg, wx: weatherSignature(weather) }
   return plan
 }
 async function setSwPlan(plan: Record<string, PlanDay> | null) {
@@ -46,14 +41,14 @@ export async function syncDateNotification(): Promise<boolean> {
   if (!dateNotificationEnabled() || notificationState() !== 'granted') return false
   const reg = await registration(); if (!reg) return false
   await ensureTitleScript(); const { title: dateTitle } = TITLE(); if (!dateTitle) return false
-  const plan = await buildPlan(); await setSwPlan(plan)
+  const plan = buildPlan(); await setSwPlan(plan)
   const today = plan[isoDay(Date.now())]
-  const wx = today ? { avg: today.avg, icon: today.icon, sig: today.wx } : (() => { const n = notificationWeather(weatherStore.getState()); return n ? { avg: n.avg, icon: null as string | null, sig: weatherSignature(n) } : null })()
+  const wx = today ? { avg: today.avg, sig: today.wx } : (() => { const n = notificationWeather(weatherStore.getState()); return n ? { avg: n.avg, sig: weatherSignature(n) } : null })()
   const title = notificationTitle(dateTitle, wx ? wx.avg : null), sig = wx ? wx.sig : ''
   try {
     const shown = await reg.getNotifications({ tag: DATE_TAG })
     if (shown.some((n) => n.title === title && ((n.data as { wx?: string } | null)?.wx ?? '') === sig)) return true // بدون تغییر: دوباره نشان نده
-    await reg.showNotification(title, { tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: '/icons/icon-192.png', ...(wx?.icon ? { icon: wx.icon } : {}), data: { url: '/', wx: sig } } as NotificationOptions)
+    await reg.showNotification(title, { tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: '/icons/icon-192.png', icon: BLANK_ICON, data: { url: '/', wx: sig } } as NotificationOptions)
     return true
   } catch { return false }
 }

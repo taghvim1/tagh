@@ -68,10 +68,12 @@ async function showDateNotification() {
   const title = self.taghvimNotifTitle(now, day ? day.avg : null), sig = day ? day.wx : ''
   const shown = await self.registration.getNotifications({ tag: DATE_TAG })
   if (shown.some((n) => n.title === title && ((n.data && n.data.wx) || '') === sig)) return // بدون تغییر
-  await self.registration.showNotification(title, Object.assign({ tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: '/icons/icon-192.png', data: { url: '/', wx: sig } }, day && day.icon ? { icon: day.icon } : {}))
+  await self.registration.showNotification(title, ({ tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: '/icons/icon-192.png', icon: '/icons/blank.png', data: { url: '/', wx: sig } }))
 }
 self.addEventListener('periodicsync', (e) => { if (e.tag === DATE_TAG) e.waitUntil(showDateNotification()) })
 self.addEventListener('message', (e) => { if (e.data && e.data.type === 'sync-date-notification') e.waitUntil(showDateNotification()) })
+// کاربر اعلان را کنار زد یا «Clear all» زد: تا وقتی گزینه روشن است همان لحظه دوباره گذاشته می‌شود (مرورگر اعلان «دائمی» اجازه نمی‌دهد)
+self.addEventListener('notificationclose', (e) => { if (e.notification.tag === DATE_TAG) e.waitUntil(showDateNotification()) })
 self.addEventListener('notificationclick', (e) => {
   const url = (e.notification.data && e.notification.data.url) || '/'
   if (e.notification.tag !== DATE_TAG) e.notification.close() // اعلان تاریخ با کلیک بسته نمی‌شود
