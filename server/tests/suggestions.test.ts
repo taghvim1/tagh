@@ -1,3 +1,6 @@
+import { mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { FastifyInstance } from 'fastify'
 import { buildApp } from '../src/app.js'
@@ -104,8 +107,13 @@ describe('کلیدهای API', () => {
     expect(ok.statusCode).toBe(200); expect(ok.json().status).toMatchObject({ source: 'ui', masked: '••••1234' }); expect(ok.body).not.toContain(KEY)
     await app.inject({ method: 'DELETE', url: '/api/admin/settings/secrets/gemini' })
     expect((await get('/admin/settings/secrets')).json().secrets.gemini.configured).toBe(false); await app.close()
-    await mk({ NODE_ENV: 'production', ADMIN_OPEN: 'true', SECRETS_ENCRYPTION_KEY: 'x'.repeat(24) })
-    expect((await app.inject({ method: 'PUT', url: '/api/admin/settings/secrets/gemini', payload: { value: KEY } })).json().reason).toBe('blocked_in_production_without_admin_token')
+    await mk({ NODE_ENV: 'production', ADMIN_OPEN: 'true', SECRETS_ENCRYPTION_KEY: 'x'.repeat(24), DATA_DIR: mkdtempSync(join(tmpdir(), 'data-')) })
+    // production با ADMIN_OPEN=true (حالت آگاهانهٔ تست): ذخیرهٔ کلید از رابط مجاز است
+    const open = await app.inject({ method: 'PUT', url: '/api/admin/settings/secrets/gemini', payload: { value: KEY } }); expect(open.statusCode).toBe(200); expect(open.body).not.toContain(KEY)
+    expect((await get('/admin/settings/secrets')).json().setup).toMatchObject({ admin_open: true, admin_token: false, encryption_key: true, storage: 'file' }); await app.close()
+    // production بدون ADMIN_TOKEN و بدون ADMIN_OPEN: کل API مدیر بسته است
+    await mk({ NODE_ENV: 'production', SECRETS_ENCRYPTION_KEY: 'x'.repeat(24), DATA_DIR: mkdtempSync(join(tmpdir(), 'data-')) })
+    expect((await app.inject({ method: 'PUT', url: '/api/admin/settings/secrets/gemini', payload: { value: KEY } })).statusCode).toBe(503)
   })
   it('آزمون اتصال: کلید نامعتبر پیام فارسی بدون کلید می‌دهد', async () => {
     await mk({ GEMINI_API_KEY: KEY }, (async () => json({ error: { message: 'API key not valid' } }, 400)) as FetchFn)

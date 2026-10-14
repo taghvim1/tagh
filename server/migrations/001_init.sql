@@ -1,5 +1,5 @@
--- طرح PostgreSQL متناظر با server/src/store/types.ts (هنوز اجرا/آزمایش‌شده روی PostgreSQL واقعی نیست).
--- ذخیره‌سازی فعلی آزمایشی و فایل JSON است؛ هنگام انتقال، یک پیاده‌سازی Store برای PostgreSQL بنویسید که همین طرح را بخواند.
+-- طرح PostgreSQL متناظر با server/src/store/types.ts؛ هنگام راه‌اندازی با DATABASE_URL خودکار اجرا می‌شود (اجرای تکراری بی‌خطر است).
+-- هر دستور باید با «;» و رفتن به خط بعد تمام شود؛ بدون «;» داخل رشته‌ها.
 create table if not exists travel_suggestions (
   id bigserial primary key,
   status text not null check (status in ('draft','pending_review','approved','published','rejected','archived')),
@@ -52,7 +52,6 @@ create table if not exists prompt_templates (
   active boolean not null default false,
   created_at timestamptz not null default now()
 );
-create unique index if not exists prompt_templates_one_active on prompt_templates (active) where active;
 
 -- تنظیمات غیرمحرمانه و کلیدهای رمزنگاری‌شده (AES-256-GCM؛ کلید رمزنگاری فقط در متغیر محیطی است)
 create table if not exists app_settings (key text primary key, value text not null, updated_at timestamptz not null default now());

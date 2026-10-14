@@ -13,6 +13,7 @@ export interface Version { id: number; version: number; content: SuggestionConte
 export interface SImage { id: number; suggestion_id: number; url: string; thumb_url: string | null; provider: string; source_url: string | null; author: string | null; license: string | null; license_url: string | null; attribution: string | null; status: 'candidate' | 'approved' | 'rejected' }
 export interface Dup { id: number; status: Status; name: string }
 export interface Detail { suggestion: Suggestion; images: SImage[]; versions: Version[]; duplicates: Dup[]; publish_check: { blocking: string[]; warnings: string[] } }
+export interface SetupStatus { storage: 'postgres' | 'file' | 'memory'; encryption_key: boolean; admin_token: boolean; admin_open: boolean }
 export interface SecretStatus { configured: boolean; source: 'env' | 'ui' | null; masked: string | null; env_var: string; ui_storage: 'available' | 'needs_encryption_key' | 'blocked_in_production_without_admin_token' }
 export interface AiSettings { llm: { primaryModel: string; fallbackModel: string; temperature: number }; webSearch: { enabled: boolean; provider: 'brave'; maxResults: number }; imageSearch: { providers: ('wikimedia' | 'pexels')[]; maxPerProvider: number }; tasks: { generate: { useWebSearch: boolean }; images: { autoSearchOnGenerate: boolean } } }
 export interface Prompt { id: number; version: number; text: string; note: string; active: boolean; created_at: string }

@@ -29,7 +29,7 @@ export interface SecretStatus { configured: boolean; source: 'env' | 'ui' | null
 export function createSecrets(config: Config, store: Store) {
   const uiWritable = (): SecretStatus['ui_storage'] => {
     if (!config.SECRETS_ENCRYPTION_KEY) return 'needs_encryption_key'
-    if (config.NODE_ENV === 'production' && !config.ADMIN_TOKEN) return 'blocked_in_production_without_admin_token'
+    if (config.NODE_ENV === 'production' && !config.ADMIN_TOKEN && config.ADMIN_OPEN !== 'true') return 'blocked_in_production_without_admin_token'
     return 'available'
   }
   async function get(n: SecretName): Promise<{ value: string; source: 'env' | 'ui' } | null> {

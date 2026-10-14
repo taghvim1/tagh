@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api, friendly, type AiSettings, type GenResult, type Prompt, type SecretStatus } from '../suggestions/api'
+import { api, friendly, type AiSettings, type GenResult, type Prompt, type SecretStatus, type SetupStatus } from '../suggestions/api'
 import { ErrorBox, fmtDate, ModeBanner, useLoad } from '../suggestions/shared'
 import { faNum } from '../../lib/jalali'
 
@@ -12,7 +12,26 @@ const SECRETS: { name: Name; title: string; hint: string }[] = [
 const STORAGE_MSG: Record<SecretStatus['ui_storage'], string> = {
   available: '',
   needs_encryption_key: 'ذخیره از این صفحه فعال نیست: متغیر SECRETS_ENCRYPTION_KEY (حداقل ۱۶ نویسه) روی سرور تنظیم نشده. به‌جایش خود کلید را در متغیر محیطی بگذارید.',
-  blocked_in_production_without_admin_token: 'در production بدون ADMIN_TOKEN ذخیرهٔ کلید از رابط مسدود است. کلید را در متغیر محیطی بگذارید یا ADMIN_TOKEN تنظیم کنید.',
+  blocked_in_production_without_admin_token: 'در production ذخیرهٔ کلید از رابط فقط با ADMIN_TOKEN (یا ADMIN_OPEN=true برای تست) ممکن است. کلید را در متغیر محیطی بگذارید یا یکی از این دو را تنظیم کنید.',
+}
+
+function SetupChecklist({ setup }: { setup: SetupStatus }) {
+  const items: { ok: boolean; title: string; text: string }[] = [
+    setup.storage === 'postgres'
+      ? { ok: true, title: 'ذخیره‌سازی ماندگار (PostgreSQL)', text: 'پیشنهادها، تنظیمات و کلیدهای واردشده از این صفحه با دیپلوی و ری‌استارت پاک نمی‌شوند.' }
+      : { ok: false, title: 'ذخیره‌سازی موقت', text: 'هر چیزی که اینجا وارد یا ساخته می‌شود با دیپلوی/ری‌استارت پاک می‌شود. برای ماندگاری، متغیر DATABASE_URL (نشانی PostgreSQL، مثلاً Neon) را یک بار روی سرور بگذارید.' },
+    setup.encryption_key
+      ? { ok: true, title: 'کلید رمزنگاری تنظیم است', text: 'کلیدهای واردشده از این صفحه رمزنگاری‌شده ذخیره می‌شوند.' }
+      : { ok: false, title: 'کلید رمزنگاری تنظیم نیست', text: 'برای ذخیرهٔ کلیدها از همین صفحه، یک بار متغیر SECRETS_ENCRYPTION_KEY (یک رشتهٔ تصادفی حداقل ۱۶ نویسه) را روی سرور بگذارید.' },
+    setup.admin_token
+      ? { ok: true, title: 'دسترسی مدیر با توکن', text: 'فقط با ADMIN_TOKEN وارد می‌شوید.' }
+      : { ok: false, title: setup.admin_open ? 'دسترسی مدیر باز (آزمایشی)' : 'دسترسی مدیر بسته', text: setup.admin_open ? 'هر کسی که نشانی سایت را بداند به پنل دسترسی دارد. پیش از انتشار عمومی ADMIN_TOKEN بگذارید و ADMIN_OPEN را حذف کنید.' : 'ADMIN_TOKEN یا برای تست ADMIN_OPEN=true را روی سرور تنظیم کنید.' },
+  ]
+  return (
+    <ul className="adm-checklist" aria-label="وضعیت راه‌اندازی">
+      {items.map((i) => <li key={i.title}><span className={`adm-badge ${i.ok ? 'on' : 'warn'}`}>{i.ok ? 'آماده' : 'نیاز به اقدام'}</span><div><strong>{i.title}</strong><p className="adm-note">{i.text}</p></div></li>)}
+    </ul>
+  )
 }
 
 function SecretRow({ name, title, hint, st, onChange }: { name: Name; title: string; hint: string; st: SecretStatus; onChange: () => void }) {
@@ -35,7 +54,7 @@ function SecretRow({ name, title, hint, st, onChange }: { name: Name; title: str
 }
 
 export default function ApiSettings() {
-  const secrets = useLoad(() => api<{ secrets: Record<Name, SecretStatus> }>('/admin/settings/secrets'), [])
+  const secrets = useLoad(() => api<{ secrets: Record<Name, SecretStatus>; setup: SetupStatus }>('/admin/settings/secrets'), [])
   const settings = useLoad(() => api<{ settings: AiSettings }>('/admin/settings/ai'), [])
   const prompts = useLoad(() => api<{ items: Prompt[]; builtin: string; active_version: number }>('/admin/prompts'), [])
   const [s, setS] = useState<AiSettings | null>(null), [smsg, setSmsg] = useState<{ ok: boolean; text: string } | null>(null)
@@ -56,6 +75,7 @@ export default function ApiSettings() {
 
       <section className="adm-card"><h3 className="adm-sub">کلیدها</h3>
         {secrets.error ? <ErrorBox error={secrets.error} onRetry={secrets.reload} /> : !secrets.data ? <p className="adm-note">در حال بارگذاری…</p> : <>
+          <SetupChecklist setup={secrets.data.setup} />
           {SECRETS.map((x) => <SecretRow key={x.name} {...x} st={secrets.data!.secrets[x.name]} onChange={secrets.reload} />)}
           <div className="adm-secret-row"><div className="adm-sg-meta"><strong>Wikimedia Commons (تصویر)</strong><span className="adm-badge on">بدون نیاز به کلید</span></div>
             <WikimediaTest /></div></>}

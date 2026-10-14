@@ -35,6 +35,7 @@ export async function createJsonStore(file?: string): Promise<Store> {
   }
 
   return {
+    kind: file ? 'file' : 'memory',
     async listSuggestions(q) {
       const base = s.suggestions.filter((r) => matches(r, q))
       const counts: Record<string, number> = { all: base.length }
@@ -71,6 +72,7 @@ export async function createJsonStore(file?: string): Promise<Store> {
       s.prompts.push(r); await save(); return clone(r)
     },
     async activatePrompt(i) {
+      if (i === -1) { s.prompts.forEach((p) => { p.active = false }); await save(); return null } // بازنشانی به قالب پیش‌فرض
       const r = s.prompts.find((p) => p.id === i); if (!r) return null
       s.prompts.forEach((p) => { p.active = p.id === i }); await save(); return clone(r)
     },

@@ -23,6 +23,8 @@ export interface SuggestionQuery { status?: Status; q?: string; scope?: 'domesti
 
 /** رابط ذخیره‌سازی (همه async تا پیاده‌سازی PostgreSQL بدون تغییر در سرویس‌ها جایگزین شود؛ طرح جدول‌ها در migrations/001_init.sql است) */
 export interface Store {
+  /** نوع ذخیره‌سازی: postgres = ماندگار؛ file = فایل JSON (با دیپلوی روی سرویس‌های بدون Volume پاک می‌شود)؛ memory = فقط حافظه */
+  readonly kind: 'postgres' | 'file' | 'memory'
   listSuggestions(q: SuggestionQuery): Promise<{ items: SuggestionRow[]; total: number; counts: Record<string, number> }>
   allSuggestions(): Promise<SuggestionRow[]>
   getSuggestion(id: number): Promise<SuggestionRow | null>

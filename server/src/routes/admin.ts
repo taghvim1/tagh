@@ -154,7 +154,11 @@ export function adminRoutes(app: FastifyInstance, d: { config: Config; store: St
       const b = aiSettingsSchema.safeParse(req.body); if (!b.success) return bad(reply, issuesOf(b.error))
       await saveAiSettings(store, b.data); return { settings: b.data }
     })
-    adm.get('/settings/secrets', async () => ({ secrets: Object.fromEntries(await Promise.all(SECRET_NAMES.map(async (n) => [n, await secrets.status(n)]))) }))
+    adm.get('/settings/secrets', async () => ({
+      secrets: Object.fromEntries(await Promise.all(SECRET_NAMES.map(async (n) => [n, await secrets.status(n)]))),
+      // وضعیت راه‌اندازی برای نمایش در صفحه (بدون هیچ مقدار محرمانه)
+      setup: { storage: store.kind, encryption_key: !!config.SECRETS_ENCRYPTION_KEY, admin_token: !!config.ADMIN_TOKEN, admin_open: config.ADMIN_OPEN === 'true' || config.NODE_ENV !== 'production' },
+    }))
     const secretName = z.enum(SECRET_NAMES)
     adm.put('/settings/secrets/:name', async (req, reply) => {
       const n = secretName.safeParse((req.params as { name: string }).name); if (!n.success) return reply.code(404).send({ error: 'not_found' })
