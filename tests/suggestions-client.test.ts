@@ -33,5 +33,7 @@ test('برنامهٔ کاربر: پاسخ غیر JSON (هاست فقط‌ایس�
   assert.equal(await refreshRemoteSuggestions(async () => { throw new Error('offline') }), false)
   const c = destinationToContent(MOCK_DESTINATIONS[0])
   const list = toRemoteDestinations([{ id: 7, version: 1, content: c, image: { url: 'https://x/y.jpg', attribution: 'Ali — CC BY', license: 'CC BY 4.0' } }])
+  const multi = toRemoteDestinations([{ id: 8, version: 1, content: c, image: { url: 'https://x/1.jpg', attribution: null, license: 'CC0' }, images: [{ url: 'https://x/1.jpg', attribution: null, license: 'CC0' }, { url: 'https://x/2.jpg', attribution: 'Sara', license: 'CC0' }, { url: 'http://insecure/3.jpg', attribution: null, license: 'CC0' }] }])
+  assert.deepEqual(multi[0].images?.map((i) => i.url), ['https://x/1.jpg', 'https://x/2.jpg']); assert.equal(list[0].images, undefined)
   assert.equal(list[0].id, 1007); assert.equal(list[0].image, 'https://x/y.jpg'); assert.match(list[0].image_credit ?? '', /Ali/)
 })

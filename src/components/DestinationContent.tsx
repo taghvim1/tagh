@@ -1,5 +1,6 @@
 import { LEVEL_LABEL, RATING_LABEL, locationLabel, type Destination, type Season } from '../data/destinations'
 import FavButton from './FavButton'
+import ImageGallery from './ImageGallery'
 import { faNum } from '../lib/jalali'
 import { seasonKey } from '../travel/season'
 
@@ -16,8 +17,7 @@ export default function DestinationContent({ destination: d, season }: Props) {
   return (
     <article className="dc">
       <FavButton kind="destination" id={d.id} />
-      <img className="dc-hero" src={d.image} alt={d.name} />
-      {d.image_credit && <p className="dc-credit">تصویر: {d.image_credit}</p>}
+      <ImageGallery alt={d.name} images={d.images && d.images.length > 1 ? d.images : [{ url: d.image, credit: d.image_credit }]} />
       <header className="dc-head">
         <h2>{d.name}</h2>
         <p className="dc-loc">{locationLabel(d)}</p>

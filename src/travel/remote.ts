@@ -11,7 +11,9 @@ const listeners = new Set<() => void>()
 
 function read(): Destination[] { try { const v = JSON.parse(localStorage.getItem(KEY) ?? '[]'); return Array.isArray(v) ? v : [] } catch { return [] } }
 export function toRemoteDestinations(list: PublicSuggestion[]): Destination[] {
-  return list.map((s) => contentToDestination(s.content, REMOTE_ID_BASE + s.id, s.image.url, [s.image.attribution, s.image.license].filter(Boolean).join(' · ') || undefined))
+  const credit = (i: { attribution: string | null; license: string | null }) => [i.attribution, i.license].filter(Boolean).join(' · ') || undefined
+  return list.map((s) => contentToDestination(s.content, REMOTE_ID_BASE + s.id, s.image.url, credit(s.image),
+    (s.images ?? []).filter((i) => /^https:\/\//.test(i.url)).map((i) => ({ url: i.url, credit: credit(i) }))))
 }
 export async function refreshRemoteSuggestions(fetchImpl: typeof fetch = (...a) => fetch(...a)): Promise<boolean> {
   try {

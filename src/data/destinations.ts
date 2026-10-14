@@ -54,6 +54,8 @@ export interface Destination {
   latitude?: number
   /** اعتبار تصویر (نام عکاس و مجوز) برای پیشنهادهای منتشرشده از سرور */
   image_credit?: string
+  /** چند تصویر برای ورق‌زدن (پیشنهادهای منتشرشده با بیش از یک تصویر تأییدشده) */
+  images?: { url: string; credit?: string }[]
   longitude?: number
   // --- فیلدهای مشتق از season_suitability (با withDerived محاسبه می‌شوند) ---
   best_seasons: Season[]

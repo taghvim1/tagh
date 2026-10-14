@@ -55,6 +55,15 @@ describe('گردش وضعیت پیشنهاد', () => {
     expect(pub).toHaveLength(1); expect(pub[0].content.name).toBe('سنندج'); expect(pub[0].image.license).toBe('CC BY 4.0')
     expect(JSON.stringify(pub)).not.toMatch(/reject_reason|ai_meta|status/)
   })
+  it('API عمومی: همهٔ تصاویر تأییدشده برای ورق‌زدن، اول تصویر اصلی؛ رد‌شده/بدون‌مجوز نمی‌آید', async () => {
+    await mk(); const s = await create(); const cover = await addApprovedImage(s.id)
+    const add = async (url: string, status: string, license?: string) => { const img = (await post(`/admin/suggestions/${s.id}/images`, { url, ...(license ? { license } : {}), author: 'B' })).json().image; if (status !== 'candidate') await post(`/admin/images/${img.id}/decision`, { status }); return img.id as number }
+    await add('https://example.org/b.jpg', 'approved', 'CC0'); await add('https://example.org/c.jpg', 'rejected', 'CC0'); await add('https://example.org/d.jpg', 'candidate', 'CC0')
+    for (const to of ['pending_review', 'approved', 'published']) await post(`/admin/suggestions/${s.id}/transition`, { to })
+    const it0 = (await get('/travel-suggestions')).json().items[0]
+    expect(it0.images.map((i: { url: string }) => i.url)).toEqual(['https://example.org/a.jpg', 'https://example.org/b.jpg'])
+    expect(it0.image.url).toBe('https://example.org/a.jpg'); expect(cover).toBeGreaterThan(0)
+  })
   it('ویرایش با نسخه‌گذاری، تعارض هم‌زمانی و لغو انتشار هنگام ویرایش', async () => {
     await mk(); const s = await create(); await addApprovedImage(s.id)
     for (const to of ['pending_review', 'approved', 'published']) await post(`/admin/suggestions/${s.id}/transition`, { to })
