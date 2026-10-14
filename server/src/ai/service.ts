@@ -80,7 +80,14 @@ export function createAiService(deps: { store: Store; secrets: Secrets; fetch: F
     try {
       if (name === 'wikimedia') { const r = await wikimediaImages(f, 'Isfahan', 1); return done(true, `اتصال برقرار است (${r.length} نتیجهٔ آزمایشی).`) }
       const key = await secrets.get(name); if (!key) return done(false, 'کلید تنظیم نشده است.')
-      if (name === 'gemini') { const s = await loadAiSettings(store); await geminiGenerate(f, key.value, s.llm.primaryModel, 'Reply with the single word: ok', { maxOutputTokens: 16 }); return done(true, `کلید معتبر است و مدل ${s.llm.primaryModel} پاسخ داد.`) }
+      if (name === 'gemini') {
+        const s = await loadAiSettings(store), models = [s.llm.primaryModel, s.llm.fallbackModel].filter(Boolean), errs: string[] = []
+        for (const m of models) {
+          try { await geminiGenerate(f, key.value, m, 'Reply with the single word: ok', { maxOutputTokens: 16 }); return done(true, `کلید معتبر است و مدل ${m} پاسخ داد.${errs.length ? ' (مدل‌های ناموفق: ' + errs.join('، ') + ')' : ''}`) }
+          catch (e) { if (e instanceof ProviderError && e.code === 'invalid_key') throw e; errs.push(`${m}: ${(e as Error).message}`) }
+        }
+        return done(false, errs.join(' | '))
+      }
       if (name === 'tavily') { await tavilySearch(f, key.value, 'test', 1); return done(true, 'کلید معتبر است.') }
       await unsplashImages(f, key.value, 'test', 1); return done(true, 'کلید معتبر است.')
     } catch (e) { return done(false, (e as Error).message) }

@@ -149,11 +149,11 @@ describe('تولید با هوش مصنوعی', () => {
   })
   it('مدل جایگزین هنگام خطای مدل اصلی؛ کلید نامعتبر جایگزین ندارد', async () => {
     const used: string[] = []
-    await mk({ GEMINI_API_KEY: KEY }, (async (url: string) => { used.push(String(url).match(/models\/([^:]+)/)![1]); return used.length === 1 ? json({}, 503) : gemini(JSON.stringify(content())) }) as FetchFn)
-    const r = (await post('/admin/ai/test-generation', { name: 'سنندج' })).json(); expect(r.ok).toBe(true); expect(r.meta.used_fallback).toBe(true); expect(used).toEqual(['gemini-3.8-flash', 'gemini-3.5-flash-lite']); await app.close()
+    await mk({ GEMINI_API_KEY: KEY }, (async (url: string) => { used.push(String(url).match(/models\/([^:]+)/)![1]); return used.at(-1) === 'gemini-3.8-flash' ? json({}, 503) : gemini(JSON.stringify(content())) }) as FetchFn)
+    const r = (await post('/admin/ai/test-generation', { name: 'سنندج' })).json(); expect(r.ok).toBe(true); expect(r.meta.used_fallback).toBe(true); expect(used).toEqual(['gemini-3.8-flash', 'gemini-3.8-flash', 'gemini-3.8-flash', 'gemini-3.5-flash-lite']); await app.close()
     used.length = 0; await mk({ GEMINI_API_KEY: KEY }, (async (url: string) => { used.push(String(url)); return json({}, 403) }) as FetchFn)
     expect((await post('/admin/ai/test-generation', { name: 'سنندج' })).json().ok).toBe(false); expect(used).toHaveLength(1)
-  })
+  }, 20_000)
   it('قالب پرامپت نسخه‌دار: اعتبارسنجی جاگذار، فعال‌سازی، و استفاده در تولید', async () => {
     let prompt = ''
     await mk({ GEMINI_API_KEY: KEY }, (async (_u: string, init: RequestInit) => { prompt = JSON.parse(init.body as string).contents[0].parts[0].text; return gemini(JSON.stringify(content())) }) as FetchFn)

@@ -20,7 +20,17 @@ async function call(f: Fetch, url: string, init: RequestInit & { headers?: Recor
 }
 
 // ---- Gemini ----
-export async function geminiGenerate(f: Fetch, key: string, model: string, prompt: string, opts: { temperature?: number; maxOutputTokens?: number; json?: boolean } = {}): Promise<string> {
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+/** خطای موقت (۵۰۳/ضعف شبکه) تا دو بار با فاصله دوباره امتحان می‌شود. */
+export async function geminiGenerate(f: Fetch, key: string, model: string, prompt: string, opts: { temperature?: number; maxOutputTokens?: number; json?: boolean; retryDelayMs?: number } = {}): Promise<string> {
+  let last: unknown
+  for (let i = 0; i < 3; i++) {
+    try { return await geminiOnce(f, key, model, prompt, opts) }
+    catch (e) { last = e; if (!(e instanceof ProviderError) || e.code !== 'unavailable' || i === 2) throw e; await sleep((opts.retryDelayMs ?? 1500) * (i + 1)) }
+  }
+  throw last
+}
+async function geminiOnce(f: Fetch, key: string, model: string, prompt: string, opts: { temperature?: number; maxOutputTokens?: number; json?: boolean } = {}): Promise<string> {
   if (!/^[\w.\-]+$/.test(model)) throw new ProviderError('bad_response', 'نام مدل نامعتبر است.')
   const data = (await call(f, `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
