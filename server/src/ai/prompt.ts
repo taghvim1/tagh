@@ -24,7 +24,7 @@ const season = `{ "rating": "${RATINGS.join('|')}", "average_temperature": 20, "
 export const SCHEMA_TEXT = `{
   "name": "", "country": "", "province_or_city": "", "scope": "domestic|international", "type": [], "description": "",
   "duration": "", "budget": "", "companions": [], "recommended_for": [], "attractions": [],
-  "visa_required": null, "quality": 7, "latitude": 0, "longitude": 0, "image_query": "",
+  "visa_required": null, "quality": 7, "latitude": 0, "longitude": 0, "image_query": "", "image_queries": [],
   "seasons": { "spring": ${season}, "summer": ..., "autumn": ..., "winter": ... }
 }`
 export const ENUMS_TEXT = [
@@ -32,9 +32,20 @@ export const ENUMS_TEXT = [
   `- companions فقط از: ${COMPANIONS.join('، ')}`, '- visa_required برای مقصد داخلی null است.',
 ].join('\n')
 
+/** قواعد ثابت؛ همیشه به انتهای پرامپت اضافه می‌شود تا با قالب سفارشی هم اعمال شود. */
+export const EXTRA_RULES = `
+قواعد تکمیلی (الزامی):
+- scope: اگر مقصد داخل ایران است «domestic» و country دقیقاً «ایران»؛ در غیر این صورت «international» و country نام فارسی کشور. نام شهر یا منطقه را با کشور درست تطبیق بده (مثلاً «ماسال» ایران است، «باتومی» گرجستان).
+- province_or_city: برای مقصد داخلی «استان»، برای مقصد خارجی «شهر یا منطقه».
+- description سه تا چهار جملهٔ مشخص دربارهٔ ویژگی‌های همین مقصد باشد، نه جمله‌های کلی و تکراری.
+- attractions حداقل پنج جاذبهٔ واقعی و مشخص (با نام)، recommended_for حداقل سه مورد.
+- فصل‌ها باید واقعاً با هم فرق کنند (دما، بارش، rating)؛ متن یک فصل را برای فصل دیگر کپی نکن.
+- image_query: عبارت انگلیسی شامل نام شهر و یکی از نمادهای شناخته‌شدهٔ آن.
+- image_queries: ۴ عبارت انگلیسی با زاویه‌های متفاوت، همه با نام شهر: ۱) نماد/جاذبهٔ اصلی، ۲) معماری و بافت تاریخی یا شهری، ۳) بازار، غذا و زندگی مردم، ۴) طبیعت یا چشم‌انداز (فقط یکی از چهار مورد دربارهٔ طبیعت باشد).`
+
 export const validateTemplate = (t: string): string[] => REQUIRED_PLACEHOLDERS.filter((p) => !t.includes(p)).map((p) => `متن باید شامل ${p} باشد.`)
 
 export function renderPrompt(template: string, name: string, sources: { title: string; url: string; snippet?: string }[]): string {
   const src = sources.length ? sources.map((s, i) => `[${i + 1}] ${s.title} (${s.url})${s.snippet ? `\n    ${s.snippet}` : ''}`).join('\n') : '(منبع وبی در دسترس نیست؛ فقط به دانستهٔ مطمئن تکیه کن)'
-  return template.replaceAll('{{names}}', name).replaceAll('{{schema}}', SCHEMA_TEXT).replaceAll('{{enums}}', ENUMS_TEXT).replaceAll('{{sources}}', src)
+  return template.replaceAll('{{names}}', name).replaceAll('{{schema}}', SCHEMA_TEXT).replaceAll('{{enums}}', ENUMS_TEXT).replaceAll('{{sources}}', src) + '\n' + EXTRA_RULES
 }

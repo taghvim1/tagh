@@ -4,7 +4,7 @@ import { z } from 'zod'
 import type { Config } from '../config.js'
 import { aiSettingsSchema, loadAiSettings, saveAiSettings } from '../ai/settings.js'
 import { validateTemplate, DEFAULT_TEMPLATE } from '../ai/prompt.js'
-import { activeTemplate, type AiService } from '../ai/service.js'
+import { activeTemplate, imageQueriesFor, type AiService } from '../ai/service.js'
 import { canTransition, contentSchema, dupKey, issuesOf, STATUSES, type Status } from '../domain/schema.js'
 import { SECRET_NAMES, type Secrets } from '../secrets.js'
 import type { ImageRow, Store, SuggestionRow } from '../store/types.js'
@@ -108,7 +108,7 @@ export function adminRoutes(app: FastifyInstance, d: { config: Config; store: St
     adm.post('/suggestions/:id/images/search', async (req, reply) => {
       const s = await loadOr404(req, reply); if (!s) return
       const q = z.object({ query: z.string().trim().max(120).optional() }).safeParse(req.body ?? {})
-      const r = await ai.searchImageCandidates(q.success && q.data.query ? q.data.query : s.content.image_query || `${s.name} ${s.country}`)
+      const r = await ai.searchImageCandidates(q.success && q.data.query ? q.data.query : imageQueriesFor(s.content))
       const stored = await ai.storeCandidates(s.id, r.items)
       return { added: stored.length, errors: r.errors, images: await store.listImages(s.id) }
     })
@@ -194,8 +194,11 @@ export function adminRoutes(app: FastifyInstance, d: { config: Config; store: St
     adm.post('/ai/generate', async (req, reply) => {
       const b = genBody.safeParse(req.body); if (!b.success) return bad(reply, ['۱ تا ۵ نام مقصد لازم است.'])
       const results = []
-      for (const name of [...new Set(b.data.names)]) results.push(await generateOne(name, true))
-      return { results }
+      // دو مقصد هم‌زمان (سریع‌تر از پشت‌سرهم، بدون فشار زیاد روی سهمیهٔ Gemini)؛ ترتیب نتایج حفظ می‌شود
+      const names = [...new Set(b.data.names)], out: Awaited<ReturnType<typeof generateOne>>[] = new Array(names.length)
+      let next = 0
+      await Promise.all(Array.from({ length: Math.min(2, names.length) }, async () => { while (next < names.length) { const i = next++; out[i] = await generateOne(names[i], true) } }))
+      return { results: out }
     })
     adm.post('/ai/test-generation', async (req, reply) => {
       const b = z.object({ name: z.string().trim().min(1).max(80) }).safeParse(req.body); if (!b.success) return bad(reply, ['نام مقصد لازم است.'])
@@ -212,7 +215,7 @@ export function adminRoutes(app: FastifyInstance, d: { config: Config; store: St
       await store.addVersion({ suggestion_id: row.id, version: 1, content: g.content, note: `تولید با ${g.meta.model}`, created_at: t })
       let image_errors: string[] = [], added = 0
       const s = await loadAiSettings(store)
-      if (s.tasks.images.autoSearchOnGenerate) { const r = await ai.searchImageCandidates(g.content.image_query || `${g.content.name} ${g.content.country}`); added = (await ai.storeCandidates(row.id, r.items)).length; image_errors = r.errors }
+      if (s.tasks.images.autoSearchOnGenerate) { const r = await ai.searchImageCandidates(imageQueriesFor(g.content)); added = (await ai.storeCandidates(row.id, r.items)).length; image_errors = r.errors }
       return { name, ok: true, saved: true, id: row.id, duplicates: dup, images_added: added, image_errors, meta: g.meta }
     }
 

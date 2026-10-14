@@ -10,13 +10,28 @@ export async function activeTemplate(store: Store): Promise<{ version: number; t
   return a ? { version: a.version, text: a.text } : { version: 0, text: DEFAULT_TEMPLATE } // نسخهٔ ۰ = پیش‌فرض داخلی
 }
 
+const IRAN = /^(ایران|جمهوری اسلامی ایران|iran|islamic republic of iran)$/i
+/** داخلی/خارجی را از کشور تعیین می‌کند (نه از حدس مدل): ایران ⇒ داخلی و بدون ویزا، غیر آن ⇒ خارجی. */
+export function normalizeScope(c: SuggestionContent): SuggestionContent {
+  const domestic = IRAN.test(c.country.trim())
+  return domestic ? { ...c, country: 'ایران', scope: 'domestic', visa_required: null } : { ...c, scope: 'international', visa_required: c.visa_required ?? false }
+}
+
+/** عبارت‌های جست‌وجوی تصویر با زاویه‌های متنوع (نه فقط طبیعت). */
+export function imageQueriesFor(c: { name: string; country: string; image_query?: string; image_queries?: string[] }): string[] {
+  const base = (c.image_query || `${c.name} ${c.country}`).trim()
+  const extra = (c.image_queries ?? []).map((q) => q.trim()).filter(Boolean)
+  const generic = extra.length >= 2 ? [] : [`${base} landmark`, `${base} architecture old town`, `${base} bazaar street food people`]
+  return [...new Set([base, ...extra, ...generic])].slice(0, 5)
+}
+
 /** خروجی مدل (شیء/آرایهٔ JSON، با یا بدون ```) → محتوای معتبر */
 export function parseModelOutput(text: string): { ok: true; value: SuggestionContent } | { ok: false; errors: string[] } {
   let data: unknown
   try { data = JSON.parse(text.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim()) } catch { return { ok: false, errors: ['خروجی مدل JSON معتبر نبود.'] } }
   if (Array.isArray(data)) data = data[0]
   const r = contentSchema.safeParse(data)
-  return r.success ? { ok: true, value: r.data } : { ok: false, errors: issuesOf(r.error) }
+  return r.success ? { ok: true, value: normalizeScope(r.data) } : { ok: false, errors: issuesOf(r.error) }
 }
 
 export function createAiService(deps: { store: Store; secrets: Secrets; fetch: Fetch; now?: () => Date }) {
@@ -57,12 +72,23 @@ export function createAiService(deps: { store: Store; secrets: Secrets; fetch: F
     return parsed.ok ? { ok: true as const, content: parsed.value, meta } : { ok: false as const, errors: parsed.errors, meta }
   }
 
-  async function searchImageCandidates(query: string): Promise<{ items: ImageCandidate[]; errors: string[] }> {
+  /** یک یا چند عبارت؛ با چند عبارت، نتایج تکراری حذف و به‌صورت نوبتی (زاویه‌های مختلف) ترکیب می‌شود. */
+  async function searchImageCandidates(query: string | string[]): Promise<{ items: ImageCandidate[]; errors: string[] }> {
+    const qs = Array.isArray(query) ? query : [query]
+    if (qs.length === 1) return searchOne(qs[0], undefined)
+    const s = await loadAiSettings(store), per = Math.max(2, Math.ceil((s.imageSearch.maxPerProvider * 1.5) / qs.length))
+    const parts = await Promise.all(qs.map((q) => searchOne(q, per))), seen = new Set<string>(), items: ImageCandidate[] = []
+    for (let i = 0; parts.some((p) => i < p.items.length); i++) for (const p of parts) { const c = p.items[i]; if (c && !seen.has(c.url)) { seen.add(c.url); items.push(c) } }
+    return { items, errors: [...new Set(parts.flatMap((p) => p.errors))] }
+  }
+
+  async function searchOne(query: string, perQuery?: number): Promise<{ items: ImageCandidate[]; errors: string[] }> {
     const s = await loadAiSettings(store), items: ImageCandidate[] = [], errors: string[] = []
+    const limit = perQuery ?? s.imageSearch.maxPerProvider
     for (const p of s.imageSearch.providers) {
       try {
-        if (p === 'wikimedia') items.push(...await wikimediaImages(f, query, s.imageSearch.maxPerProvider))
-        else { const k = await secrets.get('unsplash'); if (!k) { errors.push('Unsplash: کلید تنظیم نشده است.'); continue } items.push(...await unsplashImages(f, k.value, query, s.imageSearch.maxPerProvider)) }
+        if (p === 'wikimedia') items.push(...await wikimediaImages(f, query, limit))
+        else { const k = await secrets.get('unsplash'); if (!k) { errors.push('Unsplash: کلید تنظیم نشده است.'); continue } items.push(...await unsplashImages(f, k.value, query, limit)) }
       } catch (e) { errors.push(`${p}: ${(e as Error).message}`) }
     }
     return { items, errors }

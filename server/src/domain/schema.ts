@@ -34,6 +34,8 @@ export const contentSchema = z.object({
   latitude: numish.pipe(z.number().min(-90).max(90)).nullish().transform((v) => v ?? undefined),
   longitude: numish.pipe(z.number().min(-180).max(180)).nullish().transform((v) => v ?? undefined),
   image_query: text(120).optional(),
+  /** چند عبارت جست‌وجوی تصویر با زاویه‌های متفاوت (جاذبه، معماری، بازار، فرهنگ، طبیعت) */
+  image_queries: z.array(text(120)).max(6).optional(),
   seasons: z.object({ spring: seasonSchema, summer: seasonSchema, autumn: seasonSchema, winter: seasonSchema }),
 }).refine((c) => (c.latitude === undefined) === (c.longitude === undefined), { message: 'عرض و طول جغرافیایی باید با هم وارد شوند یا هر دو خالی باشند.', path: ['latitude'] })
 export type SuggestionContent = z.infer<typeof contentSchema>
