@@ -274,11 +274,11 @@
 .has-wx .dh-day { font-size: clamp(3.8rem, min(21vw, 13dvh), 7rem); }
 .has-wx .dh-sub { font-size: clamp(.76rem, min(2.5vw, 2dvh), 1rem); line-height: 1.5; }
 /* کارت آب‌وهوا کنار تاریخ (در صفحهٔ راست‌چین سمت راستِ تاریخ) */
-.wx { flex: none; width: clamp(108px, 30vw, 150px); padding: 4px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: none; color: var(--ink); line-height: 1.3; text-align: center; }
-.wx-icon { display: block; width: clamp(56px, 17vw, 84px); height: clamp(56px, 17vw, 84px); color: var(--ink); }
+.wx { flex: none; width: clamp(120px, 34vw, 160px); padding: 4px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: none; color: var(--ink); line-height: 1.3; text-align: center; }
+.wx-icon { display: block; width: clamp(80px, 26vw, 120px); height: clamp(80px, 26vw, 120px); color: var(--ink); }
 .wx-icon svg { display: block; width: 100%; height: 100%; }
-.wx-temp { font-size: clamp(2.6rem, min(13vw, 8dvh), 4.6rem); font-weight: 700; line-height: 1; }
-.wx-range { display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--muted); font-size: clamp(.95rem, min(3.8vw, 2.6dvh), 1.3rem); }
+.wx-temp { font-size: clamp(2.1rem, min(10.5vw, 6.4dvh), 3.6rem); font-weight: 700; line-height: 1; }
+.wx-range { display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 10px; white-space: nowrap; color: var(--muted); font-size: clamp(.95rem, min(3.8vw, 2.6dvh), 1.3rem); }
 .wx-note { color: var(--muted); font-size: .72rem; }
 .wx-stale { padding: 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: .68rem; line-height: 1.5; cursor: pointer; }
 .wx-btn { flex: none; min-height: 32px; padding: 0 12px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 700; cursor: pointer; }
@@ -339,7 +339,7 @@
 .wp-empty, .wp-warn { color: var(--wp-muted); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .wp-noicon { display: block; width: 40px; height: 40px; }
 .wp-city { display: flex; align-items: center; gap: 6px; margin: 4px 0 0; font-size: 1.5rem; font-weight: 700; }
-.wp-hero { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.wp-hero { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-inline: 14px; }
 .wp-hero-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .wp-date { color: var(--wp-muted); }
 .wp-big { font-size: clamp(3.4rem, 18vw, 5.4rem); line-height: 1; font-weight: 700; }
@@ -350,10 +350,10 @@
 .wp[data-theme='dark'] .wp-disc.cool { background: #1f3a52; }
 .wp[data-theme='dark'] .wp-disc.warm { background: #3a3220; }
 .wp-disc .wx-icon { width: 60%; height: 60%; }
-.wp-disc.huge { width: clamp(96px, 30vw, 136px); height: clamp(96px, 30vw, 136px); }
+.wp-disc.huge { width: clamp(120px, 38vw, 170px); height: clamp(120px, 38vw, 170px); }
 .wp .wx-icon { display: block; width: 40px; height: 40px; flex: none; }
 .wp .wx-icon svg { width: 100%; height: 100%; display: block; }
-.wp-stats { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; color: var(--wp-muted); font-size: .88rem; }
+.wp-stats { display: flex; justify-content: center; gap: 8px 14px; padding-inline: 8px; flex-wrap: wrap; color: var(--wp-muted); font-size: .8rem; }
 .wp-stats span { display: inline-flex; align-items: center; gap: 4px; }
 .wp-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
 @media (max-width: 340px) { .wp-cards { grid-template-columns: 1fr; } }
@@ -373,7 +373,7 @@
 .wp-it small, .wp-lo { color: var(--wp-muted); font-size: .7rem; white-space: nowrap; }
 .wp-lo { min-width: 1.9em; text-align: end; font-size: .85rem; }
 .wp-hi { font-size: .95rem; min-width: 1.9em; text-align: end; }
-.wp-item .wx-icon { width: 30px; height: 30px; }
+.wp-item .wx-icon { width: 40px; height: 40px; }
 .wp-upd { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--wp-muted); font-size: .78rem; text-align: center; }
 .wp-refresh { display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 50%; background: none; cursor: pointer; }
 .wp-glyph { flex: none; }
@@ -391,7 +391,7 @@
 .wp-dlg-hero { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 20px; background: var(--wp-card); }
 .wp-clock { display: grid; place-items: center; padding: 8px 12px; border-radius: 16px; background: var(--wp-hl); color: var(--wx-blue); font-size: 1.7rem; font-weight: 700; }
 .wp-dlg-temp { flex: 1; text-align: center; font-size: 2.8rem; line-height: 1; }
-.wp-dlg-hero .wp-disc { width: 64px; height: 64px; }
+.wp-dlg-hero .wp-disc { width: 80px; height: 80px; }
 .wp-dlg-minmax { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 16px; }
 .wp-gdate { width: 100%; color: var(--wp-muted); font-weight: 700; font-size: .9rem; }
 .wp-mm { display: inline-flex; align-items: center; gap: 4px; }
@@ -434,3 +434,4 @@
 .wp-tiles.three > .wp-tile:nth-child(3n) .wp-tip, .wp-tiles.four > .wp-tile:nth-child(4n) .wp-tip { inset-inline-start: auto; inset-inline-end: 0; transform: none; }
 .wp-tiles.three > .wp-tile:nth-child(3n+1) .wp-tip::after, .wp-tiles.four > .wp-tile:nth-child(4n+1) .wp-tip::after { inset-inline-start: 24px; margin: 0; }
 .wp-tiles.three > .wp-tile:nth-child(3n) .wp-tip::after, .wp-tiles.four > .wp-tile:nth-child(4n) .wp-tip::after { inset-inline-start: auto; inset-inline-end: 24px; margin: 0; }
+.wp .wp-disc .wx-icon { width: 64%; height: 64%; }

@@ -6,7 +6,6 @@ import { useOverlay } from '../lib/overlay'
 import { faNum, MONTHS, WEEKDAYS, fromGregorian } from '../lib/jalali'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
 import { weatherCodeText, weatherIconName } from '../weather/codes'
-import { reverseGeocode } from '../weather/current/geocode'
 import { useCurrentWeather, weatherStore } from '../weather/current/store'
 import type { CurrentWeather, DailyForecast, HourlyForecast } from '../weather/current/types'
 import { aqiLabel, clockOf, dayLabel, dayLength, degree, gregorianShort, hourLabel, isWarmIcon, kmValue, num, uvLabel, windFrom } from '../weather/format'
@@ -142,14 +141,11 @@ export default function WeatherPage() {
   const s = useCurrentWeather()
   const ov = useOverlay('wx')
   const [sel, setSel] = useState<Sel | null>(null)
-  const [city, setCity] = useState<string | null>(null)
   const [now, setNow] = useState(() => new Date())
   useEffect(() => weatherStore.start(), [])
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 60_000); return () => clearInterval(t) }, [])
   // دادهٔ ذخیره‌شدهٔ قدیمی (بدون پیش‌بینی ده‌روزه) یک‌بار تازه می‌شود
   useEffect(() => { const w = weatherStore.getState().weather; if (w && (!w.daily?.length || !w.hourly?.[0]?.pressure)) void weatherStore.retry() }, [])
-  const coords = weatherStore.getCoords()
-  useEffect(() => { if (coords) void reverseGeocode(coords.lat, coords.lon).then(setCity) }, [coords?.lat, coords?.lon])
 
   const w = s.weather
   const todayIso = isoDay(now)
@@ -172,7 +168,6 @@ export default function WeatherPage() {
           </p>
         ) : (
           <>
-            {city && <h1 className="wp-city"><Glyph name="pin" size={20} />{city}</h1>}
             <section className="wp-hero" aria-label="هوای اکنون">
               <div className="wp-hero-text">
                 <span className="wp-date">{WEEKDAYS[(now.getDay() + 1) % 7]}، {faNum(jd.day)} {MONTHS[jd.month - 1]}</span>

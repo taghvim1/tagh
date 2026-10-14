@@ -9,8 +9,6 @@ const FLAGS = 'taghvim-flags', FLAG_URL = '/__flag/date-notification'
 const TITLE = (): { title: string; day?: number } => (self as unknown as { taghvimDateTitle?: (d?: Date) => { title: string; day: number } }).taghvimDateTitle?.() ?? { title: '' }
 const PLAN_URL = '/__flag/date-plan'
 interface PlanDay { avg: number; wx: string }
-/** آیکون بزرگ اعلان: تصویر شفاف تا کروم به‌جای آن حرف اول دامنه («T») نگذارد */
-export const BLANK_ICON = '/icons/blank.png'
 
 export type EnableResult = 'ok' | 'denied' | 'unsupported' | 'insecure' | 'dismissed'
 export const notificationState = (): 'granted' | 'denied' | 'default' | 'unsupported' => (typeof Notification === 'undefined' || !('serviceWorker' in navigator) ? 'unsupported' : Notification.permission)
@@ -48,7 +46,7 @@ export async function syncDateNotification(): Promise<boolean> {
   try {
     const shown = await reg.getNotifications({ tag: DATE_TAG })
     if (shown.some((n) => n.title === title && ((n.data as { wx?: string } | null)?.wx ?? '') === sig)) return true // بدون تغییر: دوباره نشان نده
-    await reg.showNotification(title, { tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: `/icons/day/${dayNumber}.png`, icon: BLANK_ICON, data: { url: '/', wx: sig } } as NotificationOptions)
+    await reg.showNotification(title, { tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: `/icons/day/${dayNumber}.png`, icon: `/icons/daybig/${dayNumber}.png`, data: { url: '/', wx: sig } } as NotificationOptions)
     return true
   } catch { return false }
 }

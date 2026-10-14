@@ -69,7 +69,7 @@ async function showDateNotification(force) {
   const title = self.taghvimNotifTitle(now, day ? day.avg : null), sig = day ? day.wx : ''
   const shown = await self.registration.getNotifications({ tag: DATE_TAG })
   if (!force && shown.some((n) => n.title === title && ((n.data && n.data.wx) || '') === sig)) return // بدون تغییر (در بسته‌شدن اعلان اجباری است: ممکن است هنوز در فهرست باشد)
-  await self.registration.showNotification(title, ({ tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: '/icons/day/' + d.day + '.png', icon: '/icons/blank.png', data: { url: '/', wx: sig } }))
+  await self.registration.showNotification(title, ({ tag: DATE_TAG, renotify: false, silent: true, requireInteraction: true, badge: '/icons/day/' + d.day + '.png', icon: '/icons/daybig/' + d.day + '.png', data: { url: '/', wx: sig } }))
 }
 self.addEventListener('periodicsync', (e) => { if (e.tag === DATE_TAG) e.waitUntil(showDateNotification()) })
 self.addEventListener('message', (e) => { if (e.data && e.data.type === 'sync-date-notification') e.waitUntil(showDateNotification()) })

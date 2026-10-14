@@ -41,7 +41,7 @@ export const browserDeps: WeatherDeps = {
     navigator.geolocation.getCurrentPosition(
       (p) => resolve({ lat: roundCoord(p.coords.latitude), lon: roundCoord(p.coords.longitude) }),
       (e) => reject(Object.assign(new Error(e.message), { kind: POS_ERR[e.code] ?? 'unavailable' })),
-      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 10 * 60_000 },
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 10 * 60_000 },
     )
   }),
   permission: async () => {
