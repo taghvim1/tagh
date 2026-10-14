@@ -15,7 +15,7 @@ export interface Dup { id: number; status: Status; name: string }
 export interface Detail { suggestion: Suggestion; images: SImage[]; versions: Version[]; duplicates: Dup[]; publish_check: { blocking: string[]; warnings: string[] } }
 export interface SetupStatus { storage: 'postgres' | 'file' | 'memory'; encryption_key: boolean; admin_token: boolean; admin_open: boolean }
 export interface SecretStatus { configured: boolean; source: 'env' | 'ui' | null; masked: string | null; env_var: string; ui_storage: 'available' | 'needs_encryption_key' | 'blocked_in_production_without_admin_token' }
-export interface AiSettings { llm: { primaryModel: string; fallbackModel: string; temperature: number }; webSearch: { enabled: boolean; provider: 'brave'; maxResults: number }; imageSearch: { providers: ('wikimedia' | 'pexels')[]; maxPerProvider: number }; tasks: { generate: { useWebSearch: boolean }; images: { autoSearchOnGenerate: boolean } } }
+export interface AiSettings { llm: { primaryModel: string; fallbackModel: string; temperature: number }; webSearch: { enabled: boolean; provider: 'tavily'; maxResults: number }; imageSearch: { providers: ('wikimedia' | 'unsplash')[]; maxPerProvider: number }; tasks: { generate: { useWebSearch: boolean }; images: { autoSearchOnGenerate: boolean } } }
 export interface Prompt { id: number; version: number; text: string; note: string; active: boolean; created_at: string }
 export interface GenResult { name: string; ok: boolean; saved: boolean; id?: number; errors?: string[]; content?: SuggestionContent; meta?: AiMeta; duplicates?: Dup[]; images_added?: number; image_errors?: string[] }
 

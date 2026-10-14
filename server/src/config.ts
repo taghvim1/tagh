@@ -17,8 +17,8 @@ const schema = z.object({
   /** کلید رمزنگاری برای ذخیرهٔ کلیدهای API واردشده از رابط مدیریت (حداقل ۱۶ نویسه) */
   SECRETS_ENCRYPTION_KEY: z.string().min(16).optional(),
   GEMINI_API_KEY: z.string().min(1).optional(),
-  BRAVE_SEARCH_API_KEY: z.string().min(1).optional(),
-  PEXELS_API_KEY: z.string().min(1).optional(),
+  TAVILY_API_KEY: z.string().min(1).optional(),
+  UNSPLASH_ACCESS_KEY: z.string().min(1).optional(),
 })
 export type Config = z.infer<typeof schema>
 export const loadConfig = (env: NodeJS.ProcessEnv = process.env): Config => schema.parse(env)

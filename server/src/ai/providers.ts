@@ -30,16 +30,15 @@ export async function geminiGenerate(f: Fetch, key: string, model: string, promp
   return text
 }
 
-// ---- Brave Search (وب) ----
+// ---- Tavily (جست‌وجوی وب) ----
 export interface WebResult { title: string; url: string; snippet: string }
-export async function braveSearch(f: Fetch, key: string, q: string, count: number): Promise<WebResult[]> {
-  const u = new URL('https://api.search.brave.com/res/v1/web/search'); u.searchParams.set('q', q); u.searchParams.set('count', String(count))
-  const data = (await call(f, u.toString(), { headers: { accept: 'application/json', 'x-subscription-token': key } })) as { web?: { results?: { title?: string; url?: string; description?: string }[] } }
-  return (data.web?.results ?? []).filter((r) => r.url && /^https?:\/\//.test(r.url)).slice(0, count).map((r) => ({ title: stripHtml(r.title ?? r.url!), url: r.url!, snippet: stripHtml(r.description ?? '').slice(0, 300) }))
+export async function tavilySearch(f: Fetch, key: string, q: string, count: number): Promise<WebResult[]> {
+  const data = (await call(f, 'https://api.tavily.com/search', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` }, body: JSON.stringify({ query: q, max_results: count, search_depth: 'basic' }) })) as { results?: { title?: string; url?: string; content?: string }[] }
+  return (data.results ?? []).filter((r) => r.url && /^https?:\/\//.test(r.url)).slice(0, count).map((r) => ({ title: stripHtml(r.title ?? r.url!), url: r.url!, snippet: stripHtml(r.content ?? '').slice(0, 300) }))
 }
 
 // ---- تصاویر ----
-export interface ImageCandidate { url: string; thumb_url: string | null; provider: 'wikimedia' | 'pexels'; source_url: string | null; author: string | null; license: string | null; license_url: string | null; attribution: string | null }
+export interface ImageCandidate { url: string; thumb_url: string | null; provider: 'wikimedia' | 'unsplash'; source_url: string | null; author: string | null; license: string | null; license_url: string | null; attribution: string | null }
 export const stripHtml = (s: string) => s.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim()
 const httpsOnly = (u?: string | null) => (u && /^https:\/\//.test(u) ? u : null)
 
@@ -61,11 +60,13 @@ export async function wikimediaImages(f: Fetch, q: string, limit: number): Promi
   return out
 }
 
-export async function pexelsImages(f: Fetch, key: string, q: string, limit: number): Promise<ImageCandidate[]> {
-  const u = new URL('https://api.pexels.com/v1/search'); u.searchParams.set('query', q); u.searchParams.set('per_page', String(limit))
-  const data = (await call(f, u.toString(), { headers: { authorization: key } })) as { photos?: { url?: string; photographer?: string; src?: { large?: string; medium?: string } }[] }
-  return (data.photos ?? []).flatMap((p): ImageCandidate[] => {
-    const url = httpsOnly(p.src?.large); if (!url) return []
-    return [{ url, thumb_url: httpsOnly(p.src?.medium), provider: 'pexels', source_url: httpsOnly(p.url), author: p.photographer ?? null, license: 'Pexels License', license_url: 'https://www.pexels.com/license/', attribution: `${p.photographer ?? 'Pexels'} — Pexels` }]
+export async function unsplashImages(f: Fetch, key: string, q: string, limit: number): Promise<ImageCandidate[]> {
+  const u = new URL('https://api.unsplash.com/search/photos'); u.searchParams.set('query', q); u.searchParams.set('per_page', String(limit))
+  const data = (await call(f, u.toString(), { headers: { authorization: `Client-ID ${key}`, 'accept-version': 'v1' } })) as { results?: { urls?: { regular?: string; small?: string }; links?: { html?: string }; user?: { name?: string; links?: { html?: string } } }[] }
+  const utm = (h?: string | null) => { const x = httpsOnly(h); return x ? `${x}${x.includes('?') ? '&' : '?'}utm_source=taghvim_safar&utm_medium=referral` : null }
+  return (data.results ?? []).flatMap((p): ImageCandidate[] => {
+    const url = httpsOnly(p.urls?.regular); if (!url) return []
+    const author = p.user?.name ?? null
+    return [{ url, thumb_url: httpsOnly(p.urls?.small), provider: 'unsplash', source_url: utm(p.links?.html), author, license: 'Unsplash License', license_url: 'https://unsplash.com/license', attribution: `${author ?? 'Unsplash'} — Unsplash` }]
   })
 }

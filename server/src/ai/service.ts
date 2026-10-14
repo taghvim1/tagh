@@ -2,7 +2,7 @@ import { contentSchema, dupKey, issuesOf, type SuggestionContent } from '../doma
 import type { Secrets } from '../secrets.js'
 import type { AiMeta, ImageRow, Store } from '../store/types.js'
 import { renderPrompt, DEFAULT_TEMPLATE } from './prompt.js'
-import { braveSearch, geminiGenerate, pexelsImages, ProviderError, wikimediaImages, type Fetch, type ImageCandidate, type WebResult } from './providers.js'
+import { geminiGenerate, tavilySearch, unsplashImages, ProviderError, wikimediaImages, type Fetch, type ImageCandidate, type WebResult } from './providers.js'
 import { loadAiSettings } from './settings.js'
 
 export async function activeTemplate(store: Store): Promise<{ version: number; text: string }> {
@@ -25,9 +25,9 @@ export function createAiService(deps: { store: Store; secrets: Secrets; fetch: F
   async function research(name: string): Promise<{ sources: WebResult[]; warning?: string }> {
     const s = await loadAiSettings(store)
     if (!s.webSearch.enabled || !s.tasks.generate.useWebSearch) return { sources: [] }
-    const key = await secrets.get('brave')
+    const key = await secrets.get('tavily')
     if (!key) return { sources: [], warning: 'جست‌وجوی وب فعال است اما کلید آن تنظیم نشده؛ بدون منبع وب تولید شد.' }
-    try { return { sources: await braveSearch(f, key.value, `${name} راهنمای سفر بهترین فصل آب‌وهوا`, s.webSearch.maxResults) } }
+    try { return { sources: await tavilySearch(f, key.value, `${name} راهنمای سفر بهترین فصل آب‌وهوا`, s.webSearch.maxResults) } }
     catch (e) { return { sources: [], warning: `جست‌وجوی وب ناموفق بود (${(e as Error).message}); بدون منبع وب تولید شد.` } }
   }
 
@@ -62,7 +62,7 @@ export function createAiService(deps: { store: Store; secrets: Secrets; fetch: F
     for (const p of s.imageSearch.providers) {
       try {
         if (p === 'wikimedia') items.push(...await wikimediaImages(f, query, s.imageSearch.maxPerProvider))
-        else { const k = await secrets.get('pexels'); if (!k) { errors.push('Pexels: کلید تنظیم نشده است.'); continue } items.push(...await pexelsImages(f, k.value, query, s.imageSearch.maxPerProvider)) }
+        else { const k = await secrets.get('unsplash'); if (!k) { errors.push('Unsplash: کلید تنظیم نشده است.'); continue } items.push(...await unsplashImages(f, k.value, query, s.imageSearch.maxPerProvider)) }
       } catch (e) { errors.push(`${p}: ${(e as Error).message}`) }
     }
     return { items, errors }
@@ -75,14 +75,14 @@ export function createAiService(deps: { store: Store; secrets: Secrets; fetch: F
     return out
   }
 
-  async function testProvider(name: 'gemini' | 'brave' | 'pexels' | 'wikimedia') {
+  async function testProvider(name: 'gemini' | 'tavily' | 'unsplash' | 'wikimedia') {
     const t0 = Date.now(), done = (ok: boolean, message: string) => ({ ok, message, latency_ms: Date.now() - t0 })
     try {
       if (name === 'wikimedia') { const r = await wikimediaImages(f, 'Isfahan', 1); return done(true, `اتصال برقرار است (${r.length} نتیجهٔ آزمایشی).`) }
       const key = await secrets.get(name); if (!key) return done(false, 'کلید تنظیم نشده است.')
       if (name === 'gemini') { const s = await loadAiSettings(store); await geminiGenerate(f, key.value, s.llm.primaryModel, 'Reply with the single word: ok', { maxOutputTokens: 16 }); return done(true, `کلید معتبر است و مدل ${s.llm.primaryModel} پاسخ داد.`) }
-      if (name === 'brave') { await braveSearch(f, key.value, 'test', 1); return done(true, 'کلید معتبر است.') }
-      await pexelsImages(f, key.value, 'test', 1); return done(true, 'کلید معتبر است.')
+      if (name === 'tavily') { await tavilySearch(f, key.value, 'test', 1); return done(true, 'کلید معتبر است.') }
+      await unsplashImages(f, key.value, 'test', 1); return done(true, 'کلید معتبر است.')
     } catch (e) { return done(false, (e as Error).message) }
   }
 

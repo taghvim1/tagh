@@ -3,11 +3,11 @@ import { api, friendly, type AiSettings, type GenResult, type Prompt, type Secre
 import { ErrorBox, fmtDate, ModeBanner, useLoad } from '../suggestions/shared'
 import { faNum } from '../../lib/jalali'
 
-type Name = 'gemini' | 'brave' | 'pexels'
+type Name = 'gemini' | 'tavily' | 'unsplash'
 const SECRETS: { name: Name; title: string; hint: string }[] = [
   { name: 'gemini', title: 'Gemini (تولید متن)', hint: 'کلید Google AI Studio' },
-  { name: 'brave', title: 'جست‌وجوی وب (Brave Search)', hint: 'کلید Brave Search API؛ برای منبع‌یابی متن' },
-  { name: 'pexels', title: 'جست‌وجوی تصویر (Pexels)', hint: 'کلید Pexels؛ Wikimedia Commons بدون کلید کار می‌کند' },
+  { name: 'tavily', title: 'جست‌وجوی وب (Tavily)', hint: 'کلید Tavily (tvly-…)؛ برای منبع‌یابی متن' },
+  { name: 'unsplash', title: 'جست‌وجوی تصویر (Unsplash)', hint: 'فقط «Access Key»؛ Secret Key لازم نیست. Wikimedia Commons بدون کلید کار می‌کند' },
 ]
 const STORAGE_MSG: Record<SecretStatus['ui_storage'], string> = {
   available: '',
@@ -66,7 +66,7 @@ export default function ApiSettings() {
   const saveSettings = async () => { try { await api('/admin/settings/ai', { method: 'PUT', body: s }); setSmsg({ ok: true, text: 'ذخیره شد.' }) } catch (e) { setSmsg({ ok: false, text: friendly(e) }) } }
   const pAct = async (fn: () => Promise<unknown>, ok: string) => { try { await fn(); setPmsg({ ok: true, text: ok }); prompts.reload() } catch (e) { setPmsg({ ok: false, text: friendly(e) }) } }
   const set = <K extends keyof AiSettings>(k: K, patch: Partial<AiSettings[K]>) => setS((x) => (x ? { ...x, [k]: { ...x[k], ...patch } } : x))
-  const toggleProv = (p: 'wikimedia' | 'pexels') => s && set('imageSearch', { providers: s.imageSearch.providers.includes(p) ? s.imageSearch.providers.filter((x) => x !== p) : [...s.imageSearch.providers, p] })
+  const toggleProv = (p: 'wikimedia' | 'unsplash') => s && set('imageSearch', { providers: s.imageSearch.providers.includes(p) ? s.imageSearch.providers.filter((x) => x !== p) : [...s.imageSearch.providers, p] })
 
   return (
     <>
@@ -90,7 +90,7 @@ export default function ApiSettings() {
             <label className="adm-switch-row"><span>جست‌وجوی وب برای منبع‌یابی متن</span><input type="checkbox" role="switch" className="adm-switch" checked={s.webSearch.enabled} onChange={(e) => set('webSearch', { enabled: e.target.checked })} /></label>
             <label>حداکثر نتیجهٔ وب<input type="number" min={1} max={10} value={s.webSearch.maxResults} onChange={(e) => set('webSearch', { maxResults: Number(e.target.value) })} /></label>
             <fieldset><legend>منابع تصویر (به ترتیب)</legend>
-              {(['wikimedia', 'pexels'] as const).map((p) => <label key={p} className="adm-inline"><input type="checkbox" checked={s.imageSearch.providers.includes(p)} onChange={() => toggleProv(p)} />{p === 'wikimedia' ? 'Wikimedia Commons (مجوز آزاد، با اعتبار)' : 'Pexels (نیازمند کلید)'}</label>)}</fieldset>
+              {(['wikimedia', 'unsplash'] as const).map((p) => <label key={p} className="adm-inline"><input type="checkbox" checked={s.imageSearch.providers.includes(p)} onChange={() => toggleProv(p)} />{p === 'wikimedia' ? 'Wikimedia Commons (مجوز آزاد، با اعتبار)' : 'Unsplash (نیازمند کلید)'}</label>)}</fieldset>
             <label>حداکثر تصویر از هر منبع<input type="number" min={1} max={10} value={s.imageSearch.maxPerProvider} onChange={(e) => set('imageSearch', { maxPerProvider: Number(e.target.value) })} /></label>
             <label className="adm-switch-row"><span>جست‌وجوی خودکار تصویر پس از تولید</span><input type="checkbox" role="switch" className="adm-switch" checked={s.tasks.images.autoSearchOnGenerate} onChange={(e) => set('tasks', { images: { autoSearchOnGenerate: e.target.checked } } as never)} /></label>
             <div className="adm-inline"><button type="button" className="adm-btn primary" onClick={saveSettings}>ذخیرهٔ تنظیمات</button>{smsg && <span role="status" className={smsg.ok ? 'adm-result-ok' : 'adm-result-bad'}>{smsg.text}</span>}</div>

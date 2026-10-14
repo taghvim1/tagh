@@ -172,7 +172,7 @@ export function adminRoutes(app: FastifyInstance, d: { config: Config; store: St
       await secrets.remove(n.data); return { status: await secrets.status(n.data) }
     })
     adm.post('/settings/test/:provider', async (req, reply) => {
-      const p = z.enum(['gemini', 'brave', 'pexels', 'wikimedia']).safeParse((req.params as { provider: string }).provider); if (!p.success) return reply.code(404).send({ error: 'not_found' })
+      const p = z.enum(['gemini', 'tavily', 'unsplash', 'wikimedia']).safeParse((req.params as { provider: string }).provider); if (!p.success) return reply.code(404).send({ error: 'not_found' })
       return ai.testProvider(p.data)
     })
 

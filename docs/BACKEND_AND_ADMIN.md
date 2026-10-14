@@ -13,8 +13,8 @@
 | متغیر | کاربرد |
 |---|---|
 | `GEMINI_API_KEY` | کلید Gemini (اولویت بر کلید واردشده از رابط) |
-| `BRAVE_SEARCH_API_KEY` | جست‌وجوی وب برای منبع‌یابی |
-| `PEXELS_API_KEY` | جست‌وجوی تصویر Pexels (Wikimedia بدون کلید) |
+| `TAVILY_API_KEY` | جست‌وجوی وب (Tavily) برای منبع‌یابی |
+| `UNSPLASH_ACCESS_KEY` | جست‌وجوی تصویر Unsplash، فقط Access Key (Wikimedia بدون کلید) |
 | `SECRETS_ENCRYPTION_KEY` | (≥۱۶ نویسه) فعال‌کنندهٔ ذخیرهٔ رمزنگاری‌شدهٔ کلید از صفحهٔ «تنظیمات API» |
 | `ADMIN_TOKEN` | (≥۱۶ نویسه) اگر تنظیم شود همهٔ `/api/admin/*` به `Authorization: Bearer` نیاز دارد |
 | `ADMIN_OPEN=true` | فقط تست: در production بدون ADMIN_TOKEN دسترسی بازِ ادمین را روشن می‌کند |
@@ -42,4 +42,4 @@ draft → pending_review → approved → published (و rejected با دلیل،
 ## راه‌اندازی یک‌باره روی Railway بدون Volume
 1. در Neon (neon.tech) یک پروژه بسازید و «Connection string» را کپی کنید.
 2. در Railway → Variables این‌ها را یک بار بگذارید: `DATABASE_URL`، `SECRETS_ENCRYPTION_KEY` (رشتهٔ تصادفی ≥۱۶ نویسه) و `ADMIN_OPEN=true` (فقط تست) یا `ADMIN_TOKEN`.
-3. از این پس کلیدهای Gemini/Brave/Pexels را از صفحهٔ «تنظیمات API» وارد کنید؛ رمزنگاری‌شده در PostgreSQL می‌مانند و با دیپلوی پاک نمی‌شوند.
+3. از این پس کلیدهای Gemini/Tavily/Unsplash را از صفحهٔ «تنظیمات API» وارد کنید؛ رمزنگاری‌شده در PostgreSQL می‌مانند و با دیپلوی پاک نمی‌شوند.
