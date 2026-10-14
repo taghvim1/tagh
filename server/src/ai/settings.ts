@@ -9,7 +9,7 @@ export const aiSettingsSchema = z.object({
 })
 export type AiSettings = z.infer<typeof aiSettingsSchema>
 export const DEFAULT_AI_SETTINGS: AiSettings = {
-  llm: { primaryModel: 'gemini-2.5-flash', fallbackModel: 'gemini-2.5-flash-lite', temperature: 0.3 },
+  llm: { primaryModel: 'gemini-3.8-flash', fallbackModel: 'gemini-3.5-flash-lite', temperature: 0.3 },
   webSearch: { enabled: false, provider: 'tavily', maxResults: 5 },
   imageSearch: { providers: ['wikimedia', 'unsplash'], maxPerProvider: 6 },
   tasks: { generate: { useWebSearch: true }, images: { autoSearchOnGenerate: true } },

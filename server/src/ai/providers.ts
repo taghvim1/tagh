@@ -13,6 +13,7 @@ async function call(f: Fetch, url: string, init: RequestInit & { headers?: Recor
     if (res.status !== 400 || /API key|API_KEY/i.test(body)) throw new ProviderError('invalid_key', 'کلید API نامعتبر است یا دسترسی ندارد.')
     throw new ProviderError('bad_response', 'درخواست توسط سرویس پذیرفته نشد (مدل یا پارامتر نامعتبر).')
   }
+  if (res.status === 404 && url.includes('generativelanguage')) throw new ProviderError('bad_response', 'مدل پیدا نشد (۴۰۴): نام مدل اشتباه است یا برای این حساب فعال نیست. در «تنظیمات API» مدل را روی gemini-3.8-flash بگذارید.')
   if (res.status === 429) throw new ProviderError('quota', 'سهمیه یا نرخ مجاز سرویس تمام شده است.')
   if (!res.ok) throw new ProviderError('unavailable', `سرویس خطا داد (${res.status}).`)
   try { return await res.json() } catch { throw new ProviderError('bad_response', 'پاسخ سرویس JSON معتبر نبود.') }

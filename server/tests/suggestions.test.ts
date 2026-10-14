@@ -134,7 +134,7 @@ describe('تولید با هوش مصنوعی', () => {
       return json({ query: { pages: [{ title: 'File:S.jpg', imageinfo: [{ url: 'https://upload.wikimedia.org/s.jpg', thumburl: 'https://upload.wikimedia.org/t.jpg', descriptionurl: 'https://commons.wikimedia.org/wiki/File:S.jpg', mime: 'image/jpeg', extmetadata: { LicenseShortName: { value: 'CC BY-SA 4.0' }, Artist: { value: '<a href="x">Ali</a>' } } }, { title: 'File:NoLicense.jpg', imageinfo: [{ url: 'https://upload.wikimedia.org/n.jpg', mime: 'image/jpeg', extmetadata: {} }] }] }] } })
     }) as FetchFn)
     const r = (await post('/admin/ai/generate', { names: ['سنندج'] })).json().results[0]
-    expect(r.ok).toBe(true); expect(r.images_added).toBe(1); expect(r.meta.model).toBe('gemini-2.5-flash')
+    expect(r.ok).toBe(true); expect(r.images_added).toBe(1); expect(r.meta.model).toBe('gemini-3.8-flash')
     const d = (await get(`/admin/suggestions/${r.id}`)).json()
     expect(d.suggestion.source).toBe('ai'); expect(d.suggestion.status).toBe('draft'); expect(d.images[0]).toMatchObject({ status: 'candidate', license: 'CC BY-SA 4.0', author: 'Ali', provider: 'wikimedia' })
     expect(d.suggestion.cover_image_id).toBeNull(); expect(d.publish_check.blocking.length).toBeGreaterThan(0)
@@ -150,7 +150,7 @@ describe('تولید با هوش مصنوعی', () => {
   it('مدل جایگزین هنگام خطای مدل اصلی؛ کلید نامعتبر جایگزین ندارد', async () => {
     const used: string[] = []
     await mk({ GEMINI_API_KEY: KEY }, (async (url: string) => { used.push(String(url).match(/models\/([^:]+)/)![1]); return used.length === 1 ? json({}, 503) : gemini(JSON.stringify(content())) }) as FetchFn)
-    const r = (await post('/admin/ai/test-generation', { name: 'سنندج' })).json(); expect(r.ok).toBe(true); expect(r.meta.used_fallback).toBe(true); expect(used).toEqual(['gemini-2.5-flash', 'gemini-2.5-flash-lite']); await app.close()
+    const r = (await post('/admin/ai/test-generation', { name: 'سنندج' })).json(); expect(r.ok).toBe(true); expect(r.meta.used_fallback).toBe(true); expect(used).toEqual(['gemini-3.8-flash', 'gemini-3.5-flash-lite']); await app.close()
     used.length = 0; await mk({ GEMINI_API_KEY: KEY }, (async (url: string) => { used.push(String(url)); return json({}, 403) }) as FetchFn)
     expect((await post('/admin/ai/test-generation', { name: 'سنندج' })).json().ok).toBe(false); expect(used).toHaveLength(1)
   })
