@@ -21,11 +21,22 @@ export default function SuggestionDetail({ id }: { id: number }) {
   const [editing, setEditing] = useState(false), [rejecting, setRejecting] = useState(false), [reason, setReason] = useState('')
   const [preview, setPreview] = useState<'off' | 'mobile' | 'desktop'>('off')
   const [pair, setPair] = useState<[number, number] | null>(null)
+  const [imgQuery, setImgQuery] = useState('')
   const [manual, setManual] = useState({ url: '', license: '', author: '', source_url: '' })
 
   const act = async (fn: () => Promise<unknown>, ok: string) => {
     setBusy(true); setMsg(null)
     try { await fn(); setMsg({ ok: true, text: ok }); reload() } catch (e) { setMsg({ ok: false, text: friendly(e) }); if (e instanceof ApiError && e.code === 'version_conflict') reload() }
+    setBusy(false)
+  }
+  /** جست‌وجوی تصویر: با عبارت دستی (اگر نوشته شده) یا خودکار از روی مقصد؛ نتیجه نامزد می‌شود و تأیید دست مدیر است. */
+  const searchImages = async () => {
+    if (!s) return
+    setBusy(true); setMsg(null)
+    try {
+      const q = imgQuery.trim(), r = await api<{ added: number; errors: string[] }>(`/admin/suggestions/${s.id}/images/search`, { method: 'POST', body: q ? { query: q } : {}, timeoutMs: 60_000 })
+      setMsg({ ok: !r.errors.length, text: r.added || r.errors.length ? `${faNum(r.added)} تصویر نامزد افزوده شد.${r.errors.length ? ' ' + r.errors.join(' | ') : ''}` : 'تصویر جدیدی پیدا نشد؛ عبارت دیگری (ترجیحاً انگلیسی) امتحان کنید.' }); reload()
+    } catch (e) { setMsg({ ok: false, text: friendly(e) }) }
     setBusy(false)
   }
   const s = data?.suggestion
@@ -82,8 +93,12 @@ export default function SuggestionDetail({ id }: { id: number }) {
           </> : <p className="adm-note">وارد‌شده دستی؛ منبع خودکاری ندارد.</p>}</section>
       </div>
 
-      <section className="adm-card"><div className="adm-page-head" style={{ margin: 0 }}><h3 className="adm-sub">تصاویر ({faNum(data.images.length)})</h3>
-        <button type="button" className="adm-btn" disabled={busy} onClick={() => act(async () => { const r = await api<{ added: number; errors: string[] }>(`/admin/suggestions/${s.id}/images/search`, { method: 'POST', body: {}, timeoutMs: 60_000 }); setMsg({ ok: !r.errors.length, text: `${faNum(r.added)} نامزد افزوده شد.${r.errors.length ? ' ' + r.errors.join(' | ') : ''}` }) }, '')}>جست‌وجوی تصویر</button></div>
+      <section className="adm-card"><div className="adm-page-head" style={{ margin: 0 }}><h3 className="adm-sub">تصاویر ({faNum(data.images.length)})</h3></div>
+        <form className="adm-inline" style={{ marginTop: 8, flexWrap: 'wrap' }} role="search" onSubmit={(e) => { e.preventDefault(); void searchImages() }}>
+          <input style={{ flex: '1 1 220px' }} dir="auto" maxLength={120} placeholder="عبارت جست‌وجو (مثلاً Yazd Jameh Mosque یا بازار یزد)" aria-label="عبارت جست‌وجوی تصویر" value={imgQuery} onChange={(e) => setImgQuery(e.target.value)} />
+          <button type="submit" className="adm-btn primary" disabled={busy}>{imgQuery.trim() ? 'جست‌وجو' : 'جست‌وجوی خودکار'}</button>
+        </form>
+        <p className="adm-note">عبارت انگلیسی نتیجهٔ بهتری می‌دهد. اگر خالی بگذارید، با چند زاویه (جاذبه، معماری، بازار، طبیعت) خودکار جست‌وجو می‌شود. نتایج «نامزد» می‌شوند؛ هر کدام را که خواستید «تأیید» کنید.</p>
         <p className="adm-note">هیچ تصویری خودکار منتشر نمی‌شود؛ فقط تصویر «تأییدشده» می‌تواند تصویر اصلی باشد. منبع و مجوز هر تصویر را بررسی کنید.</p>
         {data.images.length === 0 ? <p className="adm-note">تصویری نیست. جست‌وجو کنید یا دستی اضافه کنید.</p> : (
           <div className="adm-img-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>{data.images.map((img) => (
