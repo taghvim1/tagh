@@ -461,14 +461,15 @@
 .wk-head { flex: none; align-self: center; margin: 2px 0 8px; padding: 2px 14px; border: 0; background: none; color: inherit; font: inherit; font-size: clamp(1.15rem, 5vw, 1.5rem); font-weight: 700; line-height: 1.5; cursor: pointer; }
 .wk-body { flex: 1 1 0; min-height: 0; display: flex; align-items: flex-start; }
 .wk-frame { position: relative; width: 100%; }
-.wk-scroll { height: 100%; overflow-y: auto; overscroll-behavior: contain; scroll-snap-type: y mandatory; scrollbar-width: none; touch-action: pan-y; -webkit-overflow-scrolling: touch;
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.3), #000 var(--wk-h), #000 calc(100% - var(--wk-h)), rgba(0,0,0,.3));
-  mask-image: linear-gradient(to bottom, rgba(0,0,0,.3), #000 var(--wk-h), #000 calc(100% - var(--wk-h)), rgba(0,0,0,.3)); }
-.wk-scroll::-webkit-scrollbar { display: none; }
-.wk-lane { height: var(--wk-h); padding: 3px 0; box-sizing: border-box; scroll-snap-align: start; }
-.wk-row { position: relative; height: 100%; display: flex; align-items: center; gap: 8px; padding-inline: 8px; border: 2px solid var(--ink); border-radius: 15px; background: var(--bg); direction: ltr; box-sizing: border-box; }
-.wk-hit { position: absolute; inset: 0; border: 0; padding: 0; margin: 0; background: none; border-radius: inherit; cursor: pointer; touch-action: pan-y; }
-.wk-num, .wk-tour, .wk-occ, .wk-note, .wk-gap { position: relative; z-index: 1; }
+.wk-slot { height: var(--wk-slot); display: grid; place-items: center; }
+.wk-scroll { position: relative; overflow: hidden; touch-action: none; overscroll-behavior: contain; cursor: grab; }
+.wk-scroll:active { cursor: grabbing; }
+.wk-track { position: absolute; inset-inline: 0; top: 0; will-change: transform; }
+.wk-lane { height: var(--wk-h); padding: 1.5px 0; box-sizing: border-box; }
+.wk-row { position: relative; height: 100%; display: flex; align-items: center; gap: 6px; padding-inline: calc(var(--wk-h) * .2); border: 1.25px solid var(--muted); border-radius: 999px; background: var(--bg); direction: ltr; box-sizing: border-box; }
+.wk-hit { position: absolute; inset: 0; border: 0; padding: 0; margin: 0; background: none; border-radius: inherit; cursor: pointer; touch-action: none; }
+.wk-num, .wk-wd, .wk-tour, .wk-occ, .wk-note, .wk-gap { position: relative; z-index: 1; }
+.wk-wd { flex: none; max-height: calc(100% - 8px); overflow: hidden; writing-mode: vertical-rl; transform: rotate(180deg); font-size: calc(var(--wk-h) * .2); line-height: 1; color: var(--muted); white-space: nowrap; pointer-events: none; }
 .wk-num { flex: none; width: calc(var(--wk-h) * .64); height: calc(var(--wk-h) * .64); display: grid; place-items: center; border-radius: 50%; font-size: clamp(1.05rem, 4.6vw, 1.5rem); line-height: 1; pointer-events: none; }
 .wk-lane.off .wk-num { color: var(--accent); }
 .wk-lane.sel .wk-num { background: var(--tour); }
@@ -481,8 +482,8 @@
   -webkit-mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
   mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%); }
 .wk-occ.holiday { color: var(--holiday); }
-.wk-arrow { position: absolute; inset-inline: 0; margin-inline: auto; width: 96px; height: var(--wk-h); display: grid; place-items: center; padding: 0; border: 0; background: none; color: var(--accent); cursor: pointer; z-index: 3; animation: wk-pop .28s ease; }
-.wk-arrow.up { top: 0; } .wk-arrow.down { bottom: 0; }
+/* فلش بازگشت به هفتهٔ جاری */
+.wk-arrow { width: 96px; height: 100%; display: grid; place-items: center; padding: 0; border: 0; background: none; color: var(--accent); cursor: pointer; animation: wk-pop .28s ease; }
 @keyframes wk-pop { from { opacity: 0; transform: translateY(var(--from, 6px)); } to { opacity: 1; transform: none; } }
 .wk-arrow.down { --from: -6px; }
 .wk-bubble { position: absolute; z-index: 5; left: 50%; max-width: min(86%, 340px); width: max-content; transform: translate(-50%, -100%); padding: 8px 14px; border-radius: 12px; background: var(--ink); color: var(--bg); font-size: .88rem; line-height: 1.7; text-align: center; direction: rtl; pointer-events: none; box-shadow: 0 6px 20px rgba(0,0,0,.25); animation: wk-bub .16s ease; }
@@ -490,7 +491,7 @@
 .wk-bubble.below { transform: translate(-50%, 0); }
 .wk-bubble.below::after { bottom: auto; top: -6px; }
 @keyframes wk-bub { from { opacity: 0; } to { opacity: 1; } }
-.wk-lane:focus-within .wk-row { outline: 2px solid var(--accent); outline-offset: 1px; }
+.wk-lane:focus-within .wk-row { outline: 2px solid var(--accent); outline-offset: 0; }
 @media (prefers-reduced-motion: reduce) { .cal-month, .cal-weekpane, .wk-arrow, .wk-bubble { transition: none; animation: none; } }
 
 /* ورق‌زدن تورهای یک روز */
