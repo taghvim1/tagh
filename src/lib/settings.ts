@@ -2,10 +2,10 @@ import { useSyncExternalStore } from 'react'
 
 // تنظیمات کاربر (جز حالت تاریک که در theme.ts است): فقط در localStorage، بدون حساب کاربری یا سرور
 const KEY = 'taghvim-settings'
-interface Settings { ancientCelebrations: boolean; weatherCard: boolean; dateNotification: boolean }
+interface Settings { ancientCelebrations: boolean; weatherCard: boolean; dateNotification: boolean; weekHaptics: boolean }
 
 const load = (): Settings => {
-  try { return { ancientCelebrations: true, weatherCard: true, dateNotification: false, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') } } catch { return { ancientCelebrations: true, weatherCard: true, dateNotification: false } }
+  try { return { ancientCelebrations: true, weatherCard: true, dateNotification: false, weekHaptics: true, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') } } catch { return { ancientCelebrations: true, weatherCard: true, dateNotification: false, weekHaptics: true } }
 }
 let settings: Settings = load()
 const listeners = new Set<() => void>()
@@ -27,6 +27,13 @@ export function setDateNotificationSetting(value: boolean) {
   try { localStorage.setItem(KEY, JSON.stringify(settings)) } catch { /* فقط حافظه */ }
   listeners.forEach((l) => l())
 }
+export function setWeekHaptics(value: boolean) {
+  settings = { ...settings, weekHaptics: value }
+  try { localStorage.setItem(KEY, JSON.stringify(settings)) } catch { /* فقط حافظه */ }
+  listeners.forEach((l) => l())
+}
+export const weekHapticsEnabled = () => settings.weekHaptics
+export const useWeekHaptics = () => useSyncExternalStore(subscribe, () => settings.weekHaptics, () => settings.weekHaptics)
 export const dateNotificationEnabled = () => settings.dateNotification
 export const useDateNotification = () => useSyncExternalStore(subscribe, () => settings.dateNotification, () => settings.dateNotification)
 

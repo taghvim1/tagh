@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { disableDateNotification, enableDateNotification, notificationState, type EnableResult } from '../lib/dateNotification'
 import { navigate } from '../lib/router'
 import AppChrome from '../components/AppChrome'
-import { setAncientCelebrations, setWeatherCard, useAncientCelebrations, useDateNotification, useWeatherCard } from '../lib/settings'
+import { setAncientCelebrations, setWeatherCard, setWeekHaptics, useAncientCelebrations, useDateNotification, useWeatherCard, useWeekHaptics } from '../lib/settings'
 import { weatherStore } from '../weather/current/store'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
 
@@ -13,6 +13,7 @@ export default function SettingsPage() {
   const ancient = useAncientCelebrations()
   const weather = useWeatherCard()
   const dateNotif = useDateNotification()
+  const haptics = useWeekHaptics()
   const [notifMsg, setNotifMsg] = useState('')
   const NOTIF_MSG: Record<EnableResult, string> = {
     ok: '', denied: 'اجازهٔ اعلان در مرورگر مسدود است. از تنظیمات مرورگر (یا برنامهٔ نصب‌شده) بخش «اعلان‌ها»ی این سایت را روی «اجازه» بگذارید و دوباره روشن کنید.',
@@ -42,6 +43,10 @@ export default function SettingsPage() {
           <label className="st-row">
             <span>کارت آب‌وهوا</span>
             <input type="checkbox" role="switch" className="cal-switch" checked={weather} onChange={(e) => { setWeatherCard(e.target.checked); if (!e.target.checked) weatherStore.clear() }} />
+          </label>
+          <label className="st-row">
+            <span>لرزش هنگام حرکت تقویم هفتگی</span>
+            <input type="checkbox" role="switch" className="cal-switch" checked={haptics} onChange={(e) => setWeekHaptics(e.target.checked)} />
           </label>
           <label className="st-row">
             <span>نمایش تاریخ در نوار اعلان</span>

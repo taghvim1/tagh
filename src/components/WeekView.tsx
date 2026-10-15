@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useStat
 import { getOccasion } from '../lib/calendarData'
 import { MONTHS, WEEKDAYS, dayNumber, faNum, fromDayNumber, toGregorianDate, weekdayIndex, type JalaliDate } from '../lib/jalali'
 import { noteKey, noteTitle } from '../lib/notes'
+import { weekHapticsEnabled } from '../lib/settings'
 import { useHSwipe } from '../lib/useSwipe'
 import { toISO } from '../tours/logic'
 import type { TourDayMap } from '../tours/calendar'
@@ -74,7 +75,7 @@ interface Props {
   onBack: (first: JalaliDate) => void
 }
 
-const vibrate = (ms: number) => { try { navigator.vibrate?.(ms) } catch { /* پشتیبانی نمی‌شود */ } }
+const vibrate = (ms: number) => { if (!weekHapticsEnabled()) return; try { navigator.vibrate?.(ms) } catch { /* پشتیبانی نمی‌شود */ } }
 
 /**
  * فیزیک اسکرول: لاین‌ها زیر انگشت می‌چسبند؛ با رها کردن، حرکت با سرعت انگشت ادامه پیدا می‌کند
@@ -102,6 +103,20 @@ export default function WeekView({ today, startDate, selected, tourDays, notes, 
   }, [])
 
   const transformFor = (p: number) => `translate3d(0, ${-(p - (Math.round(p) - BUFFER)) * hRef.current}px, 0)`
+  /** لاینی که از لبهٔ بالا/پایین خارج می‌شود کوچک و محو می‌شود (حس انتقال نرم به‌جای برش تیز). */
+  const edges = useCallback(() => {
+    const tr = track.current; if (!tr) return
+    const H = hRef.current, p = pos.current, base = firstRef.current - BUFFER
+    for (let i = 0; i < tr.children.length; i++) {
+      const y = (base + i - p) * H // بالای این لاین نسبت به بالای کادر
+      const out = y < 0 ? -y : y + H - LANES * H // مقدار خروج از کادر (پیکسل)
+      const f = out <= 0 ? 1 : Math.max(0, 1 - out / H)
+      const el = tr.children[i] as HTMLElement
+      if (f >= 1) { if (el.style.opacity) { el.style.opacity = ''; el.style.transform = '' } continue }
+      el.style.opacity = String(f * f)
+      el.style.transform = `scale(${0.6 + 0.4 * f})`
+    }
+  }, [])
   const apply = useCallback(() => {
     const idx = Math.round(pos.current)
     if (idx !== firstRef.current) {
@@ -110,8 +125,9 @@ export default function WeekView({ today, startDate, selected, tourDays, notes, 
       flushSync(() => setFirst(idx)) // لاین‌های تازه همان فریم رندر شوند
     }
     if (track.current) track.current.style.transform = transformFor(pos.current)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-  useLayoutEffect(() => { if (track.current) track.current.style.transform = transformFor(pos.current) }, [h, first]) // eslint-disable-line react-hooks/exhaustive-deps
+    edges()
+  }, [edges]) // eslint-disable-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => { if (track.current) track.current.style.transform = transformFor(pos.current); edges() }, [h, first, edges]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const cancelAnim = () => { if (anim.current) { cancelAnimationFrame(anim.current); anim.current = 0 } }
   /** لغزش نرم تا لاین target؛ سرعت اولیه (لاین بر میلی‌ثانیه) پیوسته می‌ماند. */
