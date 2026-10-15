@@ -458,7 +458,12 @@
 .cal-bottom { touch-action: pan-y; }
 
 .wk { height: 100%; width: min(100%, 640px); margin-inline: auto; padding: 0 3vw 12px; display: flex; flex-direction: column; touch-action: pan-y; }
-.wk-head { flex: none; align-self: center; margin: 2px 0 8px; padding: 2px 14px; border: 0; background: none; color: inherit; font: inherit; font-size: clamp(1.15rem, 5vw, 1.5rem); font-weight: 700; line-height: 1.5; cursor: pointer; }
+.wk-head { flex: none; align-self: flex-start; direction: ltr; display: flex; align-items: center; gap: 2px; margin: 6px 0 12px; padding-inline-start: 14px; user-select: none; -webkit-user-select: none; }
+.wk-month { flex: none; min-width: 5.5em; padding: 2px 6px; border: 0; background: none; color: inherit; font: inherit; font-size: clamp(1.35rem, 6vw, 1.8rem); font-weight: 700; line-height: 1.5; text-align: center; direction: rtl; cursor: grab; touch-action: none; will-change: transform; }
+.wk-month:active { cursor: grabbing; }
+.wk-month.snap { transition: transform .22s cubic-bezier(.22, .8, .3, 1); }
+.wk-hnav { flex: none; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--accent); cursor: pointer; }
+.wk-hnav:active { background: var(--tour); }
 .wk-body { flex: 1 1 0; min-height: 0; display: flex; align-items: flex-start; }
 .wk-frame { position: relative; width: 100%; }
 .wk-slot { height: var(--wk-slot); display: grid; place-items: center; }
@@ -474,18 +479,10 @@
 .wk-lane.off .wk-num { color: var(--accent); }
 .wk-lane.sel .wk-num { background: var(--tour); }
 .wk-lane.now .wk-num { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
-.wk-tour, .wk-note { flex: none; min-width: calc(var(--wk-h) * 1.5); max-width: 38%; padding: 0 calc(var(--wk-h) * .3); height: calc(var(--wk-h) * .62); line-height: calc(var(--wk-h) * .62 - 2px); text-align: center; border-radius: 999px; font: inherit; font-size: clamp(.82rem, 3.4vw, 1rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; direction: rtl; box-sizing: border-box; }
-.wk-tour { background: var(--tour); color: var(--ink); border: 1px solid var(--muted); }
-.wk-note { background: #fff2a0; color: #1c1c1e; border: 1px solid #c9ae22; }
+.wk-tour, .wk-note { flex: none; min-width: calc(var(--wk-h) * 1.5); max-width: 38%; padding: 0 calc(var(--wk-h) * .3); height: calc(var(--wk-h) * .7); line-height: calc(var(--wk-h) * .7 - 3px); text-align: center; border-radius: 999px; font: inherit; font-size: clamp(.95rem, 3.9vw, 1.15rem); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; direction: rtl; box-sizing: border-box; }
+.wk-tour { background: var(--tour); color: var(--ink); border: 1.25px solid var(--muted); }
+.wk-note { background: #fff2a0; color: #1c1c1e; border: 1.25px solid #c9ae22; }
 .wk-gap { position: relative; z-index: 1; }
-.wk-wd { flex: none; max-height: calc(100% - 8px); overflow: hidden; writing-mode: vertical-rl; transform: rotate(180deg); font-size: calc(var(--wk-h) * .2); line-height: 1; color: var(--muted); white-space: nowrap; pointer-events: none; }
-.wk-num { flex: none; width: calc(var(--wk-h) * .64); height: calc(var(--wk-h) * .64); display: grid; place-items: center; border-radius: 50%; font-size: clamp(1.05rem, 4.6vw, 1.5rem); line-height: 1; pointer-events: none; }
-.wk-lane.off .wk-num { color: var(--accent); }
-.wk-lane.sel .wk-num { background: var(--tour); }
-.wk-lane.now .wk-num { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
-.wk-tour, .wk-note { flex: none; max-width: 30%; padding: 1px 9px; border-radius: 8px; font: inherit; font-size: .72rem; line-height: 1.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; direction: rtl; }
-.wk-tour { background: var(--tour); color: var(--ink); border: 1px solid var(--muted); }
-.wk-note { background: #fff2a0; color: #1c1c1e; border: 1px solid #c9ae22; }
 .wk-gap { flex: 1 1 0; }
 .wk-occ { flex: 1 1 0; min-width: 0; padding: 0 6px; border: 0; background: none; color: inherit; font: inherit; font-size: .84rem; text-align: center; white-space: nowrap; overflow: hidden; cursor: pointer; direction: rtl;
   -webkit-mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);

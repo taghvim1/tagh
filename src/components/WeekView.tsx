@@ -1,7 +1,7 @@
 import { flushSync } from 'react-dom'
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { getOccasion } from '../lib/calendarData'
-import { MONTHS, WEEKDAYS, dayNumber, faNum, fromDayNumber, toGregorianDate, weekdayIndex, type JalaliDate } from '../lib/jalali'
+import { MONTHS, WEEKDAYS, dayNumber, faNum, fromDayNumber, shiftMonth, toGregorianDate, weekdayIndex, type JalaliDate } from '../lib/jalali'
 import { noteKey, noteTitle } from '../lib/notes'
 import { weekHapticsEnabled } from '../lib/settings'
 import { useHSwipe } from '../lib/useSwipe'
@@ -59,6 +59,12 @@ const Chevron = ({ up }: { up: boolean }) => (
   </svg>
 )
 
+const MonthArrow = ({ dir }: { dir: 'left' | 'right' }) => (
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d={dir === 'right' ? 'M9 5l7 7-7 7' : 'M15 5l-7 7 7 7'} />
+  </svg>
+)
+
 interface Props {
   today: JalaliDate
   /** روزی که اولین لاین می‌شود (هنگام ورود) */
@@ -92,6 +98,8 @@ export default function WeekView({ today, startDate, selected, tourDays, notes, 
   const body = useRef<HTMLDivElement>(null), frame = useRef<HTMLDivElement>(null), scroller = useRef<HTMLDivElement>(null), track = useRef<HTMLDivElement>(null)
   const pos = useRef(startN), hRef = useRef(h), firstRef = useRef(first)
   const anim = useRef(0), lastBuzz = useRef(0), moved = useRef(false)
+  const monthNav = useRef<number | null>(null) // مقصد در حال لغزش هنگام تغییر ماه (برای چند ضربهٔ پشت‌سرهم)
+  const monthEl = useRef<HTMLButtonElement>(null), mdrag = useRef<{ id: number; x0: number; moved: boolean } | null>(null), mSuppress = useRef(false)
   hRef.current = h
 
   useLayoutEffect(() => {
@@ -134,13 +142,13 @@ export default function WeekView({ today, startDate, selected, tourDays, notes, 
   const glide = useCallback((target: number, v0 = 0, fixedTau?: number) => {
     cancelAnim()
     const p0 = pos.current, D = target - p0
-    if (Math.abs(D) < 0.001) { pos.current = target; apply(); return }
+    if (Math.abs(D) < 0.001) { pos.current = target; monthNav.current = null; apply(); return }
     const tau = fixedTau ?? (v0 !== 0 && Math.sign(v0) === Math.sign(D) ? Math.min(520, Math.max(120, D / v0)) : Math.min(300, 130 + Math.abs(D) * 40))
     const t0 = performance.now()
     const step = (now: number) => {
       const e = Math.exp(-(now - t0) / tau)
       pos.current = target - D * e
-      if (Math.abs(D * e) < 0.01) { pos.current = target; apply(); anim.current = 0; return }
+      if (Math.abs(D * e) < 0.01) { pos.current = target; monthNav.current = null; apply(); anim.current = 0; return }
       apply(); anim.current = requestAnimationFrame(step)
     }
     anim.current = requestAnimationFrame(step)
@@ -153,7 +161,7 @@ export default function WeekView({ today, startDate, selected, tourDays, notes, 
     let drag: { id: number; y0: number; x0: number; last: number; axis: '' | 'x' | 'y'; samples: { t: number; y: number }[] } | null = null
     const down = (e: PointerEvent) => {
       if (e.pointerType === 'mouse' && e.button !== 0) return
-      cancelAnim(); moved.current = false; setBubble(null)
+      cancelAnim(); monthNav.current = null; moved.current = false; setBubble(null)
       drag = { id: e.pointerId, y0: e.clientY, x0: e.clientX, last: e.clientY, axis: '', samples: [{ t: performance.now(), y: e.clientY }] }
     }
     const move = (e: PointerEvent) => {
@@ -183,7 +191,7 @@ export default function WeekView({ today, startDate, selected, tourDays, notes, 
     const click = (e: MouseEvent) => { if (moved.current) { e.stopPropagation(); e.preventDefault(); moved.current = false } }
     let wheelTimer = 0
     const wheel = (e: WheelEvent) => {
-      e.preventDefault(); cancelAnim(); setBubble(null)
+      e.preventDefault(); cancelAnim(); monthNav.current = null; setBubble(null)
       pos.current += (e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY) / hRef.current; apply()
       window.clearTimeout(wheelTimer); wheelTimer = window.setTimeout(() => glide(Math.round(pos.current)), 110)
     }
@@ -224,6 +232,43 @@ export default function WeekView({ today, startDate, selected, tourDays, notes, 
     glide(todayN, 0, 170)
   }
 
+  /** رفتن به روز اولِ ماهِ قبل (delta = -1) یا بعد (delta = +1)؛ تقویم هفته هم با آن عوض می‌شود. */
+  const changeMonth = useCallback((delta: number) => {
+    const base = fromDayNumber(monthNav.current ?? Math.round(pos.current))
+    const m = shiftMonth({ year: base.year, month: base.month }, delta)
+    const target = dayNumber({ year: m.year, month: m.month, day: 1 })
+    monthNav.current = target; setBubble(null)
+    const dist = target - Math.round(pos.current)
+    if (Math.abs(dist) > 14) { pos.current = target - Math.sign(dist) * 10; apply() } // نزدیک می‌شویم، سپس نرم می‌لغزیم
+    vibrate(10)
+    glide(target, 0, 200)
+  }, [apply, glide])
+
+  // کشیدن متن ماه به چپ/راست: چپ = ماه بعد، راست = ماه قبل (مثل فلش‌ها)
+  const MDRAG_MIN = 36
+  const monthDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
+    if (e.pointerType === 'mouse' && e.button !== 0) return
+    mdrag.current = { id: e.pointerId, x0: e.clientX, moved: false }; mSuppress.current = false
+    monthEl.current?.classList.remove('snap')
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* پشتیبانی نمی‌شود */ }
+  }
+  const monthMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const d = mdrag.current; if (!d || d.id !== e.pointerId) return
+    const dx = e.clientX - d.x0
+    if (Math.abs(dx) > 8) d.moved = true
+    if (monthEl.current) monthEl.current.style.transform = `translateX(${Math.max(-28, Math.min(28, dx * 0.5))}px)`
+  }
+  const monthEnd = (e: React.PointerEvent<HTMLButtonElement>, cancelled = false) => {
+    e.stopPropagation()
+    const d = mdrag.current; if (!d || d.id !== e.pointerId) return
+    mdrag.current = null
+    const dx = e.clientX - d.x0
+    mSuppress.current = d.moved
+    if (monthEl.current) { monthEl.current.classList.add('snap'); monthEl.current.style.transform = '' }
+    if (!cancelled && d.moved && Math.abs(dx) >= MDRAG_MIN) changeMonth(dx < 0 ? 1 : -1)
+  }
+
   const showBubble = useCallback((e: React.MouseEvent, text: string) => {
     e.stopPropagation()
     const fr = frame.current; if (!fr) return
@@ -243,9 +288,16 @@ export default function WeekView({ today, startDate, selected, tourDays, notes, 
         if (e.key === 'Escape') onBack(fromDayNumber(Math.round(pos.current)))
         else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); glide(Math.round(pos.current) + (e.key === 'ArrowDown' ? 1 : -1)) }
       }}>
-      <button type="button" className="wk-head" onClick={() => onBack(fromDayNumber(Math.round(pos.current)))} aria-label={`${MONTHS[head.month - 1]} — بازگشت به تقویم ماهانه`}>
-        {MONTHS[head.month - 1]} ماه{head.year !== today.year ? ` ${faNum(head.year)}` : ''}
-      </button>
+      <div className="wk-head">
+        <button type="button" className="wk-hnav" onClick={() => changeMonth(1)} aria-label="ماه بعد"><MonthArrow dir="left" /></button>
+        <button type="button" className="wk-month" ref={monthEl}
+          onPointerDown={monthDown} onPointerMove={monthMove} onPointerUp={(e) => monthEnd(e)} onPointerCancel={(e) => monthEnd(e, true)}
+          onClick={() => { if (mSuppress.current) { mSuppress.current = false; return } onBack(fromDayNumber(Math.round(pos.current))) }}
+          aria-label={`${MONTHS[head.month - 1]} — بازگشت به تقویم ماهانه (برای تغییر ماه به چپ یا راست بکشید)`}>
+          {MONTHS[head.month - 1]} ماه{head.year !== today.year ? ` ${faNum(head.year)}` : ''}
+        </button>
+        <button type="button" className="wk-hnav" onClick={() => changeMonth(-1)} aria-label="ماه قبل"><MonthArrow dir="right" /></button>
+      </div>
       <div className="wk-body" ref={body}>
         <div className="wk-frame" ref={frame} style={{ ['--wk-h' as string]: `${h}px`, ['--wk-slot' as string]: `${h * SLOT}px` }}>
           <div className="wk-slot">
