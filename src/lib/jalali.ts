@@ -37,6 +37,11 @@ export function shiftMonth({ year, month }: MonthRef, delta: number): MonthRef {
 /** شنبه = ۰ ... جمعه = ۶ */
 export const weekdayIndex = (d: JalaliDate) => (toGregorianDate(d).getDay() + 1) % 7
 
+/** شمارهٔ روز (روزهای سپری‌شده از مبدأ ثابت)؛ برای مقایسه و جابه‌جایی روز به روز */
+export const dayNumber = (d: JalaliDate): number => { const g = toGregorianDate(d); return Math.round(Date.UTC(g.getFullYear(), g.getMonth(), g.getDate()) / 86_400_000) }
+export const fromDayNumber = (n: number): JalaliDate => { const u = new Date(n * 86_400_000); return fromGregorian(new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate(), 12)) }
+export const addDays = (d: JalaliDate, n: number): JalaliDate => fromDayNumber(dayNumber(d) + n)
+
 export const isSameDate = (a: JalaliDate, b: JalaliDate) =>
   a.year === b.year && a.month === b.month && a.day === b.day
 

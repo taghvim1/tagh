@@ -447,3 +447,58 @@
 .wp-tiles.three > .wp-tile:nth-child(3n+1) .wp-tip::after, .wp-tiles.four > .wp-tile:nth-child(4n+1) .wp-tip::after { inset-inline-start: 24px; margin: 0; }
 .wp-tiles.three > .wp-tile:nth-child(3n) .wp-tip::after, .wp-tiles.four > .wp-tile:nth-child(4n) .wp-tip::after { inset-inline-start: auto; inset-inline-end: 24px; margin: 0; }
 .wp .wp-disc .wx-icon { width: 64%; height: 64%; }
+
+/* ===== تقویم هفتگی (کشیدن تقویم ماهانه به چپ) ===== */
+.cal-swap { flex: 1 1 0; min-height: 0; position: relative; display: flex; flex-direction: column; }
+.cal-pane { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+.cal-month { transition: transform .36s cubic-bezier(.22, .8, .3, 1), opacity .3s ease, visibility 0s linear 0s; }
+.cal-swap.week .cal-month { opacity: 0; transform: translateX(-10%) scale(.96); pointer-events: none; visibility: hidden; transition: transform .36s cubic-bezier(.22, .8, .3, 1), opacity .3s ease, visibility 0s linear .36s; }
+.cal-weekpane { position: absolute; inset: 0; opacity: 0; transform: translateX(10%) scale(.97); transition: transform .36s cubic-bezier(.22, .8, .3, 1), opacity .3s ease; }
+.cal-weekpane.shown { opacity: 1; transform: none; }
+.cal-bottom { touch-action: pan-y; }
+
+.wk { height: 100%; width: min(100%, 640px); margin-inline: auto; padding: 0 3vw 12px; display: flex; flex-direction: column; touch-action: pan-y; }
+.wk-head { flex: none; align-self: center; margin: 2px 0 8px; padding: 2px 14px; border: 0; background: none; color: inherit; font: inherit; font-size: clamp(1.15rem, 5vw, 1.5rem); font-weight: 700; line-height: 1.5; cursor: pointer; }
+.wk-body { flex: 1 1 0; min-height: 0; display: flex; align-items: flex-start; }
+.wk-frame { position: relative; width: 100%; }
+.wk-scroll { height: 100%; overflow-y: auto; overscroll-behavior: contain; scroll-snap-type: y mandatory; scrollbar-width: none; touch-action: pan-y; -webkit-overflow-scrolling: touch;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.3), #000 var(--wk-h), #000 calc(100% - var(--wk-h)), rgba(0,0,0,.3));
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.3), #000 var(--wk-h), #000 calc(100% - var(--wk-h)), rgba(0,0,0,.3)); }
+.wk-scroll::-webkit-scrollbar { display: none; }
+.wk-lane { height: var(--wk-h); padding: 3px 0; box-sizing: border-box; scroll-snap-align: start; }
+.wk-row { position: relative; height: 100%; display: flex; align-items: center; gap: 8px; padding-inline: 8px; border: 2px solid var(--ink); border-radius: 15px; background: var(--bg); direction: ltr; box-sizing: border-box; }
+.wk-hit { position: absolute; inset: 0; border: 0; padding: 0; margin: 0; background: none; border-radius: inherit; cursor: pointer; touch-action: pan-y; }
+.wk-num, .wk-tour, .wk-occ, .wk-note, .wk-gap { position: relative; z-index: 1; }
+.wk-num { flex: none; width: calc(var(--wk-h) * .64); height: calc(var(--wk-h) * .64); display: grid; place-items: center; border-radius: 50%; font-size: clamp(1.05rem, 4.6vw, 1.5rem); line-height: 1; pointer-events: none; }
+.wk-lane.off .wk-num { color: var(--accent); }
+.wk-lane.sel .wk-num { background: var(--tour); }
+.wk-lane.now .wk-num { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.wk-tour, .wk-note { flex: none; max-width: 30%; padding: 1px 9px; border-radius: 8px; font: inherit; font-size: .72rem; line-height: 1.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; direction: rtl; }
+.wk-tour { background: var(--tour); color: var(--ink); border: 1px solid var(--muted); }
+.wk-note { background: #fff2a0; color: #1c1c1e; border: 1px solid #c9ae22; }
+.wk-gap { flex: 1 1 0; }
+.wk-occ { flex: 1 1 0; min-width: 0; padding: 0 6px; border: 0; background: none; color: inherit; font: inherit; font-size: .84rem; text-align: center; white-space: nowrap; overflow: hidden; cursor: pointer; direction: rtl;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 16px, #000 calc(100% - 16px), transparent 100%); }
+.wk-occ.holiday { color: var(--holiday); }
+.wk-arrow { position: absolute; inset-inline: 0; margin-inline: auto; width: 96px; height: var(--wk-h); display: grid; place-items: center; padding: 0; border: 0; background: none; color: var(--accent); cursor: pointer; z-index: 3; animation: wk-pop .28s ease; }
+.wk-arrow.up { top: 0; } .wk-arrow.down { bottom: 0; }
+@keyframes wk-pop { from { opacity: 0; transform: translateY(var(--from, 6px)); } to { opacity: 1; transform: none; } }
+.wk-arrow.down { --from: -6px; }
+.wk-bubble { position: absolute; z-index: 5; left: 50%; max-width: min(86%, 340px); width: max-content; transform: translate(-50%, -100%); padding: 8px 14px; border-radius: 12px; background: var(--ink); color: var(--bg); font-size: .88rem; line-height: 1.7; text-align: center; direction: rtl; pointer-events: none; box-shadow: 0 6px 20px rgba(0,0,0,.25); animation: wk-bub .16s ease; }
+.wk-bubble::after { content: ''; position: absolute; left: 50%; bottom: -6px; width: 12px; height: 12px; margin-left: -6px; background: inherit; transform: rotate(45deg); border-radius: 2px; }
+.wk-bubble.below { transform: translate(-50%, 0); }
+.wk-bubble.below::after { bottom: auto; top: -6px; }
+@keyframes wk-bub { from { opacity: 0; } to { opacity: 1; } }
+.wk-lane:focus-within .wk-row { outline: 2px solid var(--accent); outline-offset: 1px; }
+@media (prefers-reduced-motion: reduce) { .cal-month, .cal-weekpane, .wk-arrow, .wk-bubble { transition: none; animation: none; } }
+
+/* ورق‌زدن تورهای یک روز */
+.td-carousel { display: flex; flex-direction: column; }
+.td-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x pan-y; align-items: flex-start; }
+.td-track::-webkit-scrollbar { display: none; }
+.td-slide { flex: 0 0 100%; min-width: 0; scroll-snap-align: center; scroll-snap-stop: always; }
+.td-dots { display: flex; justify-content: center; gap: 6px; padding: 10px 0 4px; }
+.td-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line, #bbb); transition: width .2s, background .2s; }
+.td-dots i.on { width: 18px; border-radius: 4px; background: var(--accent); }
+.td-carousel .td-head { margin: 0; padding: 16px 52px 10px; text-align: center; }
