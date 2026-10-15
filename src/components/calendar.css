@@ -458,11 +458,11 @@
 .cal-bottom { touch-action: pan-y; }
 
 .wk { height: 100%; width: min(100%, 640px); margin-inline: auto; padding: 0 3vw 12px; display: flex; flex-direction: column; touch-action: pan-y; }
-.wk-head { flex: none; align-self: flex-start; direction: ltr; display: flex; align-items: center; gap: 2px; margin: 6px 0 12px; padding-inline-start: 14px; user-select: none; -webkit-user-select: none; }
-.wk-month { flex: none; min-width: 5.5em; padding: 2px 6px; border: 0; background: none; color: inherit; font: inherit; font-size: clamp(1.35rem, 6vw, 1.8rem); font-weight: 700; line-height: 1.5; text-align: center; direction: rtl; cursor: grab; touch-action: none; will-change: transform; }
+.wk-head { flex: none; align-self: flex-start; direction: ltr; display: flex; align-items: center; gap: 0; margin: 4px 0 1px; padding-inline-start: 0; user-select: none; -webkit-user-select: none; }
+.wk-month { flex: none; min-width: 4.6em; padding: 0 4px; border: 0; background: none; color: inherit; font: inherit; font-family: 'Lalezar', 'B Yekan', Tahoma, sans-serif; font-size: clamp(1.1rem, 4.8vw, 1.45rem); font-weight: 400; line-height: 1.35; text-align: center; direction: rtl; cursor: grab; touch-action: none; will-change: transform; }
 .wk-month:active { cursor: grabbing; }
 .wk-month.snap { transition: transform .22s cubic-bezier(.22, .8, .3, 1); }
-.wk-hnav { flex: none; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--accent); cursor: pointer; }
+.wk-hnav { flex: none; width: 28px; height: 28px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--accent); cursor: pointer; }
 .wk-hnav:active { background: var(--tour); }
 .wk-body { flex: 1 1 0; min-height: 0; display: flex; align-items: flex-start; }
 .wk-frame { position: relative; width: 100%; }
@@ -472,6 +472,7 @@
 .wk-track { position: absolute; inset-inline: 0; top: 0; will-change: transform; }
 .wk-lane { height: var(--wk-h); padding: 1.5px 0; box-sizing: border-box; transform-origin: center; will-change: transform, opacity; }
 .wk-row { position: relative; height: 100%; display: flex; align-items: center; gap: 6px; padding-inline: calc(var(--wk-h) * .2); border: 1.25px solid var(--muted); border-radius: 999px; background: var(--bg); direction: ltr; box-sizing: border-box; }
+.wk-row { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
 .wk-hit { position: absolute; inset: 0; border: 0; padding: 0; margin: 0; background: none; border-radius: inherit; cursor: pointer; touch-action: none; }
 .wk-num, .wk-wd, .wk-tour, .wk-occ, .wk-note, .wk-gap { position: relative; z-index: 1; }
 .wk-wd { flex: none; max-height: calc(100% - 8px); overflow: hidden; writing-mode: vertical-rl; transform: rotate(180deg); font-size: calc(var(--wk-h) * .2); line-height: 1; color: var(--muted); white-space: nowrap; pointer-events: none; }

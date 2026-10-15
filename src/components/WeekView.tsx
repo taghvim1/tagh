@@ -25,6 +25,8 @@ interface LaneProps {
   onOcc: (e: React.MouseEvent, text: string) => void; onNote: (d: JalaliDate) => void; onTours: (d: JalaliDate) => void
 }
 
+const vibrate = (ms: number) => { if (!weekHapticsEnabled()) return; try { navigator.vibrate?.(ms) } catch { /* پشتیبانی نمی‌شود */ } }
+
 const Lane = memo(function Lane({ it, isToday, isSel, onSelect, onLong, onOcc, onNote, onTours }: LaneProps) {
   const timer = useRef<{ id: number; x: number; y: number } | null>(null), fired = useRef(false)
   const stop = () => { if (timer.current) { window.clearTimeout(timer.current.id); timer.current = null } }
@@ -36,7 +38,7 @@ const Lane = memo(function Lane({ it, isToday, isSel, onSelect, onLong, onOcc, o
       <div className="wk-row">
         <button type="button" className="wk-hit" aria-label={label} aria-pressed={isSel}
           onClick={() => { if (fired.current) { fired.current = false; return } onSelect(it.date) }}
-          onPointerDown={(e) => { if (e.pointerType === 'mouse' && e.button !== 0) return; stop(); fired.current = false; timer.current = { x: e.clientX, y: e.clientY, id: window.setTimeout(() => { fired.current = true; timer.current = null; onLong(it.date) }, LONG_PRESS_MS) } }}
+          onPointerDown={(e) => { if (e.pointerType === 'mouse' && e.button !== 0) return; stop(); fired.current = false; timer.current = { x: e.clientX, y: e.clientY, id: window.setTimeout(() => { fired.current = true; timer.current = null; vibrate(25); onLong(it.date) }, LONG_PRESS_MS) } }}
           onPointerMove={(e) => { const p = timer.current; if (p && Math.hypot(e.clientX - p.x, e.clientY - p.y) > 10) stop() }}
           onPointerUp={stop} onPointerLeave={stop} onPointerCancel={stop} onContextMenu={(e) => e.preventDefault()} />
         <span className="wk-num" aria-hidden="true">{faNum(it.date.day)}</span>
@@ -81,7 +83,6 @@ interface Props {
   onBack: (first: JalaliDate) => void
 }
 
-const vibrate = (ms: number) => { if (!weekHapticsEnabled()) return; try { navigator.vibrate?.(ms) } catch { /* پشتیبانی نمی‌شود */ } }
 
 /**
  * فیزیک اسکرول: لاین‌ها زیر انگشت می‌چسبند؛ با رها کردن، حرکت با سرعت انگشت ادامه پیدا می‌کند
