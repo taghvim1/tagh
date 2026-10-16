@@ -11,7 +11,7 @@ import type { Tour } from '../tours/types'
 
 /** تعداد لاین‌های دیده‌شده (هفت روز). */
 export const LANES = 7
-const SLOT = 0.55 // ارتفاع جای فلش (بالا و پایین) نسبت به یک لاین
+const SLOT = 0.4 // ارتفاع جای فلش (بالا و پایین) نسبت به یک لاین
 const BUFFER = 6 // لاین‌های آماده خارج از دید
 const LONG_PRESS_MS = 1000
 /** ثابت زمانی ایستادن (میلی‌ثانیه): بزرگ‌تر = لغزش طولانی‌تر بعد از رها کردن */
@@ -109,7 +109,7 @@ export default function WeekView({ today, startDate, selected, tourDays, notes, 
 
   useLayoutEffect(() => {
     const el = body.current; if (!el) return
-    const measure = () => setH(Math.max(34, Math.min(64, Math.floor(el.clientHeight / (LANES + 2 * SLOT)))))
+    const measure = () => setH(Math.max(32, Math.min(58, Math.floor((el.clientHeight / (LANES + 2 * SLOT)) * 0.92))))
     measure()
     const ro = new ResizeObserver(measure); ro.observe(el)
     return () => ro.disconnect()

@@ -49,20 +49,28 @@ export function DykTile({ item, onOpen }: TileProps & { item?: FeedItem }) {
   )
 }
 
-const ROTATE_MS = 8000
+const ROTATE_MS = 6000
+const RESUME_MS = 5000
 
-/** صفحهٔ دوم: کاشی موضوع‌ها (تصویر سمت راست). موضوع‌های دارای کارتِ امروز نوبتی نمایش داده می‌شوند. */
+/** صفحهٔ دوم: کاشی موضوع‌ها (تصویر سمت راست). اسلایدها خودکار می‌چرخند و با کشیدن چپ/راست هم ورق می‌خورند. */
 export function TopicTile({ items, paused, onOpen }: TileProps & { items: Partial<Record<(typeof TILE_KINDS)[number], FeedItem>>; paused?: boolean }) {
   const list = TILE_KINDS.flatMap((k) => (items[k] ? [items[k]!] : []))
-  const [i, setI] = useState(0)
-  const g = useTapGuard()
   const n = list.length
+  const track = useRef<HTMLDivElement>(null)
+  const idx = useRef(0), holdUntil = useRef(0)
+  const dir = () => (track.current && getComputedStyle(track.current).direction === 'rtl' ? -1 : 1)
+  const goTo = (i: number) => { const el = track.current; if (el) el.scrollTo({ left: dir() * i * el.clientWidth, behavior: 'smooth' }) }
+  const onScroll = () => { const el = track.current; if (el) idx.current = Math.min(n - 1, Math.max(0, Math.round(Math.abs(el.scrollLeft) / (el.clientWidth || 1)))) }
+  const hold = () => { holdUntil.current = Date.now() + RESUME_MS } // کاربر دست زده: چرخش خودکار کمی صبر می‌کند
   useEffect(() => {
     if (n < 2 || paused) return
     if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const t = window.setInterval(() => { if (document.visibilityState === 'visible') setI((x) => (x + 1) % n) }, ROTATE_MS)
+    const t = window.setInterval(() => {
+      if (document.visibilityState !== 'visible' || Date.now() < holdUntil.current) return
+      goTo((idx.current + 1) % n)
+    }, ROTATE_MS)
     return () => window.clearInterval(t)
-  }, [n, paused, i])
+  }, [n, paused]) // eslint-disable-line react-hooks/exhaustive-deps
   if (n === 0) {
     return (
       <div className="fd-tile fd-tile2 fd-empty" role="note">
@@ -71,18 +79,14 @@ export function TopicTile({ items, paused, onOpen }: TileProps & { items: Partia
       </div>
     )
   }
-  const it = list[i % n]
   return (
-    <div className="fd-wrap">
-      <button type="button" key={it.id} className="fd-tile fd-tile2" aria-haspopup="dialog" aria-label={`${FEED_TITLE[it.kind]}: ${it.title}`} {...g.handlers} onClick={() => { if (!g.wasDrag()) onOpen(it) }}>
-        <Thumb className="fd-img" src={it.image.url} />
-        <span className="fd-text"><span className="fd-kicker">{FEED_TITLE[it.kind]}</span><strong className="fd-label">{it.title}</strong><span className="fd-snip">{it.body}</span></span>
-      </button>
-      {n > 1 && (
-        <button type="button" className="fd-next" aria-label={`موضوع بعدی (${faNum((i % n) + 1)} از ${faNum(n)})`} onClick={() => setI((x) => (x + 1) % n)}>
-          <svg {...svg} width="18" height="18"><path d="M15 5l-7 7 7 7" /></svg>
+    <div className="fd-track" ref={track} onScroll={onScroll} onPointerDown={hold} onTouchStart={hold} onWheel={hold} role="group" aria-label="موضوع‌های پیشنهاد سفر؛ برای دیدن بعدی بکشید">
+      {list.map((it) => (
+        <button type="button" key={it.id} className="fd-tile fd-tile2 fd-slide" aria-haspopup="dialog" aria-label={`${FEED_TITLE[it.kind]}: ${it.title}`} onClick={() => onOpen(it)}>
+          <Thumb className="fd-img" src={it.image.url} />
+          <span className="fd-text"><span className="fd-kicker">{FEED_TITLE[it.kind]}</span><strong className="fd-label">{it.title}</strong><span className="fd-snip">{it.body}</span></span>
         </button>
-      )}
+      ))}
     </div>
   )
 }

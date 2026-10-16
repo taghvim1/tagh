@@ -77,7 +77,6 @@ export default function CalendarPage() {
   // بازگشت از صفحهٔ دوم از بیرون WeekView (نقطه‌ها و کشیدن روی کاشی بالا)؛ WeekView اولین لاین را می‌داند
   const exitRef = useRef<(() => void) | null>(null)
   const backToMonth = () => { if (exitRef.current) exitRef.current(); else exitWeek(weekStart) }
-  const swipeTop = useHSwipe(undefined, backToMonth)
   const feed = useFeed()
   const feedPopup = useOverlay('feed')
   const [feedItem, setFeedItem] = useState<FeedItem | null>(null)
@@ -98,7 +97,7 @@ export default function CalendarPage() {
         </div>
         {weekPane.mounted && (
           <div className={`cal-pane cal-weekpane${weekPane.shown ? ' shown' : ''}`}>
-            <div className="cal-wktop" {...swipeTop}><TopicTile items={feed.items} paused={feedPopup.open} onOpen={openFeed} /></div>
+            <div className="cal-wktop"><TopicTile items={feed.items} paused={feedPopup.open} onOpen={openFeed} /></div>
             <WeekView today={today} startDate={weekStart} selected={selected} tourDays={tourDays} notes={notes} rev={`${calData.updatedAt}-${ancient}`}
               onSelect={select} onNote={weekNote} onTours={weekTours} onBack={exitWeek} exitRef={exitRef} />
           </div>

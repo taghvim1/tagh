@@ -460,8 +460,8 @@
 .cal-weekpane.shown { opacity: 1; transform: none; }
 .cal-bottom { touch-action: pan-y; }
 
-.wk { height: 100%; width: min(100%, 640px); margin-inline: auto; padding: 0 3vw 12px; display: flex; flex-direction: column; touch-action: pan-y; }
-.wk-head { flex: none; align-self: flex-start; direction: ltr; display: flex; align-items: center; gap: 0; margin: 4px 0 1px; padding-inline-start: 0; user-select: none; -webkit-user-select: none; }
+.wk { height: 100%; width: min(100%, 640px); margin-inline: auto; padding: 0 calc(3vw + 7px) 12px; display: flex; flex-direction: column; touch-action: pan-y; }
+.wk-head { flex: none; align-self: flex-start; direction: ltr; display: flex; align-items: center; gap: 0; margin: 4px 0 -6px; padding-inline-start: 0; user-select: none; -webkit-user-select: none; }
 .wk-month { flex: none; min-width: 4.6em; padding: 0 4px; border: 0; background: none; color: inherit; font: inherit; font-family: 'Lalezar', 'B Yekan', Tahoma, sans-serif; font-size: clamp(1.1rem, 4.8vw, 1.45rem); font-weight: 400; line-height: 1.35; text-align: center; direction: rtl; cursor: grab; touch-action: none; will-change: transform; }
 .wk-month:active { cursor: grabbing; }
 .wk-month.snap { transition: transform .22s cubic-bezier(.22, .8, .3, 1); }
@@ -518,7 +518,7 @@
 /* ===== دو صفحهٔ تقویم: کاشی‌های محتوا + نقطه‌های صفحه ===== */
 .cal-month { touch-action: pan-y; }
 .cal-weekpane { padding-top: 60px; }
-.cal-wktop { flex: none; touch-action: pan-y; width: min(100%, 640px); margin-inline: auto; padding: 0 3vw; box-sizing: border-box; }
+.cal-wktop { flex: none; touch-action: pan-y; width: min(100%, 640px); margin-inline: auto; padding: 0 calc(3vw + 7px); box-sizing: border-box; }
 
 /* کاشی: تصویر سمت راست، متن سمت چپ */
 .fd-tile { flex: none; align-self: center; width: min(calc(100% - 6vw), 640px); height: var(--fd-h); margin: 2px 0 4px; padding: 8px; display: flex; align-items: stretch; gap: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg-soft); color: var(--ink); font: inherit; text-align: start; cursor: pointer; overflow: hidden; touch-action: pan-y; animation: fd-in .35s ease; }
@@ -551,8 +551,8 @@ a.fd-credit:hover { text-decoration: underline; }
 .fd-sources a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; word-break: break-word; }
 
 /* دو نقطهٔ پایین: صفحهٔ اول (راست) و صفحهٔ دوم (چپ) */
-.cal-dots { flex: none; height: var(--dots); display: flex; align-items: center; justify-content: center; gap: 2px; }
-.cal-dots button { width: 34px; height: 100%; padding: 0; display: grid; place-items: center; border: 0; background: none; cursor: pointer; }
+.cal-dots { flex: none; height: var(--dots); display: flex; direction: ltr; align-items: center; justify-content: center; gap: 0; }
+.cal-dots button { width: 18px; height: 100%; padding: 0; display: grid; place-items: center; border: 0; background: none; cursor: pointer; }
 .cal-dots i { display: block; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); opacity: .45; transition: opacity .2s, transform .2s; }
 .cal-dots .on i { background: var(--ink); opacity: 1; transform: scale(1.15); }
 @media (prefers-reduced-motion: reduce) { .fd-tile { animation: none; } .cal-dots i { transition: none; } }
@@ -561,5 +561,12 @@ a.fd-credit:hover { text-decoration: underline; }
 @media (max-height: 700px) { .fd-snip { -webkit-line-clamp: 2; } .fd-tile2 .fd-snip { -webkit-line-clamp: 2; } }
 
 .fd-tile2 .fd-snip { -webkit-line-clamp: 4; }
-@media (max-height: 700px) { .fd-tile2 .fd-snip { -webkit-line-clamp: 3; } }
+@media (max-height: 700px) { .fd-tile2 .fd-snip { -webkit-line-clamp: 1; } }
+.fd-text > * { flex: none; }
+.fd-text { overflow: hidden; }
 .cal-wktop .fd-tile { width: 100%; }
+
+/* اسلایدر کاشی صفحهٔ دوم */
+.fd-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x pan-y; margin: 2px 0 6px; }
+.fd-track::-webkit-scrollbar { display: none; }
+.fd-track .fd-slide { flex: 0 0 100%; width: 100%; margin: 0; scroll-snap-align: start; scroll-snap-stop: always; animation: none; }
