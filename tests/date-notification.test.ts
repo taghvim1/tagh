@@ -23,22 +23,25 @@ import { localDayKey, notificationWeather, weatherSignature } from '../src/lib/d
 const W = (over = {}) => ({ temperature: 20, apparentTemperature: 20, humidity: 40, isDay: true, precipitation: 0, weatherCode: 0, windSpeed: 5, tempMax: 25, tempMin: 12, precipitationProbability: 0, sunrise: null, sunset: null, timezone: null, ...over })
 const NOON = new Date(2026, 9, 13, 12).getTime()
 
-test('میانگین روز = (حداکثر+حداقل)/۲ گرد‌شده؛ آیکون از کد هوا', () => {
-  const r = notificationWeather({ weather: W(), updatedAt: NOON }, NOON)!
-  assert.equal(r.avg, 19); assert.equal(r.icon, 'sun'); assert.equal(weatherSignature(r), 'sun|19')
-  assert.equal(notificationWeather({ weather: W({ tempMax: -2, tempMin: -9 }), updatedAt: NOON }, NOON)!.avg, -5)
+const hr = (time: string, temperature: number | null, weatherCode: number | null = 0) => ({ time, temperature, apparent: null, weatherCode, isDay: true, precipitationProbability: null, precipitation: null, humidity: null, windSpeed: null, windGusts: null, windDirection: null, cloudCover: null, uv: null, visibility: null })
+
+test('دمای همین ساعت از پیش‌بینی ساعتی (نه میانگین روز)؛ آیکون از کد هوا', () => {
+  const w = W({ hourly: [hr('2026-10-13T11:00', 17), hr('2026-10-13T12:00', 22.4), hr('2026-10-13T13:00', 24)] })
+  const r = notificationWeather({ weather: w, updatedAt: NOON - 86_400_000 }, NOON)!
+  assert.equal(r.temp, 22); assert.equal(r.icon, 'sun'); assert.equal(weatherSignature(r), 'sun|22')
 })
-test('دادهٔ ناقص یا مربوط به روز دیگر نمایش داده نمی‌شود (نه ساختگی، نه کهنه)', () => {
+test('بدون ردیف ساعتی: دمای فعلیِ تازه؛ دادهٔ کهنه یا ناقص نمایش داده نمی‌شود (نه ساختگی، نه کهنه)', () => {
+  assert.equal(notificationWeather({ weather: W(), updatedAt: NOON - 3600_000 }, NOON)!.temp, 20)
   assert.equal(notificationWeather({ weather: null, updatedAt: null }, NOON), null)
-  assert.equal(notificationWeather({ weather: W({ tempMax: null }), updatedAt: NOON }, NOON), null)
+  assert.equal(notificationWeather({ weather: W({ temperature: null }), updatedAt: NOON }, NOON), null)
   assert.equal(notificationWeather({ weather: W({ weatherCode: null }), updatedAt: NOON }, NOON), null)
-  assert.equal(notificationWeather({ weather: W(), updatedAt: NOON - 86_400_000 }, NOON), null)
+  assert.equal(notificationWeather({ weather: W(), updatedAt: NOON - 5 * 3600_000 }, NOON), null)
   assert.equal(weatherSignature(null), '')
   assert.equal(localDayKey(NOON), '2026-10-13')
 })
 
-import { dailyPlan, isoDay, notificationTitle, tempLabel } from '../src/lib/dateNotificationData'
-const loadAll = () => { const m = { exports: {} as unknown }; const g: Record<string, unknown> = {}; new Function('module', 'self', readFileSync('public/date-title.js', 'utf8'))(m, g); return g as { taghvimNotifTitle: (d: Date, avg: number | null) => string } }
+import { hourlyPlan, isoDay, notificationTitle, tempLabel } from '../src/lib/dateNotificationData'
+const loadAll = () => { const m = { exports: {} as unknown }; const g: Record<string, unknown> = {}; new Function('module', 'self', readFileSync('public/date-title.js', 'utf8'))(m, g); return g as { taghvimNotifTitle: (d: Date, temp: number | null) => string } }
 const day = (date: string, max: number | null, min: number | null, code: number | null = 0) => ({ date, weatherCode: code, tempMax: max, tempMin: min, apparentMax: null, apparentMin: null, precipitationSum: null, precipitationProbability: null, windMax: null, gustMax: null, uvMax: null, sunrise: null, sunset: null })
 
 test('عنوان اعلان: تاریخ بدون سال + «دما °۲۲»؛ صفحه و Service Worker یک متن می‌سازند', () => {
@@ -50,10 +53,9 @@ test('عنوان اعلان: تاریخ بدون سال + «دما °۲۲»؛ ص
   assert.equal(notificationTitle('سه‌شنبه ۲۱ مهر ماه', null), 'سه‌شنبه ۲۱ مهر ماه')
   assert.equal(loadAll().taghvimNotifTitle(new Date(2026, 9, 13, 12), null), 'سه‌شنبه ۲۱ مهر ماه')
 })
-test('طرح ده‌روزه: برای هر روز میانگین و آیکون؛ روز بدون دما حذف می‌شود و ردیف امروز حتی با دادهٔ دیروز استفاده می‌شود', () => {
-  const w = W({ daily: [day('2026-10-13', 25, 12), day('2026-10-14', 20, 10, 61), day('2026-10-15', null, 5)] })
-  const p = dailyPlan(w)
-  assert.deepEqual(p.map((x) => [x.date, x.weather.avg, x.weather.icon]), [['2026-10-13', 19, 'sun'], ['2026-10-14', 15, 'rain']])
+test('طرح ساعتی: برای هر روز و ساعت دما و آیکون؛ ساعت بدون دما حذف می‌شود', () => {
+  const w = W({ hourly: [hr('2026-10-13T12:00', 22.6), hr('2026-10-13T13:00', null), hr('2026-10-14T00:00', -3, 61)] })
+  const p = hourlyPlan(w)
+  assert.deepEqual(p, { '2026-10-13': { '12': { icon: 'sun', temp: 23 } }, '2026-10-14': { '00': { icon: 'rain', temp: -3 } } })
   assert.equal(isoDay(NOON), '2026-10-13')
-  assert.equal(notificationWeather({ weather: w, updatedAt: NOON - 3 * 86_400_000 }, NOON)!.avg, 19)
 })

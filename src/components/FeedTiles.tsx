@@ -49,7 +49,7 @@ export function DykTile({ item, onOpen }: TileProps & { item?: FeedItem }) {
   )
 }
 
-const ROTATE_MS = 6000
+const ROTATE_MS = 2000
 const RESUME_MS = 5000
 
 /** صفحهٔ دوم: کاشی موضوع‌ها (تصویر سمت راست). اسلایدها خودکار می‌چرخند و با کشیدن چپ/راست هم ورق می‌خورند. */

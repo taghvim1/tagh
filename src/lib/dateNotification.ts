@@ -1,6 +1,6 @@
 import { tracker } from '../analytics'
 import { weatherStore } from '../weather/current/store'
-import { dailyPlan, isoDay, notificationTitle, notificationWeather, weatherSignature } from './dateNotificationData'
+import { hourKey, hourlyPlan, isoDay, notificationTitle, notificationWeather, weatherSignature } from './dateNotificationData'
 import { dateNotificationEnabled, setDateNotificationSetting } from './settings'
 
 // اعلان تاریخ شمسی در نوار اعلان. فقط با کلیک آگاهانهٔ کاربر؛ مجوز مرورگر هرگز در حلقه یا بدون اقدام کاربر درخواست نمی‌شود.
@@ -8,7 +8,8 @@ export const DATE_TAG = 'taghvim-date'
 const FLAGS = 'taghvim-flags', FLAG_URL = '/__flag/date-notification'
 const TITLE = (): { title: string; day?: number } => (self as unknown as { taghvimDateTitle?: (d?: Date) => { title: string; day: number } }).taghvimDateTitle?.() ?? { title: '' }
 const PLAN_URL = '/__flag/date-plan'
-interface PlanDay { avg: number; wx: string }
+interface PlanHour { t: number; wx: string }
+type Plan = Record<string, Record<string, PlanHour>>
 
 export type EnableResult = 'ok' | 'denied' | 'unsupported' | 'insecure' | 'dismissed'
 export const notificationState = (): 'granted' | 'denied' | 'default' | 'unsupported' => (typeof Notification === 'undefined' || !('serviceWorker' in navigator) ? 'unsupported' : Notification.permission)
@@ -24,25 +25,28 @@ async function ensureTitleScript() {
   await new Promise<void>((res) => { const s = document.createElement('script'); s.src = '/date-title.js'; s.onload = () => res(); s.onerror = () => res(); document.head.appendChild(s) })
 }
 
-/** طرح ده روز آینده (فقط میانگین دما هر روز) برای Service Worker: حتی بدون باز شدن برنامه، نیمه‌شب دمای همان روز را می‌گذارد */
-function buildPlan(): Record<string, PlanDay> {
-  const plan: Record<string, PlanDay> = {}
-  for (const { date, weather } of dailyPlan(weatherStore.getState().weather)) plan[date] = { avg: weather.avg, wx: weatherSignature(weather) }
+/** طرح ساعتیِ روزهای پیش‌بینی برای Service Worker: حتی بدون باز شدن برنامه، دمای همان ساعت را می‌گذارد */
+function buildPlan(): Plan {
+  const plan: Plan = {}
+  for (const [date, hours] of Object.entries(hourlyPlan(weatherStore.getState().weather))) {
+    plan[date] = {}
+    for (const [h, w] of Object.entries(hours)) plan[date][h] = { t: w.temp, wx: weatherSignature(w) }
+  }
   return plan
 }
-async function setSwPlan(plan: Record<string, PlanDay> | null) {
+async function setSwPlan(plan: Plan | null) {
   try { const c = await caches.open(FLAGS); if (plan && Object.keys(plan).length) await c.put(PLAN_URL, new Response(JSON.stringify({ days: plan }))); else await c.delete(PLAN_URL) } catch { /* بدون Cache API */ }
 }
 
-/** عنوان = «تاریخ شمسی بدون سال   ·   دما °۲۲» و آیکون وکتور آب‌وهوا؛ بدون متن اضافه و بدون دکمه. اگر دادهٔ امروز نبود فقط تاریخ. */
+/** عنوان = «تاریخ شمسی بدون سال   ·   دمای همین ساعت °۲۲» و آیکون وکتور آب‌وهوا؛ بدون متن اضافه و بدون دکمه. اگر دادهٔ امروز نبود فقط تاریخ. */
 export async function syncDateNotification(): Promise<boolean> {
   if (!dateNotificationEnabled() || notificationState() !== 'granted') return false
   const reg = await registration(); if (!reg) return false
   await ensureTitleScript(); const { title: dateTitle, day: dayNumber } = TITLE() as { title: string; day: number }; if (!dateTitle) return false
   const plan = buildPlan(); await setSwPlan(plan)
-  const today = plan[isoDay(Date.now())]
-  const wx = today ? { avg: today.avg, sig: today.wx } : (() => { const n = notificationWeather(weatherStore.getState()); return n ? { avg: n.avg, sig: weatherSignature(n) } : null })()
-  const title = notificationTitle(dateTitle, wx ? wx.avg : null), sig = wx ? wx.sig : ''
+  const nowMs = Date.now(), slot = plan[isoDay(nowMs)]?.[hourKey(nowMs)]
+  const wx = slot ? { t: slot.t, sig: slot.wx } : (() => { const n = notificationWeather(weatherStore.getState()); return n ? { t: n.temp, sig: weatherSignature(n) } : null })()
+  const title = notificationTitle(dateTitle, wx ? wx.t : null), sig = wx ? wx.sig : ''
   try {
     const shown = await reg.getNotifications({ tag: DATE_TAG })
     if (shown.some((n) => n.title === title && ((n.data as { wx?: string } | null)?.wx ?? '') === sig)) return true // بدون تغییر: دوباره نشان نده
@@ -84,6 +88,6 @@ export function startDateNotificationSync() {
   const go = () => { void syncDateNotification() }
   document.addEventListener('visibilitychange', () => { if (!document.hidden) go() })
   weatherStore.subscribe(go) // با به‌روزشدن آب‌وهوا، اعلان هم به‌روز می‌شود
-  const schedule = () => { const n = new Date(); const next = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 1, 0, 0, 5); window.setTimeout(() => { go(); schedule() }, next.getTime() - n.getTime()) }
+  const schedule = () => { const n = new Date(); const next = new Date(n.getFullYear(), n.getMonth(), n.getDate(), n.getHours() + 1, 0, 5); window.setTimeout(() => { go(); schedule() }, next.getTime() - n.getTime()) } // هر ساعت تازه می‌شود
   schedule(); go()
 }

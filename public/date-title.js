@@ -14,11 +14,11 @@
     var p = parts(d)
     return { year: p.year, month: p.month, day: p.day, title: WEEKDAYS[(d.getDay() + 1) % 7] + ' ' + fa(p.day) + ' ' + MONTHS[p.month - 1] + ' ماه' }
   }
-  // عنوان کامل اعلان: «سه‌شنبه ۲۱ مهر ماه   ·   دما °۲۲» (اگر میانگین دما نبود فقط تاریخ)
-  g.taghvimNotifTitle = function (d, avg) {
+  // عنوان کامل اعلان: «سه‌شنبه ۲۱ مهر ماه   ·   دما °۲۲» (اگر دمای همین ساعت نبود فقط تاریخ)
+  g.taghvimNotifTitle = function (d, temp) {
     var t = g.taghvimDateTitle(d).title
-    if (avg === null || avg === undefined) return t
-    return t + '   ·   دما ' + (avg < 0 ? '\u2212' : '') + '\u00b0' + fa(Math.abs(avg))
+    if (temp === null || temp === undefined) return t
+    return t + '   ·   دما ' + (temp < 0 ? '\u2212' : '') + '\u00b0' + fa(Math.abs(temp))
   }
   if (typeof module !== 'undefined' && module.exports) module.exports = g.taghvimDateTitle
 })(typeof self !== 'undefined' ? self : globalThis)

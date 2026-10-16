@@ -518,7 +518,7 @@
 /* ===== دو صفحهٔ تقویم: کاشی‌های محتوا + نقطه‌های صفحه ===== */
 .cal-month { touch-action: pan-y; }
 .cal-weekpane { padding-top: 76px; }
-.cal-wktop { flex: none; width: min(100%, 640px); margin-inline: auto; padding: 0 calc(3vw + 7px); box-sizing: border-box; }
+.cal-wktop { flex: none; margin-bottom: 18px; width: min(100%, 640px); margin-inline: auto; padding: 0 calc(3vw + 7px); box-sizing: border-box; }
 
 /* کاشی: تصویر سمت راست، متن سمت چپ */
 .fd-tile { flex: none; align-self: center; width: min(calc(100% - 6vw), 640px); height: var(--fd-h); margin: 2px 0 4px; padding: 8px; display: flex; align-items: stretch; gap: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg-soft); color: var(--ink); font: inherit; text-align: start; cursor: pointer; overflow: hidden; touch-action: pan-y; animation: fd-in .35s ease; }
