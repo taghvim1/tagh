@@ -6,8 +6,10 @@ import Fastify, { type FastifyInstance } from 'fastify'
 import type { Config } from './config.js'
 import type { Db } from './db.js'
 import { createAiService } from './ai/service.js'
+import { createFeedService } from './feed/service.js'
 import { adminRoutes } from './routes/admin.js'
 import { eventRoutes } from './routes/events.js'
+import { feedPublicRoutes } from './routes/feed.js'
 import { publicRoutes } from './routes/public.js'
 import { createSecrets } from './secrets.js'
 import { createJsonStore } from './store/jsonStore.js'
@@ -23,6 +25,7 @@ export async function buildApp({ config, db = null, store: injected, fetchImpl }
   app.addHook('onClose', async () => { await store.close() })
   const secrets = createSecrets(config, store)
   const ai = createAiService({ store, secrets, fetch: fetchImpl ?? ((...a) => fetch(...a)) })
+  const feed = createFeedService({ store, ai })
 
   app.addHook('onSend', async (req, reply) => {
     reply.header('X-Content-Type-Options', 'nosniff').header('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -35,8 +38,9 @@ export async function buildApp({ config, db = null, store: injected, fetchImpl }
     // زنده‌بودن پردازش؛ به دیتابیس وابسته نیست (برای healthcheck پلتفرم)
     api.get('/health', async () => ({ status: 'ok' }))
     publicRoutes(api, store)
+    feedPublicRoutes(api, feed)
     eventRoutes(api, store)
-    adminRoutes(api, { config, store, secrets, ai })
+    adminRoutes(api, { config, store, secrets, ai, feed })
     // آمادگی: وضعیت دیتابیس بدون افشای جزئیات اتصال
     api.get('/ready', async (_req, reply) => {
       if (!db) return reply.code(503).send({ status: 'degraded', db: 'not_configured' })

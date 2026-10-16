@@ -59,6 +59,18 @@ export function createAiService(deps: { store: Store; secrets: Secrets; fetch: F
     throw last
   }
 
+  /** جست‌وجوی وب با چند عبارت (مثلاً فارسی برای سایت‌های داخلی + انگلیسی برای خارجی)؛ نتایج بدون تکرار آدرس. */
+  async function webSources(queries: string[]): Promise<{ sources: WebResult[]; warning?: string }> {
+    const s = await loadAiSettings(store)
+    if (!s.webSearch.enabled) return { sources: [], warning: 'جست‌وجوی وب در «تنظیمات API» خاموش است؛ بدون منبع وب تولید شد.' }
+    const key = await secrets.get('tavily')
+    if (!key) return { sources: [], warning: 'جست‌وجوی وب فعال است اما کلید Tavily تنظیم نشده؛ بدون منبع وب تولید شد.' }
+    const seen = new Set<string>(), out: WebResult[] = [], errs: string[] = []
+    const parts = await Promise.all(queries.map(async (q) => { try { return await tavilySearch(f, key.value, q, s.webSearch.maxResults) } catch (e) { errs.push((e as Error).message); return [] as WebResult[] } }))
+    for (let i = 0; parts.some((p) => i < p.length); i++) for (const p of parts) { const r = p[i]; if (r && !seen.has(r.url)) { seen.add(r.url); out.push(r) } }
+    return { sources: out, warning: out.length === 0 && errs.length ? `جست‌وجوی وب ناموفق بود (${errs[0]}); بدون منبع وب تولید شد.` : undefined }
+  }
+
   /** تولید یک مقصد: یک بار تلاش مجدد با فهرست خطاهای اعتبارسنجی. چیزی ذخیره نمی‌کند. */
   async function generateContent(name: string) {
     const tpl = await activeTemplate(store), { sources, warning } = await research(name)
@@ -119,6 +131,6 @@ export function createAiService(deps: { store: Store; secrets: Secrets; fetch: F
     } catch (e) { return done(false, (e as Error).message) }
   }
 
-  return { generateContent, searchImageCandidates, storeCandidates, testProvider, dupKey }
+  return { generateContent, searchImageCandidates, storeCandidates, testProvider, dupKey, llm, webSources }
 }
 export type AiService = ReturnType<typeof createAiService>

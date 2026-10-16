@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import Calendar from '../components/Calendar'
 import WeatherCard from '../components/WeatherCard'
 import DateHeader from '../components/DateHeader'
@@ -7,6 +7,8 @@ import OccasionRow from '../components/OccasionRow'
 import CenterModal from '../components/CenterModal'
 import NotePopup from '../components/NotePopup'
 import WeekView from '../components/WeekView'
+import { DykTile, FeedPopup, TopicTile } from '../components/FeedTiles'
+import { useFeed, type FeedItem } from '../feed/remote'
 import { useCalendarData } from '../lib/calendarData'
 import { dayNumber, fromGregorian, shiftMonth, toGregorianDate, type JalaliDate, type MonthRef } from '../lib/jalali'
 import { useAncientCelebrations, useWeatherCard } from '../lib/settings'
@@ -72,27 +74,43 @@ export default function CalendarPage() {
     setMode('month')
   }
   const swipeMonth = useHSwipe(enterWeek)
+  // بازگشت از صفحهٔ دوم از بیرون WeekView (نقطه‌ها و کشیدن روی کاشی بالا)؛ WeekView اولین لاین را می‌داند
+  const exitRef = useRef<(() => void) | null>(null)
+  const backToMonth = () => { if (exitRef.current) exitRef.current(); else exitWeek(weekStart) }
+  const swipeTop = useHSwipe(undefined, backToMonth)
+  const feed = useFeed()
+  const feedPopup = useOverlay('feed')
+  const [feedItem, setFeedItem] = useState<FeedItem | null>(null)
+  const openFeed = (it: FeedItem) => { setFeedItem(it); feedPopup.show() }
+  const feedCta = (href: string) => { feedPopup.hideSilently(); navigate(href) }
   const weekTours = (d: JalaliDate) => { select(d); popup.show() }
   const weekNote = (d: JalaliDate) => { select(d); note.show() }
   const openTour = (t: Tour) => { popup.hideSilently(); navigate(`/tours/${t.id}`) }
 
   return (
     <div className="cal-page" data-theme={dark ? 'dark' : 'light'}>
-      <section className={`cal-top${weatherOn ? ' has-wx' : ''}`}>{weatherOn && <WeatherCard />}<DateHeader today={now} /></section>
       <div className={`cal-swap ${mode}`}>
-        <div className="cal-pane cal-month" aria-hidden={mode === 'week'}>
+        <div className="cal-pane cal-month" aria-hidden={mode === 'week'} {...swipeMonth}>
+          <section className={`cal-top${weatherOn ? ' has-wx' : ''}`}>{weatherOn && <WeatherCard />}<DateHeader today={now} /></section>
+          <DykTile item={feed.items.dyk} onOpen={openFeed} />
           <OccasionRow view={view} selected={selected} onPrev={() => setView((v) => shiftMonth(v, -1))} onNext={() => setView((v) => shiftMonth(v, 1))} />
-          <section className="cal-bottom" {...swipeMonth}><Calendar today={today} view={view} selected={selected} onSelect={tapDay} tourDays={tourDays} notes={notes} onLongPress={longPress} /></section>
+          <section className="cal-bottom"><Calendar today={today} view={view} selected={selected} onSelect={tapDay} tourDays={tourDays} notes={notes} onLongPress={longPress} /></section>
         </div>
         {weekPane.mounted && (
           <div className={`cal-pane cal-weekpane${weekPane.shown ? ' shown' : ''}`}>
+            <div className="cal-wktop" {...swipeTop}><TopicTile items={feed.items} paused={feedPopup.open} onOpen={openFeed} /></div>
             <WeekView today={today} startDate={weekStart} selected={selected} tourDays={tourDays} notes={notes} rev={`${calData.updatedAt}-${ancient}`}
-              onSelect={select} onNote={weekNote} onTours={weekTours} onBack={exitWeek} />
+              onSelect={select} onNote={weekNote} onTours={weekTours} onBack={exitWeek} exitRef={exitRef} />
           </div>
         )}
       </div>
+      <nav className="cal-dots" aria-label="صفحه‌های تقویم">
+        <button type="button" className={mode === 'month' ? 'on' : ''} aria-label="صفحهٔ اول: تقویم ماهانه" aria-current={mode === 'month' ? 'page' : undefined} onClick={() => { if (mode === 'week') backToMonth() }}><i /></button>
+        <button type="button" className={mode === 'week' ? 'on' : ''} aria-label="صفحهٔ دوم: تقویم هفتگی" aria-current={mode === 'week' ? 'page' : undefined} onClick={() => { if (mode === 'month') enterWeek() }}><i /></button>
+      </nav>
       <AppChrome home overlay onToday={() => select(today)} />
       <NotePopup open={note.open} onClose={note.hide} date={selected} />
+      <FeedPopup item={feedItem} open={feedPopup.open} onClose={feedPopup.hide} onCta={feedCta} />
       <CenterModal open={popup.open && dayTours.length > 0} onClose={popup.hide} label="تورهای این روز">
         {dayTours.length > 0 && <TourDayPopup dateIso={selectedIso} tours={dayTours} onOpenTour={openTour} carousel={mode === 'week'} />}
       </CenterModal>

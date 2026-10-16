@@ -6,6 +6,8 @@ import { aiSettingsSchema, loadAiSettings, saveAiSettings } from '../ai/settings
 import { validateTemplate, DEFAULT_TEMPLATE } from '../ai/prompt.js'
 import { activeTemplate, imageQueriesFor, type AiService } from '../ai/service.js'
 import { canTransition, contentSchema, dupKey, issuesOf, STATUSES, type Status } from '../domain/schema.js'
+import type { FeedService } from '../feed/service.js'
+import { feedAdminRoutes } from './feed.js'
 import { SECRET_NAMES, type Secrets } from '../secrets.js'
 import type { ImageRow, Store, SuggestionRow } from '../store/types.js'
 
@@ -21,7 +23,7 @@ const imageInput = z.object({
   license: z.string().max(120).nullish(), license_url: z.string().url().max(2000).nullish(), attribution: z.string().max(400).nullish(),
 })
 
-export function adminRoutes(app: FastifyInstance, d: { config: Config; store: Store; secrets: Secrets; ai: AiService; now?: () => Date }) {
+export function adminRoutes(app: FastifyInstance, d: { config: Config; store: Store; secrets: Secrets; ai: AiService; feed: FeedService; now?: () => Date }) {
   const { config, store, secrets, ai } = d, now = () => (d.now ?? (() => new Date()))().toISOString()
   const bad = (reply: FastifyReply, errors: string[], code = 400) => reply.code(code).send({ error: 'validation', errors })
   const mode = adminMode(config)
@@ -218,6 +220,9 @@ export function adminRoutes(app: FastifyInstance, d: { config: Config; store: St
       if (s.tasks.images.autoSearchOnGenerate) { const r = await ai.searchImageCandidates(imageQueriesFor(g.content)); added = (await ai.storeCandidates(row.id, r.items)).length; image_errors = r.errors }
       return { name, ok: true, saved: true, id: row.id, duplicates: dup, images_added: added, image_errors, meta: g.meta }
     }
+
+    // ---------- محتوای صفحهٔ اصلی (آیا می‌دانستید + موضوعات صفحهٔ دوم) ----------
+    feedAdminRoutes(adm, d.feed)
 
     // ---------- کمکی‌ها ----------
     async function loadOr404(req: FastifyRequest, reply: FastifyReply): Promise<SuggestionRow | null> {

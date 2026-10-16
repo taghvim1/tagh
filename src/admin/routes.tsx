@@ -10,8 +10,10 @@ import ManageDestinations from './pages/ManageDestinations'
 import ManageTourOrganizers from './pages/ManageTourOrganizers'
 import ManageTours from './pages/ManageTours'
 import SeasonalRecommendations from './pages/SeasonalRecommendations'
+import FeedAdmin from './pages/FeedAdmin'
 import Settings from './pages/Settings'
 import Users from './pages/Users'
+import { FEED_KINDS, FEED_TITLE } from '../feed/topics'
 
 export interface AdminRoute {
   path: string
@@ -33,6 +35,8 @@ export const ADMIN_ROUTES: AdminRoute[] = [
   { path: '/admin/seasonal', title: 'پیشنهادهای فصلی', element: <SeasonalRecommendations />, group: 'پیشنهادهای سفر' },
   { path: '/admin/tour-organizers', title: 'برگزارکنندگان تور', element: <ManageTourOrganizers />, group: 'تورها' },
   { path: '/admin/tours', title: 'تورهای ثبت‌شده', element: <ManageTours />, group: 'تورها' },
+  // محتوای صفحهٔ اصلی: هر موضوع یک بخش جدا با صف انتشار روزانهٔ خودش
+  ...FEED_KINDS.map((k): AdminRoute => ({ path: `/admin/feed/${k}`, title: FEED_TITLE[k], element: <FeedAdmin key={k} kind={k} />, group: k === 'dyk' ? 'صفحهٔ اول: آیا می‌دانستید' : 'صفحهٔ دوم: کاشی موضوعات' })),
   { path: '/admin/api-settings', title: 'تنظیمات API', element: <ApiSettings /> },
   { path: '/admin/users', title: 'کاربران', element: <Users /> },
   { path: '/admin/settings', title: 'تنظیمات', element: <Settings /> },

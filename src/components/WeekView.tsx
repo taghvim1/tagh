@@ -81,6 +81,8 @@ interface Props {
   onTours: (d: JalaliDate) => void
   /** بازگشت به تقویم ماهانه؛ تاریخ اولین لاین داده می‌شود */
   onBack: (first: JalaliDate) => void
+  /** برای بازگشت از بیرون (نقطه‌های صفحه، کشیدن روی کاشی بالا): همین onBack با اولین لاینِ فعلی */
+  exitRef?: React.MutableRefObject<(() => void) | null>
 }
 
 
@@ -88,7 +90,7 @@ interface Props {
  * فیزیک اسکرول: لاین‌ها زیر انگشت می‌چسبند؛ با رها کردن، حرکت با سرعت انگشت ادامه پیدا می‌کند
  * (مسافت متناسب با سرعت) و روی یک لاین می‌ایستد. موقعیت به‌صورت عدد اعشاریِ «روز» نگه داشته می‌شود.
  */
-export default function WeekView({ today, startDate, selected, tourDays, notes, rev, onSelect, onNote, onTours, onBack }: Props) {
+export default function WeekView({ today, startDate, selected, tourDays, notes, rev, onSelect, onNote, onTours, onBack, exitRef }: Props) {
   const startN = useMemo(() => dayNumber(startDate), []) // eslint-disable-line react-hooks/exhaustive-deps -- فقط هنگام ورود
   const todayN = useMemo(() => dayNumber(today), [today])
   const selN = dayNumber(selected)
@@ -102,6 +104,8 @@ export default function WeekView({ today, startDate, selected, tourDays, notes, 
   const monthNav = useRef<number | null>(null) // مقصد در حال لغزش هنگام تغییر ماه (برای چند ضربهٔ پشت‌سرهم)
   const monthEl = useRef<HTMLButtonElement>(null), mdrag = useRef<{ id: number; x0: number; moved: boolean } | null>(null), mSuppress = useRef(false)
   hRef.current = h
+  if (exitRef) exitRef.current = () => onBack(fromDayNumber(Math.round(pos.current)))
+  useEffect(() => () => { if (exitRef) exitRef.current = null }, [exitRef])
 
   useLayoutEffect(() => {
     const el = body.current; if (!el) return
