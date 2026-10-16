@@ -58,9 +58,10 @@ export function TopicTile({ items, paused, onOpen }: TileProps & { items: Partia
   const n = list.length
   const track = useRef<HTMLDivElement>(null)
   const idx = useRef(0), holdUntil = useRef(0)
+  const [cur, setCur] = useState(0)
   const dir = () => (track.current && getComputedStyle(track.current).direction === 'rtl' ? -1 : 1)
   const goTo = (i: number) => { const el = track.current; if (el) el.scrollTo({ left: dir() * i * el.clientWidth, behavior: 'smooth' }) }
-  const onScroll = () => { const el = track.current; if (el) idx.current = Math.min(n - 1, Math.max(0, Math.round(Math.abs(el.scrollLeft) / (el.clientWidth || 1)))) }
+  const onScroll = () => { const el = track.current; if (!el) return; idx.current = Math.min(n - 1, Math.max(0, Math.round(Math.abs(el.scrollLeft) / (el.clientWidth || 1)))); setCur(idx.current) }
   const hold = () => { holdUntil.current = Date.now() + RESUME_MS } // کاربر دست زده: چرخش خودکار کمی صبر می‌کند
   useEffect(() => {
     if (n < 2 || paused) return
@@ -80,6 +81,7 @@ export function TopicTile({ items, paused, onOpen }: TileProps & { items: Partia
     )
   }
   return (
+    <div className="fd-wrap2">
     <div className="fd-track" ref={track} onScroll={onScroll} onPointerDown={hold} onTouchStart={hold} onWheel={hold} role="group" aria-label="موضوع‌های پیشنهاد سفر؛ برای دیدن بعدی بکشید">
       {list.map((it) => (
         <button type="button" key={it.id} className="fd-tile fd-tile2 fd-slide" aria-haspopup="dialog" aria-label={`${FEED_TITLE[it.kind]}: ${it.title}`} onClick={() => onOpen(it)}>
@@ -87,6 +89,8 @@ export function TopicTile({ items, paused, onOpen }: TileProps & { items: Partia
           <span className="fd-text"><span className="fd-kicker">{FEED_TITLE[it.kind]}</span><strong className="fd-label">{it.title}</strong><span className="fd-snip">{it.body}</span></span>
         </button>
       ))}
+    </div>
+    {n > 1 && <div className="fd-pips" aria-hidden="true">{list.map((it, i) => <i key={it.id} className={i === cur ? 'on' : ''} />)}</div>}
     </div>
   )
 }

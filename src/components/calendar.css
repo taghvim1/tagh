@@ -517,8 +517,8 @@
 
 /* ===== دو صفحهٔ تقویم: کاشی‌های محتوا + نقطه‌های صفحه ===== */
 .cal-month { touch-action: pan-y; }
-.cal-weekpane { padding-top: 60px; }
-.cal-wktop { flex: none; touch-action: pan-y; width: min(100%, 640px); margin-inline: auto; padding: 0 calc(3vw + 7px); box-sizing: border-box; }
+.cal-weekpane { padding-top: 76px; }
+.cal-wktop { flex: none; width: min(100%, 640px); margin-inline: auto; padding: 0 calc(3vw + 7px); box-sizing: border-box; }
 
 /* کاشی: تصویر سمت راست، متن سمت چپ */
 .fd-tile { flex: none; align-self: center; width: min(calc(100% - 6vw), 640px); height: var(--fd-h); margin: 2px 0 4px; padding: 8px; display: flex; align-items: stretch; gap: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg-soft); color: var(--ink); font: inherit; text-align: start; cursor: pointer; overflow: hidden; touch-action: pan-y; animation: fd-in .35s ease; }
@@ -567,6 +567,11 @@ a.fd-credit:hover { text-decoration: underline; }
 .cal-wktop .fd-tile { width: 100%; }
 
 /* اسلایدر کاشی صفحهٔ دوم */
-.fd-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x pan-y; margin: 2px 0 6px; }
+.fd-wrap2 { position: relative; margin: 2px 0 6px; }
+.fd-wrap2 .fd-track { margin: 0; }
+.fd-pips { position: absolute; left: 18px; bottom: 13px; display: flex; gap: 5px; pointer-events: none; direction: ltr; }
+.fd-pips i { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); opacity: .4; }
+.fd-pips i.on { background: var(--accent); opacity: 1; }
+.fd-track { direction: ltr; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x pan-y; margin: 2px 0 6px; }
 .fd-track::-webkit-scrollbar { display: none; }
-.fd-track .fd-slide { flex: 0 0 100%; width: 100%; margin: 0; scroll-snap-align: start; scroll-snap-stop: always; animation: none; }
+.fd-track .fd-slide { direction: rtl; flex: 0 0 100%; width: 100%; margin: 0; scroll-snap-align: start; scroll-snap-stop: always; animation: none; touch-action: pan-x pan-y; }
