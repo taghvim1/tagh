@@ -17,7 +17,7 @@
 .cal-page :is(button, a):focus-visible, .tp-page a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-.cal-page { --fd-h: clamp(88px, 15.5dvh, 136px); --fd2-h: clamp(112px, 18dvh, 170px); --dots: 30px; height: 100vh; height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow: hidden; display: flex; flex-direction: column; }
+.cal-page { --fd-h: clamp(88px, 15.5dvh, 136px); --fd2-h: max(104px, calc(32dvh - 72px)); --dots: 30px; height: 100vh; height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow: hidden; display: flex; flex-direction: column; }
 
 /* بالا: تاریخ امروز */
 .cal-top { flex: 0 0 28vh; flex-basis: 28dvh; display: flex; align-items: center; justify-content: center; text-align: center; padding-inline: 12px; }
@@ -518,7 +518,7 @@
 /* ===== دو صفحهٔ تقویم: کاشی‌های محتوا + نقطه‌های صفحه ===== */
 .cal-month { touch-action: pan-y; }
 .cal-weekpane { padding-top: 60px; }
-.cal-wktop { flex: none; touch-action: pan-y; }
+.cal-wktop { flex: none; touch-action: pan-y; width: min(100%, 640px); margin-inline: auto; padding: 0 3vw; box-sizing: border-box; }
 
 /* کاشی: تصویر سمت راست، متن سمت چپ */
 .fd-tile { flex: none; align-self: center; width: min(calc(100% - 6vw), 640px); height: var(--fd-h); margin: 2px 0 4px; padding: 8px; display: flex; align-items: stretch; gap: 12px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg-soft); color: var(--ink); font: inherit; text-align: start; cursor: pointer; overflow: hidden; touch-action: pan-y; animation: fd-in .35s ease; }
@@ -526,7 +526,7 @@
 @media (hover: hover) { .fd-tile:hover { border-color: var(--muted); } }
 .fd-tile.fd-empty { cursor: default; }
 .fd-tile2 { height: var(--fd2-h); }
-.fd-wrap { position: relative; flex: none; width: min(calc(100% - 6vw), 640px); margin: 2px auto 6px; }
+.fd-wrap { position: relative; flex: none; width: 100%; margin: 2px 0 6px; }
 .fd-wrap .fd-tile { width: 100%; margin: 0; }
 .fd-img { flex: none; display: block; width: calc(var(--fd-h) - 18px); height: 100%; object-fit: cover; border-radius: 10px; background: var(--line); -webkit-user-drag: none; }
 .fd-tile2 .fd-img { width: calc(var(--fd2-h) - 18px); }
@@ -559,3 +559,7 @@ a.fd-credit:hover { text-decoration: underline; }
 
 .fd-wrap .fd-text { padding-inline-end: 38px; }
 @media (max-height: 700px) { .fd-snip { -webkit-line-clamp: 2; } .fd-tile2 .fd-snip { -webkit-line-clamp: 2; } }
+
+.fd-tile2 .fd-snip { -webkit-line-clamp: 4; }
+@media (max-height: 700px) { .fd-tile2 .fd-snip { -webkit-line-clamp: 3; } }
+.cal-wktop .fd-tile { width: 100%; }
