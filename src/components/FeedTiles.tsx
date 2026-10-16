@@ -60,12 +60,19 @@ export function TopicTile({ items, paused, onOpen }: TileProps & { items: Partia
   const idx = useRef(0), holdUntil = useRef(0)
   const [cur, setCur] = useState(0)
   const dir = () => (track.current && getComputedStyle(track.current).direction === 'rtl' ? -1 : 1)
-  const goTo = (i: number) => { const el = track.current; if (el) el.scrollTo({ left: dir() * i * el.clientWidth, behavior: 'smooth' }) }
+  const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+  const goTo = (i: number) => {
+    const el = track.current; if (!el) return
+    const left = dir() * i * el.clientWidth
+    // «کاهش انیمیشن» روشن است ⇒ بدون لغزش (جهش آنی) ولی اسلاید همچنان عوض می‌شود
+    el.scrollTo({ left, behavior: reduced() ? 'auto' : 'smooth' })
+    // اگر مرورگر لغزش نرم را اجرا نکرد (یا نیمه‌کاره رها شد)، آنی جابه‌جا می‌کنیم تا اسلاید هرگز گیر نکند
+    window.setTimeout(() => { const t = track.current; if (t && Math.round(Math.abs(t.scrollLeft) / (t.clientWidth || 1)) !== i) t.scrollTo({ left, behavior: 'auto' }) }, 900)
+  }
   const onScroll = () => { const el = track.current; if (!el) return; idx.current = Math.min(n - 1, Math.max(0, Math.round(Math.abs(el.scrollLeft) / (el.clientWidth || 1)))); setCur(idx.current) }
   const hold = () => { holdUntil.current = Date.now() + RESUME_MS } // کاربر دست زده: چرخش خودکار کمی صبر می‌کند
   useEffect(() => {
     if (n < 2 || paused) return
-    if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const t = window.setInterval(() => {
       if (document.visibilityState !== 'visible' || Date.now() < holdUntil.current) return
       goTo((idx.current + 1) % n)

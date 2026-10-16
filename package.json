@@ -12,7 +12,8 @@
     "build:server": "tsc -p server/tsconfig.json",
     "start:api": "node server/dist/index.js",
     "dev:server": "tsc -p server/tsconfig.json --watch",
-    "test:server": "vitest run --config server/vitest.config.ts"
+    "test:server": "vitest run --config server/vitest.config.ts",
+    "import:holidays": "node scripts/import-holidays.mjs"
   },
   "dependencies": {
     "@fastify/rate-limit": "^11.2.1",

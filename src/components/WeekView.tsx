@@ -32,7 +32,7 @@ const Lane = memo(function Lane({ it, isToday, isSel, onSelect, onLong, onOcc, o
   const stop = () => { if (timer.current) { window.clearTimeout(timer.current.id); timer.current = null } }
   useEffect(() => stop, [])
   const label = `${it.weekday} ${faNum(it.date.day)} ${MONTHS[it.date.month - 1]}${it.occ ? ` — ${it.occ}` : ''}${it.note ? ' — دارای یادداشت' : ''}${it.tours.length ? ' — دارای تور' : ''}`
-  const cls = ['wk-lane', isToday && 'now', isSel && 'sel', (it.friday || it.holiday) && 'off'].filter(Boolean).join(' ')
+  const cls = ['wk-lane', isToday && 'now', isSel && 'sel', (it.friday || it.holiday) && 'off', it.friday && 'fri'].filter(Boolean).join(' ')
   return (
     <div className={cls} role="listitem">
       <div className="wk-row">
@@ -214,7 +214,7 @@ export default function WeekView({ today, startDate, selected, tourDays, notes, 
   const itemFor = (n: number): Item => {
     let it = cache.get(n)
     if (!it) {
-      const date = fromDayNumber(n), o = getOccasion(date.month, date.day), wi = weekdayIndex(date)
+      const date = fromDayNumber(n), o = getOccasion(date.month, date.day, date.year), wi = weekdayIndex(date)
       it = { n, date, holiday: !!o?.holiday, friday: wi === 6, weekday: WEEKDAYS[wi], occ: o?.title ?? '', note: notes[noteKey(date)] ?? '', tours: tourDays.get(toISO(toGregorianDate(date))) ?? [] }
       cache.set(n, it)
     }

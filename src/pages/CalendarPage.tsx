@@ -3,7 +3,7 @@ import Calendar from '../components/Calendar'
 import WeatherCard from '../components/WeatherCard'
 import DateHeader from '../components/DateHeader'
 import AppChrome from '../components/AppChrome'
-import OccasionRow from '../components/OccasionRow'
+import OccasionRow, { OccasionsPopup } from '../components/OccasionRow'
 import CenterModal from '../components/CenterModal'
 import NotePopup from '../components/NotePopup'
 import WeekView from '../components/WeekView'
@@ -11,7 +11,7 @@ import { DykTile, FeedPopup, TopicTile } from '../components/FeedTiles'
 import { useFeed, type FeedItem } from '../feed/remote'
 import { useCalendarData } from '../lib/calendarData'
 import { dayNumber, fromGregorian, shiftMonth, toGregorianDate, type JalaliDate, type MonthRef } from '../lib/jalali'
-import { useAncientCelebrations, useWeatherCard } from '../lib/settings'
+import { useAncientCelebrations, useWeatherCard, useWorldDays } from '../lib/settings'
 import { useOverlay } from '../lib/overlay'
 import { useAnimatedMount } from '../lib/useAnimatedMount'
 import { useHSwipe } from '../lib/useSwipe'
@@ -30,6 +30,7 @@ export default function CalendarPage() {
   const [dark] = useDarkMode()
   useThemeColorMeta(dark)
   const weatherOn = useWeatherCard()
+  const worldDays = useWorldDays() // روشن/خاموش‌کردن روزهای جهانی و ملی هم بلافاصله اعمال می‌شود
   const ancient = useAncientCelebrations() // تغییر تنظیم آیین‌های باستانی بلافاصله روی تقویم اعمال می‌شود
   const calData = useCalendarData() // با رسیدن داده‌های جدید تقویم دوباره رندر می‌شود
 
@@ -45,6 +46,7 @@ export default function CalendarPage() {
   const tourDays = useTourDays()
   const popup = useOverlay('tour-day')
   const note = useOverlay('note')
+  const occPopup = useOverlay('occasions')
   const notes = useNotes()
   const selectedIso = toISO(toGregorianDate(selected))
   const dayTours = tourDays.get(selectedIso) ?? []
@@ -92,13 +94,13 @@ export default function CalendarPage() {
         <div className="cal-pane cal-month" aria-hidden={mode === 'week'} {...swipeMonth}>
           <section className={`cal-top${weatherOn ? ' has-wx' : ''}`}>{weatherOn && <WeatherCard />}<DateHeader today={now} /></section>
           <DykTile item={feed.items.dyk} onOpen={openFeed} />
-          <OccasionRow view={view} selected={selected} onPrev={() => setView((v) => shiftMonth(v, -1))} onNext={() => setView((v) => shiftMonth(v, 1))} />
+          <OccasionRow onOpen={occPopup.show} view={view} selected={selected} onPrev={() => setView((v) => shiftMonth(v, -1))} onNext={() => setView((v) => shiftMonth(v, 1))} />
           <section className="cal-bottom"><Calendar today={today} view={view} selected={selected} onSelect={tapDay} tourDays={tourDays} notes={notes} onLongPress={longPress} /></section>
         </div>
         {weekPane.mounted && (
           <div className={`cal-pane cal-weekpane${weekPane.shown ? ' shown' : ''}`}>
             <div className="cal-wktop"><TopicTile items={feed.items} paused={feedPopup.open} onOpen={openFeed} /></div>
-            <WeekView today={today} startDate={weekStart} selected={selected} tourDays={tourDays} notes={notes} rev={`${calData.updatedAt}-${ancient}`}
+            <WeekView today={today} startDate={weekStart} selected={selected} tourDays={tourDays} notes={notes} rev={`${calData.updatedAt}-${ancient}-${worldDays}`}
               onSelect={select} onNote={weekNote} onTours={weekTours} onBack={exitWeek} exitRef={exitRef} />
           </div>
         )}
@@ -108,6 +110,7 @@ export default function CalendarPage() {
         <button type="button" className={mode === 'week' ? 'on' : ''} aria-label="صفحهٔ دوم: تقویم هفتگی" aria-current={mode === 'week' ? 'page' : undefined} onClick={() => { if (mode === 'month') enterWeek() }}><i /></button>
       </nav>
       <AppChrome home overlay onToday={() => select(today)} />
+      <OccasionsPopup date={selected} open={occPopup.open} onClose={occPopup.hide} />
       <NotePopup open={note.open} onClose={note.hide} date={selected} />
       <FeedPopup item={feedItem} open={feedPopup.open} onClose={feedPopup.hide} onCta={feedCta} />
       <CenterModal open={popup.open && dayTours.length > 0} onClose={popup.hide} label="تورهای این روز">

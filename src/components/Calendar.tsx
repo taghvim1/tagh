@@ -49,7 +49,7 @@ export default function Calendar({ today, view, selected, onSelect, tourDays, no
 
       <div className="grid days">
         {days.map(({ date, inMonth, isFriday, isToday }) => {
-          const occ = inMonth ? getOccasion(date.month, date.day) : undefined
+          const occ = inMonth ? getOccasion(date.month, date.day, date.year) : undefined
           const isSelected = !!selected && isSameDate(date, selected)
           const tours = tourDays?.get(toISO(toGregorianDate(date)))
           const base = occ ? `${formatLongDate(date)} — ${occ.title}${occ.holiday ? ' (تعطیل)' : ''}` : formatLongDate(date)

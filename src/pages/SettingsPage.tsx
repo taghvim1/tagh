@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { disableDateNotification, enableDateNotification, notificationState, type EnableResult } from '../lib/dateNotification'
 import { navigate } from '../lib/router'
 import AppChrome from '../components/AppChrome'
-import { setAncientCelebrations, setWeatherCard, setWeekHaptics, useAncientCelebrations, useDateNotification, useWeatherCard, useWeekHaptics } from '../lib/settings'
+import { setAncientCelebrations, setWeatherCard, setWeekHaptics, setWorldDays, useAncientCelebrations, useDateNotification, useWeatherCard, useWeekHaptics, useWorldDays } from '../lib/settings'
 import { weatherStore } from '../weather/current/store'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
 
@@ -11,6 +11,7 @@ export default function SettingsPage() {
   const [dark, setDark] = useDarkMode()
   useThemeColorMeta(dark)
   const ancient = useAncientCelebrations()
+  const worldDays = useWorldDays()
   const weather = useWeatherCard()
   const dateNotif = useDateNotification()
   const haptics = useWeekHaptics()
@@ -39,6 +40,10 @@ export default function SettingsPage() {
           <label className="st-row">
             <span>آیین‌ها و جشن‌های باستانی</span>
             <input type="checkbox" role="switch" className="cal-switch" checked={ancient} onChange={(e) => setAncientCelebrations(e.target.checked)} />
+          </label>
+          <label className="st-row">
+            <span>روزهای جهانی و ملی</span>
+            <input type="checkbox" role="switch" className="cal-switch" checked={worldDays} onChange={(e) => setWorldDays(e.target.checked)} />
           </label>
           <label className="st-row">
             <span>کارت آب‌وهوا</span>
