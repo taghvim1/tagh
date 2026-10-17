@@ -10,7 +10,10 @@ export default function Topbar({ title, menuOpen, onMenu }: Props) {
       <button className="adm-menu-btn" onClick={onMenu} aria-label="باز و بسته کردن منو" aria-expanded={menuOpen} aria-controls="adm-sidebar">
         ☰
       </button>
-      <h1>{title}</h1>
+      <div className="adm-titles">
+        <span className="adm-topbar-sub">پنل مدیریت تقویم سفری</span>
+        <h1>{title}</h1>
+      </div>
       <div className="adm-user">
         <span className="adm-avatar" aria-hidden="true">م</span>
         <span className="adm-user-name">کاربر مدیر</span>

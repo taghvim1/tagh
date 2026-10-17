@@ -1,9 +1,19 @@
 import type { ReactNode } from 'react'
 
-export default function Section({ title, children }: { title: string; children: ReactNode }) {
+interface Props {
+  title: string
+  /** توضیح کوتاه زیر عنوان بخش (اختیاری) */
+  desc?: string
+  children: ReactNode
+}
+
+export default function Section({ title, desc, children }: Props) {
   return (
     <section className="adm-section">
-      <h2>{title}</h2>
+      <div className="adm-section-head">
+        <h2>{title}</h2>
+        {desc && <p className="adm-section-desc">{desc}</p>}
+      </div>
       {children}
     </section>
   )

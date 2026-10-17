@@ -1,27 +1,37 @@
+import Icon from '../components/Icon'
 import QuickAction from '../components/QuickAction'
 import Section from '../components/Section'
-import StatCard from '../components/StatCard'
+import StatCard, { type StatTone } from '../components/StatCard'
 import type { IconName } from '../components/Icon'
+import bundled from '../../../public/data/calendar-data.json'
+import { INITIAL_EVENTS } from '../data/events'
+import { faNum } from '../../lib/jalali'
 
-// داده‌های Static/Mock؛ در مراحل بعد با داده‌های واقعی جایگزین می‌شوند.
-const STATS: { title: string; value: string; description: string; icon: IconName }[] = [
-  { title: 'وضعیت تقویم', value: 'فعال', description: 'تقویم شمسی', icon: 'calendar' },
-  { title: 'مناسبت‌ها', value: '۰', description: 'مناسبت ثبت‌شده', icon: 'event' },
-  { title: 'وضعیت PWA', value: 'فعال', description: 'قابل نصب', icon: 'mobile' },
-  { title: 'وضعیت سیستم', value: 'سالم', description: 'نسخه فعلی', icon: 'system' },
+// آمار از داده‌ی واقعی تقویم (همان فایلی که اپ کاربران با خودش دارد) ساخته می‌شود؛ مقدارهای اندازه‌گیرینشده (مثل «سلامت سرویس») نمایش داده نمی‌شوند.
+const holidays = INITIAL_EVENTS.filter((e) => e.description === 'تعطیل رسمی').length
+const year = INITIAL_EVENTS[0]?.calendar_date.slice(0, 4) ?? ''
+
+const STATS: { title: string; value: string; description: string; icon: IconName; tone: StatTone }[] = [
+  { title: 'مناسبت‌ها', value: faNum(INITIAL_EVENTS.length), description: `ثبت‌شده در داده‌ی تقویم سال ${year}`, icon: 'event', tone: 'teal' },
+  { title: 'تعطیلات رسمی', value: faNum(holidays), description: `روز تعطیل رسمی در سال ${year}`, icon: 'calendar', tone: 'green' },
+  { title: 'نسخه‌ی داده', value: faNum(bundled.version), description: 'مناسبت‌های همراه برنامه', icon: 'system', tone: 'blue' },
+  { title: 'وضعیت PWA', value: 'فعال', description: 'قابل نصب روی گوشی', icon: 'mobile', tone: 'amber' },
 ]
 
 const ACTIONS: { title: string; description: string; path: string; icon: IconName }[] = [
-  { title: 'تقویم', description: 'مشاهده و بررسی تقویم', path: '/admin/calendar', icon: 'calendar' },
-  { title: 'مناسبت‌ها', description: 'مدیریت مناسبت‌ها', path: '/admin/events', icon: 'event' },
-  { title: 'تنظیمات', description: 'تنظیمات سیستم', path: '/admin/settings', icon: 'settings' },
+  { title: 'مناسبت‌ها', description: 'افزودن و ویرایش مناسبت‌های تقویم', path: '/admin/events', icon: 'event' },
+  { title: 'مدیریت پیشنهادها', description: 'چرخهٔ پیش‌نویس تا انتشار مقصدها', path: '/admin/suggestions', icon: 'compass' },
+  { title: 'تولید با هوش مصنوعی', description: 'ساخت پیش‌نویس محتوا با Gemini', path: '/admin/ai-suggestions', icon: 'spark' },
+  { title: 'تورها', description: 'مدیریت تورها و برگزارکنندگان', path: '/admin/tours', icon: 'ticket' },
+  { title: 'کاربران', description: 'مشاهده کاربران و تحلیل رفتار', path: '/admin/users', icon: 'chart' },
+  { title: 'تنظیمات API', description: 'کلیدهای Gemini و منابع تصویر', path: '/admin/api-settings', icon: 'key' },
 ]
 
 const SYSTEM_INFO = [
   { label: 'نسخه', value: '۱٫۰٫۰' },
   { label: 'تقویم', value: 'جلالی' },
   { label: 'زبان', value: 'فارسی' },
-  { label: 'وضعیت', value: 'فعال' },
+  { label: 'نسخه‌ی داده‌ی مناسبت‌ها', value: faNum(bundled.version) },
 ]
 
 export default function Dashboard() {
@@ -29,30 +39,31 @@ export default function Dashboard() {
     <>
       <section className="adm-welcome">
         <h2>مدیریت تقویم سفری</h2>
-        <p>مدیریت و کنترل محتوای تقویم در یک نگاه</p>
+        <p>مدیریت محتوای تقویم، پیشنهادهای سفر و کاربران در یک نگاه. برای شروع از دسترسی سریع زیر استفاده کنید.</p>
       </section>
 
-      <Section title="نمای کلی">
+      <Section title="نمای کلی" desc="خلاصه‌ای از وضعیت فعلی سیستم">
         <div className="adm-stats">
           {STATS.map((s) => <StatCard key={s.title} {...s} />)}
         </div>
       </Section>
 
-      <Section title="دسترسی سریع">
+      <Section title="دسترسی سریع" desc="پرکاربردترین بخش‌های پنل">
         <div className="adm-actions">
           {ACTIONS.map((a) => <QuickAction key={a.path} {...a} />)}
         </div>
       </Section>
 
       <div className="adm-split">
-        <Section title="فعالیت‌های اخیر">
+        <Section title="فعالیت‌های اخیر" desc="آخرین تغییرات مدیریت">
           <div className="adm-card adm-empty">
+            <span className="adm-empty-icon" aria-hidden="true"><Icon name="clock" size={24} /></span>
             <strong>هنوز فعالیتی ثبت نشده است</strong>
-            <p>پس از اتصال پنل به سیستم، فعالیت‌های مدیریتی اینجا نمایش داده می‌شوند.</p>
+            <p>پس از اتصال پنل به سیستم، فعالیت‌های مدیریتی (ایجاد، ویرایش و انتشار) اینجا نمایش داده می‌شوند.</p>
           </div>
         </Section>
 
-        <Section title="اطلاعات سیستم">
+        <Section title="اطلاعات سیستم" desc="مشخصات نسخهٔ جاری">
           <dl className="adm-card adm-info">
             {SYSTEM_INFO.map((i) => (
               <div key={i.label}>
