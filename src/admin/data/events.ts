@@ -1,5 +1,10 @@
-// داده‌های Mock و منطق خالص مناسبت‌ها (بدون وابستگی به UI). در مراحل بعد با API جایگزین می‌شود.
-export const EVENT_TYPES = ['ملی', 'مذهبی', 'فرهنگی', 'بین‌المللی'] as const
+// داده و منطق خالص مناسبت‌ها (بدون وابستگی به UI). فهرست اولیه از همان داده‌ی واقعی تقویم (calendar-data.json) ساخته می‌شود؛
+// ویرایش‌های این صفحه فعلاً فقط State محلی است و به برنامه‌ی کاربران نمی‌رسد (در مراحل بعد با API جایگزین می‌شود).
+import bundled from '../../../public/data/calendar-data.json'
+import { KIND_LABEL, type CalendarData, type OccasionKind } from '../../lib/calendarData'
+import { MONTHS, faNum, fromGregorian } from '../../lib/jalali'
+
+export const EVENT_TYPES = ['مذهبی', 'باستانی و آیینی', 'جهانی', 'ملی'] as const
 export const EVENT_STATUSES = ['فعال', 'غیرفعال'] as const
 
 export type EventType = (typeof EVENT_TYPES)[number]
@@ -15,21 +20,29 @@ export interface EventItem {
   status: EventStatus
 }
 
-export const MOCK_EVENTS: EventItem[] = [
-  { id: 1, title: 'نوروز', date: '۱ فروردین', calendar_date: '۱۴۰۵/۰۱/۰۱', type: 'ملی', description: 'آغاز سال نو', status: 'فعال' },
-  { id: 2, title: 'روز طبیعت', date: '۱۳ فروردین', calendar_date: '۱۴۰۵/۰۱/۱۳', type: 'ملی', description: 'روز طبیعت', status: 'فعال' },
-  { id: 3, title: 'روز معلم', date: '۱۲ اردیبهشت', calendar_date: '۱۴۰۵/۰۲/۱۲', type: 'فرهنگی', description: 'روز گرامیداشت مقام معلم', status: 'فعال' },
-  { id: 4, title: 'روز جهانی محیط زیست', date: '۱۵ خرداد', calendar_date: '۱۴۰۵/۰۳/۱۵', type: 'بین‌المللی', description: 'روز جهانی محیط زیست', status: 'فعال' },
-  { id: 5, title: 'شب یلدا', date: '۳۰ آذر', calendar_date: '۱۴۰۵/۰۹/۳۰', type: 'فرهنگی', description: 'بلندترین شب سال', status: 'فعال' },
-  { id: 6, title: 'روز دانشجو', date: '۱۶ آذر', calendar_date: '۱۴۰۵/۰۹/۱۶', type: 'فرهنگی', description: 'روز دانشجو', status: 'فعال' },
-  { id: 7, title: 'روز جهانی گردشگری', date: '۵ مهر', calendar_date: '۱۴۰۵/۰۷/۰۵', type: 'بین‌المللی', description: 'روز جهانی گردشگری', status: 'فعال' },
-  { id: 8, title: 'روز خبرنگار', date: '۱۷ مرداد', calendar_date: '۱۴۰۵/۰۵/۱۷', type: 'فرهنگی', description: 'روز خبرنگار', status: 'فعال' },
-  { id: 9, title: 'روز جمهوری اسلامی', date: '۱۲ فروردین', calendar_date: '۱۴۰۵/۰۱/۱۲', type: 'ملی', description: 'روز جمهوری اسلامی ایران', status: 'فعال' },
-  { id: 10, title: 'روز جهانی کوهستان', date: '۲۰ آذر', calendar_date: '۱۴۰۵/۰۹/۲۰', type: 'بین‌المللی', description: 'روز جهانی کوهستان', status: 'فعال' },
-  // دو نمونهٔ آزمایشی برای تست فیلتر «مذهبی» و «غیرفعال»؛ تاریخ‌ها واقعی نیستند.
-  { id: 11, title: 'مناسبت مذهبی نمونه', date: '۱ تیر', calendar_date: '۱۴۰۵/۰۴/۰۱', type: 'مذهبی', description: 'نمونهٔ آزمایشی برای نمایش نوع مذهبی', status: 'فعال' },
-  { id: 12, title: 'مناسبت آزمایشی', date: '۱۰ بهمن', calendar_date: '۱۴۰۵/۱۱/۱۰', type: 'فرهنگی', description: 'نمونهٔ آزمایشی غیرفعال', status: 'غیرفعال' },
-]
+const TYPE_OF_KIND: Record<OccasionKind, EventType> = { r: 'مذهبی', a: 'باستانی و آیینی', i: 'جهانی', n: 'ملی' }
+const pad = (n: number) => faNum(n).padStart(2, '۰')
+
+/** مناسبت‌های یک سال شمسی از داده‌ی تقویم؛ اگر آن سال داده نداشت، آخرین سالِ موجود */
+export function buildEvents(data: CalendarData, year: number): EventItem[] {
+  const years = Object.keys(data.years ?? {}).map(Number).sort((a, b) => a - b)
+  const y = years.includes(year) ? year : years[years.length - 1]
+  const out: EventItem[] = []
+  if (y === undefined) return out
+  for (const [key, list] of Object.entries(data.years![y])) {
+    const [month, day] = key.split('-').map(Number)
+    for (const [title, kind, holiday] of list) {
+      out.push({
+        id: out.length + 1, title,
+        date: `${faNum(day)} ${MONTHS[month - 1]}`, calendar_date: `${faNum(y)}/${pad(month)}/${pad(day)}`,
+        type: TYPE_OF_KIND[kind], description: holiday ? 'تعطیل رسمی' : KIND_LABEL[kind], status: 'فعال',
+      })
+    }
+  }
+  return out
+}
+
+export const INITIAL_EVENTS: EventItem[] = buildEvents(bundled as unknown as CalendarData, fromGregorian(new Date()).year)
 
 export interface EventFilters {
   query: string

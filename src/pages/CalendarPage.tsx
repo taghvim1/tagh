@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Calendar from '../components/Calendar'
 import WeatherCard from '../components/WeatherCard'
 import DateHeader from '../components/DateHeader'
@@ -11,8 +11,8 @@ import { DykTile, FeedPopup, TopicTile } from '../components/FeedTiles'
 import { useFeed, type FeedItem } from '../feed/remote'
 import { useCalendarData } from '../lib/calendarData'
 import { dayNumber, fromGregorian, shiftMonth, toGregorianDate, type JalaliDate, type MonthRef } from '../lib/jalali'
-import { useAncientCelebrations, useWeatherCard, useWorldDays } from '../lib/settings'
-import { useOverlay } from '../lib/overlay'
+import { useOccasionPrefs, useWeatherCard } from '../lib/settings'
+import { overlayActive, popOverlay, pushOverlay, useOverlay } from '../lib/overlay'
 import { useAnimatedMount } from '../lib/useAnimatedMount'
 import { useHSwipe } from '../lib/useSwipe'
 import { useNotes } from '../lib/notes'
@@ -30,8 +30,7 @@ export default function CalendarPage() {
   const [dark] = useDarkMode()
   useThemeColorMeta(dark)
   const weatherOn = useWeatherCard()
-  const worldDays = useWorldDays() // روشن/خاموش‌کردن روزهای جهانی و ملی هم بلافاصله اعمال می‌شود
-  const ancient = useAncientCelebrations() // تغییر تنظیم آیین‌های باستانی بلافاصله روی تقویم اعمال می‌شود
+  const occPrefs = useOccasionPrefs() // خاموش/روشن‌کردن هر دستهٔ مناسبت بلافاصله روی تقویم اعمال می‌شود
   const calData = useCalendarData() // با رسیدن داده‌های جدید تقویم دوباره رندر می‌شود
 
   // اگر کاربر از صفحهٔ دیگری برگشته، همان روز انتخاب‌شده قبلی باز می‌ماند؛ در غیر این صورت امروز
@@ -39,9 +38,9 @@ export default function CalendarPage() {
   const [view, setView] = useState<MonthRef>(() => ({ year: selected.year, month: selected.month }))
 
   // کشیدن تقویم ماهانه به چپ ⇒ تقویم هفتگی (۹ لاین)؛ کشیدن به راست یا زدن عنوان ماه ⇒ بازگشت
-  const [mode, setMode] = useState<'month' | 'week'>('month')
+  const [mode, setMode] = useState<'month' | 'week'>(() => (overlayActive('week') ? 'week' : 'month'))
   const weekPane = useAnimatedMount(mode === 'week', 340)
-  const [weekStart, setWeekStart] = useState<JalaliDate>(today)
+  const [weekStart, setWeekStart] = useState<JalaliDate>(() => (overlayActive('week') ? getSelectedDate() ?? today : today))
 
   const tourDays = useTourDays()
   const popup = useOverlay('tour-day')
@@ -68,9 +67,13 @@ export default function CalendarPage() {
     const inView = selected.year === view.year && selected.month === view.month
     const todayView = today.year === view.year && today.month === view.month
     setWeekStart(inView ? selected : todayView ? today : { ...view, day: 1 })
+    // تقویم هفتگی یک ورودی History می‌گیرد: «بک» فقط به تقویم ماهانه برمی‌گردد و در تقویم ماهانه از برنامه خارج می‌شود
+    if (!overlayActive('week')) pushOverlay('week')
     setMode('week')
   }
   const exitWeek = (first: JalaliDate) => {
+    // خروج با رابط (فلش، نقطه‌ها، کشیدن): ورودی History را برمی‌داریم؛ popstate دوباره همین تابع را (با ورودیِ غیرفعال) صدا می‌زند
+    if (popOverlay('week')) return
     const f = dayNumber(first), s = dayNumber(selected)
     select(s >= f && s <= f + 6 ? selected : first) // روز انتخاب‌شده اگر دیده نمی‌شود، اولین روز هفته انتخاب می‌شود
     setMode('month')
@@ -79,6 +82,14 @@ export default function CalendarPage() {
   // بازگشت از صفحهٔ دوم از بیرون WeekView (نقطه‌ها و کشیدن روی کاشی بالا)؛ WeekView اولین لاین را می‌داند
   const exitRef = useRef<(() => void) | null>(null)
   const backToMonth = () => { if (exitRef.current) exitRef.current(); else exitWeek(weekStart) }
+  // دکمهٔ بک مرورگر/اندروید در تقویم هفتگی ⇒ برگشت به تقویم ماهانه (ورودی History هفته دیگر فعال نیست)
+  const popRef = useRef({ mode, backToMonth })
+  popRef.current = { mode, backToMonth }
+  useEffect(() => {
+    const onPop = () => { const c = popRef.current; if (c.mode === 'week' && !overlayActive('week')) c.backToMonth() }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
   const feed = useFeed()
   const feedPopup = useOverlay('feed')
   const [feedItem, setFeedItem] = useState<FeedItem | null>(null)
@@ -100,7 +111,7 @@ export default function CalendarPage() {
         {weekPane.mounted && (
           <div className={`cal-pane cal-weekpane${weekPane.shown ? ' shown' : ''}`}>
             <div className="cal-wktop"><TopicTile items={feed.items} paused={feedPopup.open} onOpen={openFeed} /></div>
-            <WeekView today={today} startDate={weekStart} selected={selected} tourDays={tourDays} notes={notes} rev={`${calData.updatedAt}-${ancient}-${worldDays}`}
+            <WeekView today={today} startDate={weekStart} selected={selected} tourDays={tourDays} notes={notes} rev={`${calData.updatedAt}-${occPrefs}`}
               onSelect={select} onNote={weekNote} onTours={weekTours} onBack={exitWeek} exitRef={exitRef} />
           </div>
         )}

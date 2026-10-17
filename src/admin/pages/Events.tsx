@@ -2,14 +2,14 @@ import { useMemo, useState } from 'react'
 import EventForm, { type EventDraft } from '../components/EventForm'
 import EventTable from '../components/EventTable'
 import Modal from '../components/Modal'
-import { DEFAULT_FILTERS, EVENT_STATUSES, EVENT_TYPES, MOCK_EVENTS, filterEvents, type EventFilters, type EventItem } from '../data/events'
+import { DEFAULT_FILTERS, EVENT_STATUSES, EVENT_TYPES, INITIAL_EVENTS, filterEvents, type EventFilters, type EventItem } from '../data/events'
 import { faNum } from '../../lib/jalali'
 
 type FormState = { mode: 'add' } | { mode: 'edit'; event: EventItem } | null
 
-// فقط State محلی؛ با Refresh داده‌های Mock اولیه برمی‌گردد.
+// فقط State محلی؛ با Refresh فهرست اولیه (از داده‌ی تقویم) برمی‌گردد.
 export default function Events() {
-  const [events, setEvents] = useState<EventItem[]>(MOCK_EVENTS)
+  const [events, setEvents] = useState<EventItem[]>(INITIAL_EVENTS)
   const [filters, setFilters] = useState<EventFilters>(DEFAULT_FILTERS)
   const [form, setForm] = useState<FormState>(null)
   const [toDelete, setToDelete] = useState<EventItem | null>(null)

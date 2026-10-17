@@ -45,7 +45,8 @@ export function initHistory() {
   const h = window.history
   const state = current()
   if (state.inApp) {
-    if (state.overlay) h.replaceState({ inApp: true, idx: state.idx ?? 0 }, '') // Overlay بعد از Reload بسته است
+    // Overlay (منو، پاپ‌آپ …) بعد از Reload بسته است؛ فقط «هفته» یک حالت صفحه است و می‌ماند تا Back درست کار کند
+    if (state.overlay && state.overlay !== 'week') h.replaceState({ inApp: true, idx: state.idx ?? 0 }, '')
     return
   }
   const here = window.location.pathname + window.location.search + window.location.hash

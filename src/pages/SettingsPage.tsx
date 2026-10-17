@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { disableDateNotification, enableDateNotification, notificationState, type EnableResult } from '../lib/dateNotification'
 import { navigate } from '../lib/router'
 import AppChrome from '../components/AppChrome'
-import { setAncientCelebrations, setWeatherCard, setWeekHaptics, setWorldDays, useAncientCelebrations, useDateNotification, useWeatherCard, useWeekHaptics, useWorldDays } from '../lib/settings'
+import { setAncientCelebrations, setNationalDays, setReligiousDays, setWeatherCard, setWeekHaptics, setWorldDays, useAncientCelebrations, useDateNotification, useNationalDays, useReligiousDays, useWeatherCard, useWeekHaptics, useWorldDays } from '../lib/settings'
 import { weatherStore } from '../weather/current/store'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
 
@@ -12,6 +12,8 @@ export default function SettingsPage() {
   useThemeColorMeta(dark)
   const ancient = useAncientCelebrations()
   const worldDays = useWorldDays()
+  const religious = useReligiousDays()
+  const national = useNationalDays()
   const weather = useWeatherCard()
   const dateNotif = useDateNotification()
   const haptics = useWeekHaptics()
@@ -38,12 +40,20 @@ export default function SettingsPage() {
             <input type="checkbox" role="switch" className="cal-switch" checked={dark} onChange={(e) => setDark(e.target.checked)} />
           </label>
           <label className="st-row">
-            <span>آیین‌ها و جشن‌های باستانی</span>
+            <span>مناسبت‌های مذهبی</span>
+            <input type="checkbox" role="switch" className="cal-switch" checked={religious} onChange={(e) => setReligiousDays(e.target.checked)} />
+          </label>
+          <label className="st-row">
+            <span>مناسبت‌های باستانی و آیینی</span>
             <input type="checkbox" role="switch" className="cal-switch" checked={ancient} onChange={(e) => setAncientCelebrations(e.target.checked)} />
           </label>
           <label className="st-row">
-            <span>روزهای جهانی و ملی</span>
+            <span>مناسبت‌های جهانی</span>
             <input type="checkbox" role="switch" className="cal-switch" checked={worldDays} onChange={(e) => setWorldDays(e.target.checked)} />
+          </label>
+          <label className="st-row">
+            <span>مناسبت‌های ملی</span>
+            <input type="checkbox" role="switch" className="cal-switch" checked={national} onChange={(e) => setNationalDays(e.target.checked)} />
           </label>
           <label className="st-row">
             <span>کارت آب‌وهوا</span>

@@ -60,8 +60,7 @@ export default function Calendar({ today, view, selected, onSelect, tourDays, no
             <button key={`${date.month}-${date.day}`} type="button" className={cls} aria-pressed={isSelected} aria-current={isToday ? 'date' : undefined}
               aria-label={label} title={label} onClick={() => click(date)}
               onPointerDown={(e) => start(e, date)} onPointerMove={move} onPointerUp={cancel} onPointerLeave={cancel} onPointerCancel={cancel} onContextMenu={(e) => e.preventDefault()}>
-              <span className="cell-num">{faNum(date.day)}</span>
-              {occ && !occ.holiday && <span className="cell-dot" aria-hidden="true" />}
+              <span className="cell-num">{faNum(date.day)}{occ && !occ.holiday && <span className="cell-dot" aria-hidden="true" />}</span>
             </button>
           )
         })}

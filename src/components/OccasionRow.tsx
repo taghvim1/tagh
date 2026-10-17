@@ -1,4 +1,4 @@
-import { getOccasion, getOccasionList } from '../lib/calendarData'
+import { KIND_LABEL, getOccasion, getOccasionList } from '../lib/calendarData'
 import { MONTHS, WEEKDAYS, faNum, formatLongDate, weekdayIndex, type JalaliDate, type MonthRef } from '../lib/jalali'
 import CenterModal from './CenterModal'
 
@@ -21,7 +21,7 @@ const Chevron = ({ dir }: { dir: 'right' | 'left' }) => (
 export default function OccasionRow({ view, selected, onPrev, onNext, onOpen }: Props) {
   const occasion = getOccasion(selected.month, selected.day, selected.year)
   const count = occasion ? 1 + (occasion.more?.length ?? 0) : 0
-  const label = occasion ? `${occasion.hypothetical ? 'مناسبت فرضی' : 'مناسبت'}${count > 1 ? ` · ${faNum(count)} مورد` : ''}` : `${MONTHS[view.month - 1]} ${faNum(view.year)}`
+  const label = occasion ? `${occasion.kind ? KIND_LABEL[occasion.kind] : 'مناسبت'}${count > 1 ? ` · ${faNum(count)} مورد` : ''}` : `${MONTHS[view.month - 1]} ${faNum(view.year)}`
   const title = occasion ? occasion.title : `${WEEKDAYS[weekdayIndex(selected)]} ${faNum(selected.day)} ${MONTHS[selected.month - 1]}`
   const text = (
     <>
@@ -48,7 +48,7 @@ export function OccasionsPopup({ date, open, onClose }: { date: JalaliDate; open
       <article className="dc oc-pop">
         <header className="dc-head"><span className="fd-kicker">مناسبت‌های این روز</span><h2>{formatLongDate(date)}</h2></header>
         <ul className="oc-list">
-          {list.map((o) => <li key={o.title}><span>{o.title}</span>{o.holiday && <em className="oc-hol">تعطیل</em>}</li>)}
+          {list.map((o) => <li key={o.title}><span>{o.title}</span><span className="oc-tags">{o.holiday && <em className="oc-hol">تعطیل</em>}<em className="oc-kind">{KIND_LABEL[o.kind]}</em></span></li>)}
         </ul>
       </article>
     </CenterModal>

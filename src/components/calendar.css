@@ -38,6 +38,8 @@
 .oc-list { margin: 0; padding: 0; list-style: none; }
 .oc-list li { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); line-height: 1.8; }
 .oc-list li:last-child { border-bottom: 0; }
+.oc-tags { flex: none; display: inline-flex; gap: 6px; }
+.oc-kind { flex: none; font-style: normal; font-size: .75rem; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; line-height: 1.7; }
 .oc-hol { flex: none; font-style: normal; font-size: .75rem; color: var(--holiday); border: 1px solid var(--holiday); border-radius: 999px; padding: 0 8px; line-height: 1.7; }
 .info-label { color: var(--muted); font-size: clamp(.8rem, 2.4vw, .95rem); }
 .info-title { max-width: 100%; font-size: clamp(1.4rem, min(6.5vw, 4dvh), 2.3rem); font-weight: 700; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -59,11 +61,12 @@
 .cell.adjacent .cell-num { color: var(--muted); opacity: .55; }
 .cell.now .cell-num { color: var(--accent); font-weight: 700; }
 .cell.has-tour::before { background: var(--tour); }
-.cell.has-note .cell-num { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
+.cell.has-note .cell-num { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .12em; }
 .cell.holiday::before { border-color: var(--holiday); }
 .cell.selected::before { background: var(--accent); }
 .cell.selected .cell-num { color: var(--accent-ink); font-weight: 700; opacity: 1; }
-.cell-dot { position: absolute; bottom: 2%; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--dot); }
+.cell-dot { position: absolute; left: 50%; top: calc(100% + .3em); width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--dot); }
+.cell.selected .cell-dot { background: var(--accent-ink); }
 .cell:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 50%; }
 
 /* هدر مشترک: همبرگر (راست) و زنگوله (چپ) */
