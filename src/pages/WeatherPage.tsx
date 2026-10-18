@@ -10,6 +10,8 @@ import { useCurrentWeather, weatherStore } from '../weather/current/store'
 import type { CurrentWeather, DailyForecast, HourlyForecast } from '../weather/current/types'
 import { aqiLabel, clockOf, dayLabel, dayLength, degree, gregorianShort, hourLabel, isWarmIcon, kmValue, num, uvLabel, windFrom } from '../weather/format'
 import Glyph, { type GlyphName } from '../weather/Glyph'
+import MoonPhase from '../weather/MoonPhase'
+import { MOON_PHASE_FA, moonForDay } from '../weather/moon'
 import WeatherIcon from '../weather/WeatherIcon'
 
 type Sel = { kind: 'hour'; h: HourlyForecast } | { kind: 'day'; d: DailyForecast; today: boolean }
@@ -69,6 +71,9 @@ function Dialog({ sel, onClose, w, now }: { sel: Sel; onClose: () => void; w: Cu
   const dayFlag = sel.kind === 'day' ? true : sel.h.isDay
   const km = (v: number | null | undefined) => (v == null ? null : num(kmValue(v)!, 0))
   const t = { tip, onTip: setTip }
+  // طلوع/غروب ماه و شکل ماه همان شب؛ به مختصات ذخیره‌شدهٔ دستگاه نیاز دارد (در دادهٔ قدیمی نیست ⇒ نمایش داده نمی‌شود)
+  const coords = weatherStore.getCoords()
+  const moon = useMemo(() => (sel.kind === 'day' && day && coords && w.timezone ? moonForDay(day.date, coords.lat, coords.lon, w.timezone) : null), [sel.kind, day?.date, coords?.lat, coords?.lon, w.timezone]) // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="wp-dlg-root">
       <button type="button" className="wp-backdrop" aria-label="بستن" tabIndex={-1} onClick={onClose} />
@@ -124,6 +129,16 @@ function Dialog({ sel, onClose, w, now }: { sel: Sel; onClose: () => void; w: Cu
             <div><Glyph name="sunrise" size={24} /><strong>{clockOf(day.sunrise)}</strong></div>
             <div className="wp-sun-mid"><Arc sunrise={day.sunrise} sunset={day.sunset} now={day.date === isoDay(now) ? now : null} /></div>
             <div><Glyph name="sunset" size={24} /><strong>{clockOf(day.sunset)}</strong></div>
+          </div>
+        )}
+        {moon && (
+          <div className="wp-sun wp-moon" aria-label="طلوع و غروب ماه">
+            <div><Glyph name="moonrise" size={24} /><strong>{moon.rise ? clockOf(moon.rise) : '—'}</strong></div>
+            <div className="wp-sun-mid wp-moon-mid">
+              <MoonPhase phase={moon.phase} fraction={moon.fraction} southern={(coords?.lat ?? 0) < 0} label={`${MOON_PHASE_FA[moon.name]}، ${num(Math.round(moon.fraction * 100))} درصد روشن`} />
+              <span>{MOON_PHASE_FA[moon.name]} · {num(Math.round(moon.fraction * 100))}٪</span>
+            </div>
+            <div><Glyph name="moonset" size={24} /><strong>{moon.set ? clockOf(moon.set) : '—'}</strong></div>
           </div>
         )}
       </section>

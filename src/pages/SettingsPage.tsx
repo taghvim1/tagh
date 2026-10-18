@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { disableDateNotification, enableDateNotification, notificationState, type EnableResult } from '../lib/dateNotification'
-import { navigate } from '../lib/router'
 import AppChrome from '../components/AppChrome'
 import { setAncientCelebrations, setNationalDays, setReligiousDays, setWeatherCard, setWeekHaptics, setWorldDays, useAncientCelebrations, useDateNotification, useNationalDays, useReligiousDays, useWeatherCard, useWeekHaptics, useWorldDays } from '../lib/settings'
 import { weatherStore } from '../weather/current/store'
@@ -40,6 +39,10 @@ export default function SettingsPage() {
             <input type="checkbox" role="switch" className="cal-switch" checked={dark} onChange={(e) => setDark(e.target.checked)} />
           </label>
           <label className="st-row">
+            <span>نمایش تاریخ در نوار اعلان</span>
+            <input type="checkbox" role="switch" className="cal-switch" checked={dateNotif && notificationState() === 'granted'} onChange={(e) => void toggleDate(e.target.checked)} />
+          </label>
+          <label className="st-row">
             <span>مناسبت‌های مذهبی</span>
             <input type="checkbox" role="switch" className="cal-switch" checked={religious} onChange={(e) => setReligiousDays(e.target.checked)} />
           </label>
@@ -56,25 +59,15 @@ export default function SettingsPage() {
             <input type="checkbox" role="switch" className="cal-switch" checked={national} onChange={(e) => setNationalDays(e.target.checked)} />
           </label>
           <label className="st-row">
-            <span>کارت آب‌وهوا</span>
+            <span>کاشی آب‌وهوا</span>
             <input type="checkbox" role="switch" className="cal-switch" checked={weather} onChange={(e) => { setWeatherCard(e.target.checked); if (!e.target.checked) weatherStore.clear() }} />
           </label>
           <label className="st-row">
             <span>لرزش هنگام حرکت تقویم هفتگی</span>
             <input type="checkbox" role="switch" className="cal-switch" checked={haptics} onChange={(e) => setWeekHaptics(e.target.checked)} />
           </label>
-          <label className="st-row">
-            <span>نمایش تاریخ در نوار اعلان</span>
-            <input type="checkbox" role="switch" className="cal-switch" checked={dateNotif && notificationState() === 'granted'} onChange={(e) => void toggleDate(e.target.checked)} />
-          </label>
         </div>
         {notifMsg && <p className="st-hint" role="alert">{notifMsg}</p>}
-        <p className="st-hint">مرورگر اجازهٔ اعلانِ «غیرقابل‌حذف» به وب‌اپ نمی‌دهد: ممکن است کنار زده شود و اگر چند روز برنامه را باز نکنید تاریخ قدیمی بماند (به‌روزرسانی پس‌زمینه به مرورگر بستگی دارد). اعلان واقعاً دائمی به نسخهٔ اندرویدی نیاز دارد.</p>
-        <div className="st-list">
-          <button type="button" className="st-row st-link" onClick={() => navigate('/privacy')}>
-            <span>حریم خصوصی و رضایت</span><span aria-hidden="true">‹</span>
-          </button>
-        </div>
       </main>
     </div>
   )

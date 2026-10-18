@@ -39,16 +39,16 @@ test('پیش‌فرض: تحلیل ثبت می‌شود (روشن)؛ لغو، ص�
   assert.ok(tr.track('app_open'))
 })
 
-test('پیش‌فرض‌ها: تحلیل و تبلیغات روشن، اعلان و موقعیت خاموش؛ هر نوع مستقل است و پیش‌فرض‌ها با نسخهٔ سیاست ثبت می‌شوند', () => {
+test('پیش‌فرض‌ها: هر چهار رضایت روشن؛ هر نوع مستقل است و پیش‌فرض‌ها با نسخهٔ سیاست ثبت می‌شوند', () => {
   const { tr } = mk()
-  assert.deepEqual(tr.consent(), { analytics: true, marketing: true, notifications: false, location: false })
+  assert.deepEqual(tr.consent(), { analytics: true, marketing: true, notifications: true, location: true }) // هر چهار رضایت پیش‌فرض فعال
   const recs = tr.exportMyData().consent
-  assert.deepEqual(recs.map((r) => [r.kind, r.granted, r.source]).sort(), [['analytics', true, 'default'], ['marketing', true, 'default']])
-  assert.ok(recs.every((r) => r.policy_version === '2026-10-v3' && r.recorded_at))
+  assert.deepEqual(recs.map((r) => [r.kind, r.granted, r.source]).sort(), [['analytics', true, 'default'], ['location', true, 'default'], ['marketing', true, 'default'], ['notifications', true, 'default']])
+  assert.ok(recs.every((r) => r.policy_version === '2026-10-v4' && r.recorded_at))
   tr.setConsent('marketing', false, 'privacy_page')
-  assert.deepEqual(tr.consent(), { analytics: true, marketing: false, notifications: false, location: false })
-  tr.setConsent('notifications', true)
-  assert.deepEqual(tr.consent(), { analytics: true, marketing: false, notifications: true, location: false })
+  assert.deepEqual(tr.consent(), { analytics: true, marketing: false, notifications: true, location: true })
+  tr.setConsent('notifications', false)
+  assert.deepEqual(tr.consent(), { analytics: true, marketing: false, notifications: false, location: true })
   assert.equal(tr.exportMyData().consent.at(-1)!.source, 'settings')
 })
 
@@ -111,7 +111,7 @@ test('درخواست حذف داده: پاک‌سازی محلی، لغو رضا
   const req = tr.deleteMyData()
   assert.equal(req.anonymous_id, id)
   assert.equal(tr.pending(), 0)
-  assert.deepEqual(tr.consent(), { analytics: true, marketing: true, notifications: false, location: false }) // پس از حذف دوباره پیش‌فرض‌ها
+  assert.deepEqual(tr.consent(), { analytics: true, marketing: true, notifications: true, location: true }) // پس از حذف دوباره پیش‌فرض‌ها
   assert.equal(tr.deletionRequest()?.status, 'pending_server')
   assert.notEqual(tr.installation().anonymous_id, id)
   assert.equal(kv.getItem('taghvim-outbox-v1'), null)
@@ -247,7 +247,7 @@ test('ارسال: رکوردهای رضایت همراه رویدادها می�
   const transport: Transport = { send: async (events, ctx) => { sent.push({ n: events.length, consents: ctx.consents.map((c) => `${c.kind}:${c.granted}`) }) } }
   const { tr } = mk(memoryKV(), transport)
   tr.track('app_open'); tr.track('view_calendar')
-  assert.equal((await tr.flush()).status, 'sent'); assert.equal(sent[0].n, 2); assert.deepEqual(sent[0].consents.sort(), ['analytics:true', 'marketing:true'])
+  assert.equal((await tr.flush()).status, 'sent'); assert.equal(sent[0].n, 2); assert.deepEqual(sent[0].consents.sort(), ['analytics:true', 'location:true', 'marketing:true', 'notifications:true'])
   assert.equal((await tr.flush()).status, 'empty')
   tr.setConsent('analytics', false)
   assert.equal((await tr.flush()).status, 'sent'); assert.equal(sent[1].n, 0); assert.ok(sent[1].consents.includes('analytics:false'))

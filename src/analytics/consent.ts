@@ -1,11 +1,12 @@
 import { nowISO, randomId, type KV } from './ids'
 import type { ConsentKind, ConsentRecord, ConsentSummary } from './types'
 
-// تصمیم محصول: «تحلیل ناشناس» و «تبلیغات شخصی‌سازی‌شده» به‌طور پیش‌فرض روشن‌اند (بدون پنجرهٔ رضایت) و هر زمان از «حریم خصوصی و رضایت» قابل خاموش‌کردن‌اند.
-// اعلان‌ها و موقعیت پیش‌فرض خاموش‌اند. هر نوع جدا مدیریت می‌شود و پیش‌فرض‌ها هم با نسخهٔ سیاست و زمان ثبت می‌شوند (source: 'default').
-export const POLICY_VERSION = '2026-10-v3'
+// تصمیم محصول: هر چهار رضایت (تحلیل ناشناس، تبلیغات شخصی‌سازی‌شده، اعلان‌ها، موقعیت) به‌طور پیش‌فرض فعال‌اند (بدون پنجرهٔ رضایت).
+// ردیف «حریم خصوصی و رضایت» از صفحهٔ تنظیمات برداشته شده؛ صفحهٔ /privacy و منطق رضایت‌ها همچنان کار می‌کنند.
+// هر نوع جدا مدیریت می‌شود و پیش‌فرض‌ها هم با نسخهٔ سیاست و زمان ثبت می‌شوند (source: 'default').
+export const POLICY_VERSION = '2026-10-v4'
 export const CONSENT_KINDS: ConsentKind[] = ['analytics', 'marketing', 'notifications', 'location']
-export const DEFAULT_CONSENT: ConsentSummary = { analytics: true, marketing: true, notifications: false, location: false }
+export const DEFAULT_CONSENT: ConsentSummary = { analytics: true, marketing: true, notifications: true, location: true }
 export const NO_CONSENT: ConsentSummary = { analytics: false, marketing: false, notifications: false, location: false }
 const KEY = 'taghvim-consent-v1'
 
@@ -26,10 +27,10 @@ export function recordConsent(kv: KV, subjectId: string, kind: ConsentKind, gran
 }
 export const clearConsent = (kv: KV) => kv.removeItem(KEY)
 
-/** رکوردهای پیش‌فرض (اگر نوعی هنوز رکوردی ندارد) تا سرور مبنای وضعیت را بداند. فقط برای انواعِ پیش‌فرض‌روشن. */
+/** رکوردهای پیش‌فرض (اگر نوعی هنوز رکوردی ندارد) تا سرور مبنای وضعیت را بداند. انتخاب صریح قبلیِ کاربر هرگز بازنویسی نمی‌شود. */
 export function seedDefaultConsents(kv: KV, subjectId: string, now = new Date()): ConsentRecord[] {
   const records = loadConsentRecords(kv)
-  const missing = (['analytics', 'marketing'] as ConsentKind[]).filter((k) => !records.some((r) => r.kind === k))
+  const missing = CONSENT_KINDS.filter((k) => !records.some((r) => r.kind === k))
   if (!missing.length) return records
   const next = [...records, ...missing.map((kind): ConsentRecord => ({ consent_id: randomId('c'), subject_id: subjectId, kind, granted: DEFAULT_CONSENT[kind], recorded_at: nowISO(now), policy_version: POLICY_VERSION, source: 'default' }))]
   try { kv.setItem(KEY, JSON.stringify(next)) } catch { /* فقط حافظه */ }

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 // آیکون‌های خطی شاخص‌های آب‌وهوا (هم‌سبک آیکون‌های وضعیت هوا): آبی، و زرد برای خورشید/گرما
-export type GlyphName = 'humidity' | 'wind' | 'rain-prob' | 'pressure' | 'eye' | 'thermo' | 'thermo-up' | 'thermo-down' | 'cloud' | 'aqi' | 'uv' | 'rain-cloud' | 'sunrise' | 'sunset' | 'pin' | 'refresh' | 'close' | 'arrow'
+export type GlyphName = 'humidity' | 'wind' | 'rain-prob' | 'pressure' | 'eye' | 'thermo' | 'thermo-up' | 'thermo-down' | 'cloud' | 'aqi' | 'uv' | 'rain-cloud' | 'sunrise' | 'sunset' | 'moonrise' | 'moonset' | 'pin' | 'refresh' | 'close' | 'arrow'
 const G: Record<GlyphName, ReactNode> = {
   humidity: <><path className="b" d="M12 3.5c3.2 4 5.8 7 5.8 10.2a5.8 5.8 0 0 1-11.6 0C6.2 10.5 8.8 7.5 12 3.5z" /><path className="b" d="M9.8 15.5l4.4-4.4M10 11.3v.1M14 15.3v.1" /></>,
   wind: <><path className="b" d="M3 9h10.5a2.5 2.5 0 1 0-2.4-3.2M3 13h15a2.6 2.6 0 1 1-2.5 3.3M3 17h6" /></>,
@@ -17,6 +17,8 @@ const G: Record<GlyphName, ReactNode> = {
   'rain-cloud': <><path className="b" d="M7 14.5h10.5a4.2 4.2 0 0 0 .5-8.4 6 6 0 0 0-11.5 1.6A3.5 3.5 0 0 0 7 14.5z" /><path className="b" d="M9 17.5v2M12 17.5v3M15 17.5v2" /></>,
   sunrise: <><path className="a" d="M3 19h18M7 19a5 5 0 0 1 10 0M12 4v7M9 7l3-3 3 3M4.5 12.5l1.5 1M19.5 12.5l-1.5 1" /></>,
   sunset: <><path className="a" d="M3 19h18M7 19a5 5 0 0 1 10 0M12 11V4M9 8l3 3 3-3M4.5 12.5l1.5 1M19.5 12.5l-1.5 1" /></>,
+  moonrise: <><path className="b" d="M3 19h18M17.15 8.2A4.95 4.95 0 1 1 11.8 2.85a3.85 3.85 0 0 0 5.35 5.35zM12 17v-4.5M9.8 14.6l2.2-2.2 2.2 2.2" /></>,
+  moonset: <><path className="b" d="M3 19h18M17.15 8.2A4.95 4.95 0 1 1 11.8 2.85a3.85 3.85 0 0 0 5.35 5.35zM12 12.5V17M9.8 14.9l2.2 2.2 2.2-2.2" /></>,
   pin: <><path className="b" d="M12 21s6.5-5.7 6.5-11A6.5 6.5 0 0 0 5.5 10c0 5.3 6.5 11 6.5 11z" /><circle className="b" cx="12" cy="10" r="2.4" /></>,
   refresh: <><path className="b" d="M20 11a8 8 0 0 0-14-4.5L4 9M4 13a8 8 0 0 0 14 4.5l2-2.5M4 4v5h5M20 20v-5h-5" /></>,
   close: <path className="b" d="M6 6l12 12M18 6L6 18" />,

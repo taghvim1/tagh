@@ -297,7 +297,9 @@
 .has-wx .dh-day { font-size: clamp(3rem, min(18vw, 9.5dvh), 6rem); }
 .has-wx .dh-sub { font-size: clamp(.7rem, min(2.3vw, 1.6dvh), .9rem); line-height: 1.5; }
 /* کارت آب‌وهوا کنار تاریخ (در صفحهٔ راست‌چین سمت راستِ تاریخ) */
-.wx { flex: none; width: clamp(110px, 32vw, 150px); padding: 4px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: none; color: var(--ink); line-height: 1.3; text-align: center; }
+.wx { flex: none; width: clamp(112px, 33vw, 152px); padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg-soft); color: var(--ink); line-height: 1.3; text-align: center; overflow: hidden; animation: fd-in .35s ease; }
+.wx > .wx-note, .wx > .wx-btn, .wx > .wx-stale { margin: 10px 8px; }
+.wx-open + .wx-stale { margin-top: -6px; }
 .wx-icon { display: block; width: clamp(56px, 20vw, min(100px, 9.5dvh)); height: clamp(56px, 20vw, min(100px, 9.5dvh)); color: var(--ink); }
 .wx-icon svg { display: block; width: 100%; height: 100%; }
 .wx-temp { font-size: clamp(1.7rem, min(8.5vw, 4.8dvh), 3rem); font-weight: 700; line-height: 1; }
@@ -349,8 +351,9 @@
 .dc-credit { font-size: .72rem; opacity: .65; margin: 4px 0 0; }
 
 /* کارت آب‌وهوا قابل‌لمس (باز کردن صفحهٔ جزئیات) */
-.wx-open { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; line-height: inherit; cursor: pointer; }
-.wx-open:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 10px; }
+.wx-open { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 12px 8px; border: 0; background: none; color: inherit; font: inherit; line-height: inherit; cursor: pointer; }
+.wx-open:active { background: color-mix(in srgb, var(--line) 45%, transparent); }
+.wx-open:focus-visible { outline: 2px solid var(--ink); outline-offset: -3px; border-radius: 16px; }
 
 /* صفحهٔ آب‌وهوا (طرح آبی روشن با کارت‌های ساعتی و ده‌روزه و پنجرهٔ جزئیات) */
 .cal-page, .tp-page { --wx-blue: #2a7aa8; --wx-amber: #dd9f38; }
@@ -451,6 +454,12 @@
 .wp-sun > div:not(.wp-sun-mid) { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .wp-sun strong { font-size: 1.25rem; }
 .wp-sun-mid { display: flex; justify-content: center; min-width: 0; }
+.wp-moon-mid { flex-direction: column; align-items: center; gap: 4px; }
+.wp-moon-mid > span { font-size: .8rem; color: var(--wp-muted, var(--muted)); text-align: center; }
+.wp-moonsvg { display: block; }
+.wp-moonsvg .dark { fill: var(--wp-line); opacity: .65; }
+.wp-moonsvg .lit { fill: #fdf1d8; }
+.wp-moonsvg .rim { fill: none; stroke: var(--wx-amber); stroke-width: 1.4; }
 .wp-arc { width: 100%; max-width: 190px; height: auto; }
 .wp-arc .base { stroke: var(--wp-line); stroke-width: 2; }
 .wp-arc .path { fill: none; stroke: var(--wx-amber); stroke-width: 1.6; stroke-dasharray: 4 4; }
@@ -567,7 +576,7 @@ a.fd-credit:hover { text-decoration: underline; }
 .cal-dots button { width: 18px; height: 100%; padding: 0; display: grid; place-items: center; border: 0; background: none; cursor: pointer; }
 .cal-dots i { display: block; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); opacity: .45; transition: opacity .2s, transform .2s; }
 .cal-dots .on i { background: var(--ink); opacity: 1; transform: scale(1.15); }
-@media (prefers-reduced-motion: reduce) { .fd-tile { animation: none; } .cal-dots i { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .fd-tile, .wx { animation: none; } .cal-dots i { transition: none; } }
 
 .fd-wrap .fd-text { padding-inline-end: 38px; }
 @media (max-height: 700px) { .fd-snip { -webkit-line-clamp: 2; } .fd-tile2 .fd-snip { -webkit-line-clamp: 2; } }
