@@ -3,6 +3,8 @@ import { lazyWithRetry, RouteBoundary, SlowLoading } from './components/LazyBoun
 import { trackRoute } from './analytics'
 import CalendarPage from './pages/CalendarPage'
 import NotesPage from './pages/NotesPage'
+import ChecklistPage from './pages/ChecklistPage'
+import ChecklistDetail from './pages/ChecklistDetail'
 import Favorites from './pages/Favorites'
 import DestinationDetails from './pages/DestinationDetails'
 import TourDetails from './pages/TourDetails'
@@ -39,6 +41,9 @@ function Routes() {
   if (path === '/weather') return <WeatherPage />
   if (path === '/privacy') return <PrivacyPage />
   if (path === '/notes') return <NotesPage />
+  if (path === '/checklist') return <ChecklistPage />
+  const ck = path.match(/^\/checklist\/([\w-]+)$/)
+  if (ck) return <ChecklistDetail id={ck[1]} />
   if (path === '/favorites') return <Favorites />
   if (path === '/tours') return <Tours />
   const tour = path.match(/^\/tours\/(\d+)$/)
