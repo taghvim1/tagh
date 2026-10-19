@@ -47,7 +47,7 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
   const isJson = (res.headers.get('content-type') ?? '').includes('json')
   if (!isJson) throw new ApiError(0, 'network', [], 'سرور API در دسترس نیست (پاسخ JSON نیامد).')
   const data = await res.json()
-  if (!res.ok) throw new ApiError(res.status, data.error ?? 'error', data.errors ?? [], data.reason ?? data.errors?.[0])
+  if (!res.ok) throw new ApiError(res.status, data.error ?? 'error', data.errors ?? [], data.reason ?? data.errors?.[0] ?? data.message)
   return data as T
 }
 

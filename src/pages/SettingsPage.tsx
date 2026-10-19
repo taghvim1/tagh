@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { disableDateNotification, enableDateNotification, notificationState, type EnableResult } from '../lib/dateNotification'
 import AppChrome from '../components/AppChrome'
 import { setAncientCelebrations, setNationalDays, setReligiousDays, setWeatherCard, setWeekHaptics, setWorldDays, useAncientCelebrations, useDateNotification, useNationalDays, useReligiousDays, useWeatherCard, useWeekHaptics, useWorldDays } from '../lib/settings'
 import { weatherStore } from '../weather/current/store'
+import { refreshAuth, useAuth } from '../auth/client'
+import { navigate } from '../lib/router'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
 
 // تنظیمات کاربر: هر تغییر بلافاصله ذخیره می‌شود. عنوان هر گزینه به‌تنهایی کافی است.
@@ -11,6 +13,8 @@ export default function SettingsPage() {
   useThemeColorMeta(dark)
   const ancient = useAncientCelebrations()
   const worldDays = useWorldDays()
+  const auth = useAuth()
+  useEffect(() => { void refreshAuth() }, [])
   const religious = useReligiousDays()
   const national = useNationalDays()
   const weather = useWeatherCard()
@@ -66,6 +70,12 @@ export default function SettingsPage() {
             <span>لرزش هنگام حرکت تقویم هفتگی</span>
             <input type="checkbox" role="switch" className="cal-switch" checked={haptics} onChange={(e) => setWeekHaptics(e.target.checked)} />
           </label>
+          {auth.available && (
+            <button type="button" className="st-row st-link" onClick={() => navigate('/login')}>
+              <span>{auth.status === 'in' ? 'حساب کاربری' : 'ورود با شماره موبایل'}</span>
+              <span className="st-val" dir="ltr">{auth.status === 'in' && auth.user ? auth.user.phone_masked : '‹'}</span>
+            </button>
+          )}
         </div>
         {notifMsg && <p className="st-hint" role="alert">{notifMsg}</p>}
       </main>

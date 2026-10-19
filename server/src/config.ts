@@ -19,6 +19,12 @@ const schema = z.object({
   GEMINI_API_KEY: z.string().min(1).optional(),
   TAVILY_API_KEY: z.string().min(1).optional(),
   UNSPLASH_ACCESS_KEY: z.string().min(1).optional(),
+  /** کلید وب‌سرویس قاصدک برای ورود پیامکی (یا از «تنظیمات API» پنل مدیریت) */
+  GHASEDAK_API_KEY: z.string().min(1).optional(),
+  /** نشانی پایهٔ وب‌سرویس قاصدک. پیش‌فرض https است؛ فقط اگر https پشتیبانی نشد (مثل مستند http) عمداً تغییر دهید. */
+  GHASEDAK_BASE_URL: z.string().url().default('https://api.ghasedaksms.com'),
+  /** فقط برای توسعهٔ محلی (NODE_ENV=development و بدون کلید پیامک): کد ورود در پاسخ برگردانده می‌شود. در production هرگز اثر ندارد. */
+  AUTH_DEV_ECHO: z.enum(['true', 'false']).default('false'),
 })
 export type Config = z.infer<typeof schema>
 export const loadConfig = (env: NodeJS.ProcessEnv = process.env): Config => schema.parse(env)

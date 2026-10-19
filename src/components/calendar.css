@@ -658,3 +658,15 @@ a.fd-credit:hover { text-decoration: underline; }
 .ck-swatch.on { border-color: var(--ink); }
 .tp-btn:disabled { opacity: .45; cursor: default; }
 @media (prefers-reduced-motion: reduce) { .ck-progress i, .ck-chev, .ck-box { transition: none; } }
+
+/* ورود با شماره موبایل */
+.lg-card { width: 100%; max-width: 420px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; line-height: 1.8; }
+.lg-field { display: flex; flex-direction: column; gap: 6px; font-size: .95rem; }
+.lg-input { min-height: 54px; padding: 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--ink); font: inherit; font-size: 1.25rem; text-align: center; letter-spacing: .06em; }
+.lg-input::placeholder { color: var(--muted); opacity: .6; }
+.lg-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.lg-code { font-size: 1.7rem; letter-spacing: .55em; padding-inline-start: .55em; }
+.lg-err { margin: 0; color: var(--accent); font-size: .9rem; }
+.lg-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.lg-link { align-self: flex-start; padding: 6px 0; border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; }
+.st-val { font-size: .9rem; opacity: .65; }

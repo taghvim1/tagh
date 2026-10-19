@@ -4,6 +4,7 @@ import { trackRoute } from './analytics'
 import CalendarPage from './pages/CalendarPage'
 import NotesPage from './pages/NotesPage'
 import ChecklistPage from './pages/ChecklistPage'
+import LoginPage from './pages/LoginPage'
 import ChecklistDetail from './pages/ChecklistDetail'
 import Favorites from './pages/Favorites'
 import DestinationDetails from './pages/DestinationDetails'
@@ -40,6 +41,7 @@ function Routes() {
   if (path === '/settings') return <SettingsPage />
   if (path === '/weather') return <WeatherPage />
   if (path === '/privacy') return <PrivacyPage />
+  if (path === '/login') return <LoginPage />
   if (path === '/notes') return <NotesPage />
   if (path === '/checklist') return <ChecklistPage />
   const ck = path.match(/^\/checklist\/([\w-]+)$/)

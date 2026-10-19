@@ -3,10 +3,11 @@ import { api, friendly, type AiSettings, type GenResult, type Prompt, type Secre
 import { ErrorBox, fmtDate, ModeBanner, useLoad } from '../suggestions/shared'
 import { faNum } from '../../lib/jalali'
 
-type Name = 'gemini' | 'tavily' | 'unsplash'
+type Name = 'gemini' | 'tavily' | 'unsplash' | 'ghasedak'
 const SECRETS: { name: Name; title: string; hint: string }[] = [
   { name: 'gemini', title: 'Gemini (تولید متن)', hint: 'کلید Google AI Studio' },
   { name: 'tavily', title: 'جست‌وجوی وب (Tavily)', hint: 'کلید Tavily (tvly-…)؛ برای منبع‌یابی متن' },
+  { name: 'ghasedak', title: 'پیامک قاصدک (ورود با شماره موبایل)', hint: 'کلید وب‌سرویس (apikey) از «تنظیمات/حساب کاربری» پنل قاصدک؛ «آزمون اتصال» فقط اعتبار حساب را می‌پرسد و پیامک نمی‌فرستد. ابزار تست ورود در بخش «ورود پیامکی (تست)» است' },
   { name: 'unsplash', title: 'جست‌وجوی تصویر (Unsplash)', hint: 'فقط «Access Key»؛ Secret Key لازم نیست. Wikimedia Commons بدون کلید کار می‌کند' },
 ]
 const STORAGE_MSG: Record<SecretStatus['ui_storage'], string> = {

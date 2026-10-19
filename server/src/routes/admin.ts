@@ -7,6 +7,9 @@ import { validateTemplate, DEFAULT_TEMPLATE } from '../ai/prompt.js'
 import { activeTemplate, imageQueriesFor, type AiService } from '../ai/service.js'
 import { canTransition, contentSchema, dupKey, issuesOf, STATUSES, type Status } from '../domain/schema.js'
 import type { FeedService } from '../feed/service.js'
+import type { Ghasedak } from '../auth/ghasedak.js'
+import type { AuthService } from '../auth/service.js'
+import { smsAdminRoutes } from './authAdmin.js'
 import { feedAdminRoutes } from './feed.js'
 import { SECRET_NAMES, type Secrets } from '../secrets.js'
 import type { ImageRow, Store, SuggestionRow } from '../store/types.js'
@@ -23,7 +26,7 @@ const imageInput = z.object({
   license: z.string().max(120).nullish(), license_url: z.string().url().max(2000).nullish(), attribution: z.string().max(400).nullish(),
 })
 
-export function adminRoutes(app: FastifyInstance, d: { config: Config; store: Store; secrets: Secrets; ai: AiService; feed: FeedService; now?: () => Date }) {
+export function adminRoutes(app: FastifyInstance, d: { config: Config; store: Store; secrets: Secrets; ai: AiService; feed: FeedService; auth: AuthService; sms: Ghasedak; now?: () => Date }) {
   const { config, store, secrets, ai } = d, now = () => (d.now ?? (() => new Date()))().toISOString()
   const bad = (reply: FastifyReply, errors: string[], code = 400) => reply.code(code).send({ error: 'validation', errors })
   const mode = adminMode(config)
@@ -174,9 +177,16 @@ export function adminRoutes(app: FastifyInstance, d: { config: Config; store: St
       await secrets.remove(n.data); return { status: await secrets.status(n.data) }
     })
     adm.post('/settings/test/:provider', async (req, reply) => {
-      const p = z.enum(['gemini', 'tavily', 'unsplash', 'wikimedia']).safeParse((req.params as { provider: string }).provider); if (!p.success) return reply.code(404).send({ error: 'not_found' })
+      const p = z.enum(['gemini', 'tavily', 'unsplash', 'wikimedia', 'ghasedak']).safeParse((req.params as { provider: string }).provider); if (!p.success) return reply.code(404).send({ error: 'not_found' })
+      if (p.data === 'ghasedak') { // فقط اعتبار حساب را می‌پرسد (پیامکی نمی‌فرستد)
+        const t0 = Date.now(), r = await d.sms.credit()
+        return r.ok ? { ok: true, message: `کلید معتبر است؛ اعتبار حساب ${Math.round(r.data.credit).toLocaleString('en-US')} ریال.`, latency_ms: Date.now() - t0 } : { ok: false, message: r.message, latency_ms: Date.now() - t0 }
+      }
       return ai.testProvider(p.data)
     })
+
+    // ---------- ورود پیامکی (قاصدک) ----------
+    smsAdminRoutes(adm, { config, auth: d.auth, sms: d.sms })
 
     // ---------- قالب پرامپت (نسخه‌دار) ----------
     adm.get('/prompts', async () => ({ items: await store.listPrompts(), builtin: DEFAULT_TEMPLATE, active_version: (await activeTemplate(store)).version }))

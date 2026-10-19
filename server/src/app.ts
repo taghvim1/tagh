@@ -7,7 +7,10 @@ import type { Config } from './config.js'
 import type { Db } from './db.js'
 import { createAiService } from './ai/service.js'
 import { createFeedService } from './feed/service.js'
+import { createGhasedak } from './auth/ghasedak.js'
+import { createAuthService } from './auth/service.js'
 import { adminRoutes } from './routes/admin.js'
+import { authRoutes } from './routes/auth.js'
 import { eventRoutes } from './routes/events.js'
 import { feedPublicRoutes } from './routes/feed.js'
 import { publicRoutes } from './routes/public.js'
@@ -15,9 +18,9 @@ import { createSecrets } from './secrets.js'
 import { createJsonStore } from './store/jsonStore.js'
 import type { Store } from './store/types.js'
 
-export interface AppDeps { config: Config; db?: Db | null; store?: Store; fetchImpl?: typeof fetch }
+export interface AppDeps { config: Config; db?: Db | null; store?: Store; fetchImpl?: typeof fetch; /** فقط برای تست: ساعت قابل تزریق */ now?: () => number }
 
-export async function buildApp({ config, db = null, store: injected, fetchImpl }: AppDeps): Promise<FastifyInstance> {
+export async function buildApp({ config, db = null, store: injected, fetchImpl, now }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({ logger: config.NODE_ENV === 'test' ? false : { level: 'info', redact: ['req.headers.authorization', 'req.headers.cookie'] }, trustProxy: true, bodyLimit: 64 * 1024 })
 
   await app.register(rateLimit, { global: false })
@@ -26,6 +29,8 @@ export async function buildApp({ config, db = null, store: injected, fetchImpl }
   const secrets = createSecrets(config, store)
   const ai = createAiService({ store, secrets, fetch: fetchImpl ?? ((...a) => fetch(...a)) })
   const feed = createFeedService({ store, ai })
+  const sms = createGhasedak({ secrets, baseUrl: config.GHASEDAK_BASE_URL, fetchImpl })
+  const auth = createAuthService({ store, secrets, sms, config, now })
 
   app.addHook('onSend', async (req, reply) => {
     reply.header('X-Content-Type-Options', 'nosniff').header('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -40,7 +45,8 @@ export async function buildApp({ config, db = null, store: injected, fetchImpl }
     publicRoutes(api, store)
     feedPublicRoutes(api, feed)
     eventRoutes(api, store)
-    adminRoutes(api, { config, store, secrets, ai, feed })
+    authRoutes(api, { config, auth })
+    adminRoutes(api, { config, store, secrets, ai, feed, auth, sms })
     // آمادگی: وضعیت دیتابیس بدون افشای جزئیات اتصال
     api.get('/ready', async (_req, reply) => {
       if (!db) return reply.code(503).send({ status: 'degraded', db: 'not_configured' })

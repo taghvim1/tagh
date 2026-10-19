@@ -2,9 +2,9 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:
 import type { Config } from './config.js'
 import type { Store } from './store/types.js'
 
-export const SECRET_NAMES = ['gemini', 'tavily', 'unsplash'] as const
+export const SECRET_NAMES = ['gemini', 'tavily', 'unsplash', 'ghasedak'] as const
 export type SecretName = (typeof SECRET_NAMES)[number]
-const ENV_VAR: Record<SecretName, keyof Config> = { gemini: 'GEMINI_API_KEY', tavily: 'TAVILY_API_KEY', unsplash: 'UNSPLASH_ACCESS_KEY' }
+const ENV_VAR: Record<SecretName, keyof Config> = { gemini: 'GEMINI_API_KEY', tavily: 'TAVILY_API_KEY', unsplash: 'UNSPLASH_ACCESS_KEY', ghasedak: 'GHASEDAK_API_KEY' }
 export const envVarOf = (n: SecretName) => ENV_VAR[n] as string
 const kvKey = (n: SecretName) => `secret:${n}`
 
