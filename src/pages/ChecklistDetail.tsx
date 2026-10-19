@@ -122,7 +122,7 @@ export default function ChecklistDetail({ id }: { id: string }) {
       <button type="button" className="ck-fab" aria-label="افزودن آیتم به چک‌لیست" aria-haspopup="dialog" onClick={() => { setTarget(undefined); add.show() }}>
         <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
       </button>
-      <CenterModal open={add.open} onClose={add.hide} label="افزودن آیتم"><AddForm type={type} onDone={add.hide} defaultCat={target} /></CenterModal>
+      <CenterModal open={add.open} onClose={add.hide} label="افزودن آیتم" className="cm-sm"><AddForm type={type} onDone={add.hide} defaultCat={target} /></CenterModal>
     </div>
   )
 }

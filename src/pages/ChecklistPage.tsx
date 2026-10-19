@@ -27,11 +27,11 @@ function CreateForm({ onDone, onCreated }: { onDone: () => void; onCreated: (id:
       </div>
       <label className="ck-field"><span>شروع از</span>
         <select className="tp-input" value={from} onChange={(e) => setFrom(e.target.value)}>
-          <option value="">چک‌لیست خالی (خودم می‌نویسم)</option>
+          <option value="">خالی (خودم می‌نویسم)</option>
           {TRIP_TYPES.map((t) => <option key={t.id} value={t.id}>کپی از «{t.title}»</option>)}
         </select>
       </label>
-      <div className="nt-actions"><button type="button" className="tp-btn" onClick={onDone}>انصراف</button><button type="submit" className="tp-btn primary" disabled={!title.trim()}>ساخت چک‌لیست</button></div>
+      <div className="nt-actions"><button type="button" className="tp-btn" onClick={onDone}>انصراف</button><button type="submit" className="tp-btn primary" disabled={!title.trim()}>ساخت</button></div>
     </form>
   )
 }
@@ -69,7 +69,7 @@ export default function ChecklistPage() {
           </button>
         </div>
       </main>
-      <CenterModal open={create.open} onClose={create.hide} label="ساخت نوع سفر"><CreateForm onDone={create.hide} onCreated={(id) => { create.hideSilently(); navigate(`/checklist/${id}`) }} /></CenterModal>
+      <CenterModal open={create.open} onClose={create.hide} label="ساخت نوع سفر" className="cm-sm"><CreateForm onDone={create.hide} onCreated={(id) => { create.hideSilently(); navigate(`/checklist/${id}`) }} /></CenterModal>
     </div>
   )
 }
