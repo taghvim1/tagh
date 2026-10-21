@@ -12,6 +12,7 @@ const schema = z.object({
   DATA_DIR: z.string().default('data'),
   /** اگر تنظیم شود، همهٔ /api/admin/* به هدر Authorization: Bearer <token> نیاز دارد */
   ADMIN_TOKEN: z.string().min(16).optional(),
+  VAPID_PUBLIC_KEY: z.string().optional(), VAPID_PRIVATE_KEY: z.string().optional(), VAPID_SUBJECT: z.string().optional(), // اعلان Push؛ بدون آن‌ها کلیدها خودکار ساخته می‌شوند
   /** فقط برای تست: در production بدون ADMIN_TOKEN، دسترسی بازِ ادمین را آگاهانه روشن می‌کند */
   ADMIN_OPEN: z.enum(['true', 'false']).default('false'),
   /** کلید رمزنگاری برای ذخیرهٔ کلیدهای API واردشده از رابط مدیریت (حداقل ۱۶ نویسه) */

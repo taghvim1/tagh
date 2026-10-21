@@ -22,9 +22,18 @@ export async function registerInstallation(fetchImpl?: typeof fetch): Promise<bo
 }
 export interface AuthState { status: 'unknown' | 'out' | 'in'; user: AuthUser | null; /** آیا سرور ورود پیامکی را پشتیبانی می‌کند؟ (null = هنوز معلوم نیست) */ available: boolean | null }
 
-let state: AuthState = { status: 'unknown', user: null, available: null }
+// پروفایل کاربرِ واردشده روی همین دستگاه نگه داشته می‌شود تا هنگام باز شدن برنامه از سرور بارگذاری نشود (آفلاین هم نمایش داده می‌شود)؛ سرور فقط در پس‌زمینه تأیید می‌کند.
+const CACHE_KEY = 'tp-auth-cache-v1'
+const readCache = (): AuthUser | null => { try { const v = JSON.parse(localStorage.getItem(CACHE_KEY) ?? 'null') as AuthUser | null; return v && typeof v.id === 'string' ? v : null } catch { return null } }
+const writeCache = (u: AuthUser | null) => { try { if (u) localStorage.setItem(CACHE_KEY, JSON.stringify(u)); else localStorage.removeItem(CACHE_KEY) } catch { /* فقط حافظه */ } }
+const cached = readCache()
+let state: AuthState = { status: cached ? 'in' : 'unknown', user: cached, available: null }
 const listeners = new Set<() => void>()
-const set = (patch: Partial<AuthState>) => { state = { ...state, ...patch }; listeners.forEach((l) => l()) }
+const set = (patch: Partial<AuthState>) => {
+  state = { ...state, ...patch }
+  if ('user' in patch || 'status' in patch) writeCache(state.status === 'in' ? state.user : null)
+  listeners.forEach((l) => l())
+}
 const subscribe = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l) } }
 export const getAuth = () => state
 export const useAuth = () => useSyncExternalStore(subscribe, getAuth, getAuth)

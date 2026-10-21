@@ -18,7 +18,7 @@ import type { Tour } from '../tours/types'
 import { useAllDestinations } from '../travel/remote'
 import PackageView from '../package/PackageView'
 import { removePackage, useSavedPackages } from '../package/saved'
-import type { TourPackage } from '../package/types'
+import { imagesOf, type TourPackage } from '../package/types'
 import { seasonOfMonth } from '../travel/season'
 
 type Opened = { kind: 'destination'; item: Destination } | { kind: 'tour'; item: Tour } | null
@@ -81,10 +81,10 @@ export default function Favorites() {
                   {pkgs.map((p) => (
                     <li key={p.id}>
                       <button type="button" className="pk-saved-open" onClick={() => { setOpenPkg(p); pkgPopup.show() }}>
-                        {p.image ? <img src={p.image.url} alt="" loading="lazy" referrerPolicy="no-referrer" /> : <span className="pk-saved-ph" aria-hidden="true" />}
+                        {imagesOf(p)[0] ? <img src={imagesOf(p)[0].url} alt="" loading="lazy" referrerPolicy="no-referrer" /> : <span className="pk-saved-ph" aria-hidden="true" />}
                         <span><strong>{p.content.title}</strong><small>{p.input.origin} ← {p.input.destination} · {faNum(p.input.days)} روز</small></span>
                       </button>
-                      <button type="button" className="pk-saved-del" aria-label={`حذف ${p.content.title}`} onClick={() => { if (window.confirm('این پکیج از علاقه‌مندی‌ها حذف شود؟')) removePackage(p.id) }}>حذف</button>
+                      <button type="button" className="pk-saved-del" aria-label={`حذف ${p.content.title}`} onClick={() => { if (window.confirm("این پکیج از علاقه‌مندی‌ها حذف شود؟")) removePackage(p.id) }}>×</button>
                     </li>
                   ))}
                 </ul>

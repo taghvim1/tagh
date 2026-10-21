@@ -7,6 +7,7 @@ import ChecklistPage from './pages/ChecklistPage'
 import PackagePage from './pages/PackagePage'
 import ProfilePage from './pages/ProfilePage'
 import { registerInstallation } from './auth/client'
+import { startJobPoller } from './package/jobs'
 import ChecklistDetail from './pages/ChecklistDetail'
 import Favorites from './pages/Favorites'
 import DestinationDetails from './pages/DestinationDetails'
@@ -22,7 +23,7 @@ import { usePath } from './lib/router'
 const AdminApp = lazyWithRetry(() => import('./admin/AdminApp'))
 
 export default function App() {
-  useEffect(() => { void registerInstallation() }, []) // ثبت نصب در پنل مدیریت (مهمان)
+  useEffect(() => { void registerInstallation(); startJobPoller() }, []) // ثبت نصب در پنل مدیریت (مهمان)
   return <Routes />
 }
 

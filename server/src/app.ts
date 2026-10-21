@@ -13,6 +13,7 @@ import { createRegistry } from './auth/registry.js'
 import { adminRoutes } from './routes/admin.js'
 import { authRoutes } from './routes/auth.js'
 import { createPackageService } from './package/service.js'
+import { createPusher } from './package/push.js'
 import { packagePublicRoutes } from './routes/package.js'
 import { eventRoutes } from './routes/events.js'
 import { feedPublicRoutes } from './routes/feed.js'
@@ -32,7 +33,7 @@ export async function buildApp({ config, db = null, store: injected, fetchImpl, 
   const secrets = createSecrets(config, store)
   const ai = createAiService({ store, secrets, fetch: fetchImpl ?? ((...a) => fetch(...a)) })
   const feed = createFeedService({ store, ai })
-  const pkg = createPackageService({ store, ai })
+  const pkg = createPackageService({ store, ai, pusher: createPusher({ store, config }), ...(now ? { now: () => new Date(now()) } : {}) })
   const sms = createGhasedak({ secrets, baseUrl: config.GHASEDAK_BASE_URL, fetchImpl })
   const registry = createRegistry({ store, ...(now ? { now } : {}) })
   const auth = createAuthService({ store, secrets, sms, config, registry, ...(now ? { now } : {}) })

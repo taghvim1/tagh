@@ -89,5 +89,12 @@ self.addEventListener('notificationclose', (e) => { if (e.notification.tag === D
 self.addEventListener('notificationclick', (e) => {
   const url = (e.notification.data && e.notification.data.url) || '/'
   if (e.notification.tag !== DATE_TAG) e.notification.close() // اعلان تاریخ با کلیک بسته نمی‌شود
-  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => (list.length ? list[0].focus() : self.clients.openWindow(url))))
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => (list.length ? list[0].focus().then((c) => { if (c && c.navigate && url !== '/') return c.navigate(url) }) : self.clients.openWindow(url))))
+})
+
+// Web Push (مثلاً آماده‌شدن پکیج تور وقتی برنامه بسته است)
+self.addEventListener('push', (e) => {
+  let d = {}
+  try { d = e.data ? e.data.json() : {} } catch { /* بدون محتوا */ }
+  e.waitUntil(self.registration.showNotification(d.title || 'تقویم سفر', { body: d.body || '', tag: d.tag || 'taghvim-push', icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', dir: 'rtl', lang: 'fa', data: { url: d.url || '/' } }))
 })
