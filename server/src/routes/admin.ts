@@ -10,6 +10,8 @@ import type { FeedService } from '../feed/service.js'
 import type { Ghasedak } from '../auth/ghasedak.js'
 import type { AuthService } from '../auth/service.js'
 import { smsAdminRoutes } from './authAdmin.js'
+import { packageAdminRoutes } from './package.js'
+import type { PackageService } from '../package/service.js'
 import { usersAdminRoutes } from './usersAdmin.js'
 import type { Registry } from '../auth/registry.js'
 import { feedAdminRoutes } from './feed.js'
@@ -28,7 +30,7 @@ const imageInput = z.object({
   license: z.string().max(120).nullish(), license_url: z.string().url().max(2000).nullish(), attribution: z.string().max(400).nullish(),
 })
 
-export function adminRoutes(app: FastifyInstance, d: { config: Config; store: Store; secrets: Secrets; ai: AiService; feed: FeedService; auth: AuthService; registry: Registry; sms: Ghasedak; now?: () => Date }) {
+export function adminRoutes(app: FastifyInstance, d: { config: Config; store: Store; secrets: Secrets; ai: AiService; feed: FeedService; pkg: PackageService; auth: AuthService; registry: Registry; sms: Ghasedak; now?: () => Date }) {
   const { config, store, secrets, ai } = d, now = () => (d.now ?? (() => new Date()))().toISOString()
   const bad = (reply: FastifyReply, errors: string[], code = 400) => reply.code(code).send({ error: 'validation', errors })
   const mode = adminMode(config)
@@ -189,6 +191,7 @@ export function adminRoutes(app: FastifyInstance, d: { config: Config; store: St
 
     // ---------- ورود پیامکی (قاصدک) ----------
     smsAdminRoutes(adm, { config, auth: d.auth, sms: d.sms })
+    packageAdminRoutes(adm, d.pkg)
     usersAdminRoutes(adm, { registry: d.registry, auth: d.auth })
 
     // ---------- قالب پرامپت (نسخه‌دار) ----------

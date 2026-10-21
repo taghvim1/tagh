@@ -12,6 +12,8 @@ import { createAuthService } from './auth/service.js'
 import { createRegistry } from './auth/registry.js'
 import { adminRoutes } from './routes/admin.js'
 import { authRoutes } from './routes/auth.js'
+import { createPackageService } from './package/service.js'
+import { packagePublicRoutes } from './routes/package.js'
 import { eventRoutes } from './routes/events.js'
 import { feedPublicRoutes } from './routes/feed.js'
 import { publicRoutes } from './routes/public.js'
@@ -30,6 +32,7 @@ export async function buildApp({ config, db = null, store: injected, fetchImpl, 
   const secrets = createSecrets(config, store)
   const ai = createAiService({ store, secrets, fetch: fetchImpl ?? ((...a) => fetch(...a)) })
   const feed = createFeedService({ store, ai })
+  const pkg = createPackageService({ store, ai })
   const sms = createGhasedak({ secrets, baseUrl: config.GHASEDAK_BASE_URL, fetchImpl })
   const registry = createRegistry({ store, ...(now ? { now } : {}) })
   const auth = createAuthService({ store, secrets, sms, config, registry, ...(now ? { now } : {}) })
@@ -47,8 +50,9 @@ export async function buildApp({ config, db = null, store: injected, fetchImpl, 
     publicRoutes(api, store)
     feedPublicRoutes(api, feed)
     eventRoutes(api, store)
+    packagePublicRoutes(api, pkg)
     authRoutes(api, { config, auth, registry })
-    adminRoutes(api, { config, store, secrets, ai, feed, auth, registry, sms })
+    adminRoutes(api, { config, store, secrets, ai, feed, pkg, auth, registry, sms })
     // آمادگی: وضعیت دیتابیس بدون افشای جزئیات اتصال
     api.get('/ready', async (_req, reply) => {
       if (!db) return reply.code(503).send({ status: 'degraded', db: 'not_configured' })

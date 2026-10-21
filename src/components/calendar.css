@@ -671,3 +671,48 @@ a.fd-credit:hover { text-decoration: underline; }
 .lg-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .lg-link { align-self: flex-start; padding: 6px 0; border: 0; background: none; color: var(--accent); font: inherit; cursor: pointer; }
 .st-val { font-size: .9rem; opacity: .65; }
+
+/* ---- پکیج تور ---- */
+.pk-form { gap: 12px; }
+.pk-form select.lg-input { appearance: auto; }
+.pk-stepper { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pk-stepper output { font-size: 1.2rem; font-weight: 700; }
+.pk-stepper .tp-btn { min-width: 52px; font-size: 1.3rem; }
+.pk-result { margin-top: 20px; width: 100%; max-width: 620px; margin-inline: auto; }
+.pk-view { display: flex; flex-direction: column; gap: 12px; line-height: 1.9; }
+.pk-view h3 { margin: 6px 0 2px; font-size: 1.05rem; }
+.pk-view p, .pk-view ul, .pk-view ol { margin: 0; }
+.pk-view ul { padding-inline-start: 20px; }
+.pk-title { margin: 0; font-size: 1.35rem; }
+.pk-img { margin: 0; border-radius: 16px; overflow: hidden; background: var(--bg-soft); }
+.pk-img img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+.pk-img figcaption { padding: 4px 10px; font-size: .7rem; color: var(--muted); }
+.pk-img figcaption a { color: inherit; }
+.pk-meta { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; padding: 0 !important; }
+.pk-meta li { border: 1px solid var(--line); border-radius: 999px; padding: 0 10px; font-size: .8rem; line-height: 1.9; color: var(--muted); }
+.pk-days { padding-inline-start: 0 !important; list-style: none; display: grid; gap: 10px; }
+.pk-days > li { padding: 10px 12px; border-radius: 12px; background: var(--bg-soft); }
+.pk-days ul { margin-top: 4px; }
+.pk-small { font-size: .82rem; color: var(--muted); }
+.pk-tips { padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); }
+.pk-warn { padding: 10px 12px; border-radius: 12px; border: 1px solid var(--accent); }
+.pk-warn h3 { color: var(--accent); }
+.pk-actions { display: flex; }
+.pk-fav { flex: 1; min-height: 48px; padding: 0 14px; border: 1px solid var(--accent); border-radius: 14px; background: none; color: var(--accent); font: inherit; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.pk-fav.on { background: var(--accent); color: var(--accent-ink); }
+.pk-cloud { position: fixed; z-index: 80; inset-inline: 0; bottom: max(24px, env(safe-area-inset-bottom)); margin-inline: auto; width: fit-content; max-width: calc(100vw - 32px); display: flex; align-items: center; gap: 10px; padding: 14px 24px; border-radius: 40px 40px 40px 14px; background: var(--ink); color: var(--bg); box-shadow: 0 8px 28px rgba(0, 0, 0, .28); animation: pk-pop .35s cubic-bezier(.2, 1.4, .4, 1); }
+.pk-cloud::before, .pk-cloud::after { content: ''; position: absolute; background: inherit; border-radius: 50%; }
+.pk-cloud::before { width: 22px; height: 22px; top: -9px; inset-inline-start: 26px; }
+.pk-cloud::after { width: 15px; height: 15px; top: -14px; inset-inline-start: 56px; }
+.pk-cloud-icon { color: var(--accent); }
+.pk-cloud-link { color: inherit; font-weight: 700; text-decoration: underline; white-space: nowrap; }
+@keyframes pk-pop { from { opacity: 0; transform: translateY(16px) scale(.9); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .pk-cloud { animation: none; } }
+.pk-saved { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.pk-saved li { display: flex; align-items: stretch; gap: 8px; }
+.pk-saved-open { flex: 1; display: flex; align-items: center; gap: 12px; padding: 8px; border: 1px solid var(--line); border-radius: 14px; background: none; color: inherit; font: inherit; text-align: start; cursor: pointer; }
+.pk-saved-open img, .pk-saved-ph { flex: none; width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: var(--bg-soft); }
+.pk-saved-open span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.pk-saved-open small { color: var(--muted); }
+.pk-saved-del { flex: none; padding: 0 12px; border: 1px solid var(--line); border-radius: 14px; background: none; color: var(--muted); font: inherit; cursor: pointer; }
+.cm .pk-view { padding: 44px 14px 18px; }

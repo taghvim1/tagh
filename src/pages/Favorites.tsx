@@ -16,6 +16,9 @@ import TourCard from '../tours/TourCard'
 import TourContent from '../tours/TourContent'
 import type { Tour } from '../tours/types'
 import { useAllDestinations } from '../travel/remote'
+import PackageView from '../package/PackageView'
+import { removePackage, useSavedPackages } from '../package/saved'
+import type { TourPackage } from '../package/types'
 import { seasonOfMonth } from '../travel/season'
 
 type Opened = { kind: 'destination'; item: Destination } | { kind: 'tour'; item: Tour } | null
@@ -38,7 +41,10 @@ export default function Favorites() {
   // نمونهٔ باز‌شده نگه داشته می‌شود تا با برداشتن علاقه‌مندی، پنجره ناگهان بسته نشود
   const [opened, setOpened] = useState<Opened>(null)
   const open = (o: NonNullable<Opened>) => { setOpened(o); popup.show() }
-  const total = favDestinations.length + favTours.length
+  const pkgs = useSavedPackages()
+  const [openPkg, setOpenPkg] = useState<TourPackage | null>(null)
+  const pkgPopup = useOverlay('favorite-package')
+  const total = favDestinations.length + favTours.length + pkgs.length
 
   return (
     <div className="tp-page" data-theme={dark ? 'dark' : 'light'}>
@@ -52,7 +58,7 @@ export default function Favorites() {
         {total === 0 ? (
           <div className="tp-placeholder">
             <strong>هنوز چیزی ذخیره نکرده‌ای</strong>
-            <p>در جزئیات هر مقصد یا تور، دکمهٔ «افزودن به علاقه‌مندی‌ها» را بزن تا اینجا بیاید.</p>
+            <p>در جزئیات هر مقصد یا تور، دکمهٔ «افزودن به علاقه‌مندی‌ها» را بزن تا اینجا بیاید. پکیج‌های تور هم همین‌جا ذخیره می‌شوند.</p>
           </div>
         ) : (
           <>
@@ -68,9 +74,28 @@ export default function Favorites() {
                 <div className="dest-grid">{favTours.map((t) => <TourCard key={t.id} tour={t} onOpen={(x) => open({ kind: 'tour', item: x })} />)}</div>
               </div>
             )}
+            {pkgs.length > 0 && (
+              <div className="tp-section">
+                <h3>پکیج‌های تور ({faNum(pkgs.length)})</h3>
+                <ul className="pk-saved">
+                  {pkgs.map((p) => (
+                    <li key={p.id}>
+                      <button type="button" className="pk-saved-open" onClick={() => { setOpenPkg(p); pkgPopup.show() }}>
+                        {p.image ? <img src={p.image.url} alt="" loading="lazy" referrerPolicy="no-referrer" /> : <span className="pk-saved-ph" aria-hidden="true" />}
+                        <span><strong>{p.content.title}</strong><small>{p.input.origin} ← {p.input.destination} · {faNum(p.input.days)} روز</small></span>
+                      </button>
+                      <button type="button" className="pk-saved-del" aria-label={`حذف ${p.content.title}`} onClick={() => { if (window.confirm('این پکیج از علاقه‌مندی‌ها حذف شود؟')) removePackage(p.id) }}>حذف</button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </>
         )}
       </main>
+      <CenterModal open={pkgPopup.open && !!openPkg} onClose={pkgPopup.hide} label={openPkg?.content.title ?? 'پکیج تور'}>
+        {openPkg && <PackageView pkg={openPkg} />}
+      </CenterModal>
 
       <CenterModal open={popup.open && !!opened} onClose={popup.hide} label={opened?.kind === 'tour' ? opened.item.title : opened?.item.name ?? 'جزئیات'}>
         {opened?.kind === 'destination' && <DestinationContent destination={opened.item} season={season} />}

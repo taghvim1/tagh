@@ -13,6 +13,7 @@ import SeasonalRecommendations from './pages/SeasonalRecommendations'
 import FeedAdmin from './pages/FeedAdmin'
 import Settings from './pages/Settings'
 import SmsLogin from './pages/SmsLogin'
+import PackagePrompt from './pages/PackagePrompt'
 import Users from './pages/Users'
 import { FEED_KINDS, FEED_TITLE } from '../feed/topics'
 import type { IconName } from './components/Icon'
@@ -47,6 +48,7 @@ export const ADMIN_ROUTES: AdminRoute[] = [
     group: k === 'dyk' ? 'صفحهٔ اول: آیا می‌دانستید' : 'صفحهٔ دوم: کاشی موضوعات',
     icon: k === 'dyk' ? 'bulb' : 'news',
   })),
+  { path: '/admin/package', title: 'پکیج تور (پرامپت)', element: <PackagePrompt />, group: 'پکیج تور', icon: 'spark' },
   { path: '/admin/api-settings', title: 'تنظیمات API', element: <ApiSettings />, icon: 'key' },
   { path: '/admin/sms-login', title: 'ورود و ثبت‌نام پیامکی', element: <SmsLogin />, icon: 'mobile' },
   { path: '/admin/users', title: 'کاربران', element: <Users />, icon: 'chart' },
