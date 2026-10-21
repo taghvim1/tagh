@@ -50,11 +50,12 @@ export function createDemoApi(now: () => Date = () => new Date(), seed?: Profile
   }
 }
 
-/** کلاینت API واقعی: هنوز هیچ سرویسی وجود ندارد، پس هر فراخوانی خطای «در دسترس نیست» می‌دهد (نه داده ساختگی). */
+/** کلاینت API واقعی (سرور). اگر سرور در دسترس یا مجاز نباشد، خطا می‌دهد و هرگز داده ساختگی جایگزین نمی‌شود. توکن مدیر همان است که در ورود به پنل ذخیره شده. */
 export function createRemoteApi(baseUrl = '/api/admin', fetchImpl: typeof fetch = (...a) => fetch(...a)): UsersApi {
   async function req<T>(path: string, init?: RequestInit): Promise<T> {
     let res: Response
-    try { res = await fetchImpl(baseUrl + path, { credentials: 'include', headers: { 'content-type': 'application/json' }, ...init }) } catch { throw new ApiUnavailableError('NETWORK_ERROR') }
+    let token = ''; try { token = sessionStorage.getItem('adm-token') ?? '' } catch { /* بدون ذخیره‌سازی */ }
+    try { res = await fetchImpl(baseUrl + path, { credentials: 'include', ...init, headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) } }) } catch { throw new ApiUnavailableError('NETWORK_ERROR') }
     if (res.status === 401 || res.status === 403) throw new ApiUnavailableError('UNAUTHORIZED')
     if (!res.ok || !(res.headers.get('content-type') ?? '').includes('json')) throw new ApiUnavailableError('BACKEND_NOT_CONNECTED')
     return res.json() as Promise<T>

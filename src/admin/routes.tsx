@@ -48,7 +48,7 @@ export const ADMIN_ROUTES: AdminRoute[] = [
     icon: k === 'dyk' ? 'bulb' : 'news',
   })),
   { path: '/admin/api-settings', title: 'تنظیمات API', element: <ApiSettings />, icon: 'key' },
-  { path: '/admin/sms-login', title: 'ورود پیامکی (تست)', element: <SmsLogin />, icon: 'mobile' },
+  { path: '/admin/sms-login', title: 'ورود و ثبت‌نام پیامکی', element: <SmsLogin />, icon: 'mobile' },
   { path: '/admin/users', title: 'کاربران', element: <Users />, icon: 'chart' },
   { path: '/admin/settings', title: 'تنظیمات', element: <Settings />, icon: 'settings' },
 ]

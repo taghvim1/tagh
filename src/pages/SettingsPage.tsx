@@ -71,7 +71,7 @@ export default function SettingsPage() {
             <input type="checkbox" role="switch" className="cal-switch" checked={haptics} onChange={(e) => setWeekHaptics(e.target.checked)} />
           </label>
           {auth.available && (
-            <button type="button" className="st-row st-link" onClick={() => navigate('/login')}>
+            <button type="button" className="st-row st-link" onClick={() => navigate('/profile')}>
               <span>{auth.status === 'in' ? 'حساب کاربری' : 'ورود با شماره موبایل'}</span>
               <span className="st-val" dir="ltr">{auth.status === 'in' && auth.user ? auth.user.phone_masked : '‹'}</span>
             </button>

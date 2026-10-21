@@ -14,7 +14,7 @@ export const SMS_ERROR_FA: Record<SmsErrorKind, string> = {
   invalid_number: 'شمارهٔ گیرنده نامعتبر است.',
   filtered_number: 'شمارهٔ گیرنده فیلتر شده است.',
   no_credit: 'اعتبار ریالی حساب قاصدک کافی نیست.',
-  template_invalid: 'قالب پیامک معتبر نیست؛ نام قالب را در این صفحه بررسی یا قالب را بسازید.',
+  template_invalid: 'قالب پیامک معتبر نیست؛ نام قالب را با قالب تأییدشده در پنل قاصدک مقایسه کنید.',
   unavailable: 'سرویس قاصدک در دسترس نیست؛ کمی بعد دوباره تلاش کنید.',
   bad_response: 'پاسخ نامعتبر از قاصدک دریافت شد.',
   network: 'ارتباط با قاصدک برقرار نشد (شبکه یا نشانی پایه را بررسی کنید).',
@@ -65,16 +65,6 @@ export function createGhasedak(d: GhasedakDeps) {
       const r = await call('/v2/credit', {}); if (!r.ok) return r
       const credit = Number(r.data.credit)
       return Number.isFinite(credit) ? { ok: true, data: { credit } } : fail('bad_response')
-    },
-    async createTemplate(name: string, message: string): Promise<SmsResult<{ templateId: number }>> {
-      const r = await call('/v2/sms/otp/create', { template: name, message }); if (!r.ok) return r
-      const id = Number(r.data.templateid)
-      return Number.isFinite(id) ? { ok: true, data: { templateId: id } } : fail('bad_response')
-    },
-    async templateStatus(templateId: number): Promise<SmsResult<{ status: number }>> {
-      const r = await call('/v2/sms/otp/status', { templateid: templateId }); if (!r.ok) return r
-      const status = Number(r.data.status)
-      return Number.isFinite(status) ? { ok: true, data: { status } } : fail('bad_response')
     },
   }
 }

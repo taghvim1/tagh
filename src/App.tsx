@@ -4,7 +4,8 @@ import { trackRoute } from './analytics'
 import CalendarPage from './pages/CalendarPage'
 import NotesPage from './pages/NotesPage'
 import ChecklistPage from './pages/ChecklistPage'
-import LoginPage from './pages/LoginPage'
+import ProfilePage from './pages/ProfilePage'
+import { registerInstallation } from './auth/client'
 import ChecklistDetail from './pages/ChecklistDetail'
 import Favorites from './pages/Favorites'
 import DestinationDetails from './pages/DestinationDetails'
@@ -20,6 +21,7 @@ import { usePath } from './lib/router'
 const AdminApp = lazyWithRetry(() => import('./admin/AdminApp'))
 
 export default function App() {
+  useEffect(() => { void registerInstallation() }, []) // ثبت نصب در پنل مدیریت (مهمان)
   return <Routes />
 }
 
@@ -41,7 +43,7 @@ function Routes() {
   if (path === '/settings') return <SettingsPage />
   if (path === '/weather') return <WeatherPage />
   if (path === '/privacy') return <PrivacyPage />
-  if (path === '/login') return <LoginPage />
+  if (path === '/login' || path === '/profile') return <ProfilePage />
   if (path === '/notes') return <NotesPage />
   if (path === '/checklist') return <ChecklistPage />
   const ck = path.match(/^\/checklist\/([\w-]+)$/)

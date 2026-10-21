@@ -9,6 +9,7 @@ import { createAiService } from './ai/service.js'
 import { createFeedService } from './feed/service.js'
 import { createGhasedak } from './auth/ghasedak.js'
 import { createAuthService } from './auth/service.js'
+import { createRegistry } from './auth/registry.js'
 import { adminRoutes } from './routes/admin.js'
 import { authRoutes } from './routes/auth.js'
 import { eventRoutes } from './routes/events.js'
@@ -30,7 +31,8 @@ export async function buildApp({ config, db = null, store: injected, fetchImpl, 
   const ai = createAiService({ store, secrets, fetch: fetchImpl ?? ((...a) => fetch(...a)) })
   const feed = createFeedService({ store, ai })
   const sms = createGhasedak({ secrets, baseUrl: config.GHASEDAK_BASE_URL, fetchImpl })
-  const auth = createAuthService({ store, secrets, sms, config, now })
+  const registry = createRegistry({ store, ...(now ? { now } : {}) })
+  const auth = createAuthService({ store, secrets, sms, config, registry, ...(now ? { now } : {}) })
 
   app.addHook('onSend', async (req, reply) => {
     reply.header('X-Content-Type-Options', 'nosniff').header('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -45,8 +47,8 @@ export async function buildApp({ config, db = null, store: injected, fetchImpl, 
     publicRoutes(api, store)
     feedPublicRoutes(api, feed)
     eventRoutes(api, store)
-    authRoutes(api, { config, auth })
-    adminRoutes(api, { config, store, secrets, ai, feed, auth, sms })
+    authRoutes(api, { config, auth, registry })
+    adminRoutes(api, { config, store, secrets, ai, feed, auth, registry, sms })
     // آمادگی: وضعیت دیتابیس بدون افشای جزئیات اتصال
     api.get('/ready', async (_req, reply) => {
       if (!db) return reply.code(503).send({ status: 'degraded', db: 'not_configured' })

@@ -47,7 +47,7 @@ const fixBool = (f: ProfileFilters): ProfileFilters => ({ ...f, marketingConsent
 
 export default function Users() {
   const demo = useMemo(() => createDemoApi(), [])
-  const [mode, setMode] = useState<'demo' | 'remote'>('demo')
+  const [mode, setMode] = useState<'demo' | 'remote'>('remote')
   const remote = useMemo(() => createRemoteApi(), [])
   const api: UsersApi = mode === 'demo' ? demo : remote
   const [role, setRole] = useState<AdminRole>('analyst')
@@ -80,13 +80,13 @@ export default function Users() {
       <div className="adm-page-head"><div><h2>کاربران و تحلیل رفتار</h2></div></div>
 
       <div className="adm-card" role="note" style={{ borderColor: '#e0b252', background: '#fff8e8', marginBottom: 12 }}>
-        <strong>{mode === 'demo' ? 'داده‌ی نمایشی — بک‌اند متصل نیست' : 'اتصال به سرور'}</strong>
+        <strong>{mode === 'demo' ? 'داده‌ی نمایشی — ساختگی' : 'داده‌ی واقعی سرور'}</strong>
         <p className="adm-note">
-          {mode === 'demo' ? 'همهٔ کاربران این صفحه ساختگی‌اند و فقط برای نمایش رابط تولید می‌شوند. داده‌ی واقعی کاربران فقط از طریق API امن سرور قابل نمایش است و هنوز چنین سرویسی وجود ندارد. انتخاب نقش در این صفحه یک شبیه‌سازی است و امنیت واقعی ایجاد نمی‌کند؛ مجوزها باید در سرور اعمال شوند.' : 'اگر سرور در دسترس نباشد، خطا نمایش داده می‌شود و هیچ داده ساختگی جایگزین نمی‌شود.'}
+          {mode === 'demo' ? 'همهٔ کاربران این صفحه ساختگی‌اند و فقط برای نمایش رابط تولید می‌شوند. داده‌ی واقعی کاربران فقط از طریق API امن سرور قابل نمایش است و هنوز چنین سرویسی وجود ندارد. انتخاب نقش در این صفحه یک شبیه‌سازی است و امنیت واقعی ایجاد نمی‌کند؛ مجوزها باید در سرور اعمال شوند.' : 'هر نصب تازه به‌صورت «مهمان» ثبت می‌شود؛ با ثبت‌نام با شماره به «ثبت‌نام‌شده» و با تکمیل نام و شهر به «پروفایل کامل» تبدیل می‌شود. آمار رفتاری (نشست، مقصد، علایق) هنوز از برنامه ارسال نمی‌شود و صفر نشان داده می‌شود. اگر سرور در دسترس نباشد، خطا نمایش داده می‌شود و داده ساختگی جایگزین نمی‌شود.'}
         </p>
         <div className="adm-filters two">
           <select aria-label="نقش نمایشی" value={role} onChange={(e) => setRole(e.target.value as AdminRole)}>{ROLES.map(([r, l]) => <option key={r} value={r}>نقش: {l}</option>)}</select>
-          <select aria-label="منبع داده" value={mode} onChange={(e) => { setMode(e.target.value as 'demo' | 'remote'); setList(null); setAud(null) }}><option value="demo">منبع: نمایشی</option><option value="remote">منبع: سرور (آماده نیست)</option></select>
+          <select aria-label="منبع داده" value={mode} onChange={(e) => { setMode(e.target.value as 'demo' | 'remote'); setList(null); setAud(null) }}><option value="remote">منبع: سرور (واقعی)</option><option value="demo">منبع: نمایشی</option></select>
         </div>
       </div>
 
@@ -100,7 +100,7 @@ export default function Users() {
       {tab === 'overview' && stats && (
         <>
           <div className="adm-stats">
-            {([['کل پروفایل‌ها', stats.total], ['مهمان', stats.guests], ['ثبت‌نام‌شده', stats.registered], ['فعال روزانه', stats.dau], ['فعال هفتگی', stats.wau], ['فعال ماهانه', stats.mau], ['جدید (۳۰ روز)', stats.newProfiles], ['بازگشتی', stats.returning], ['نشست‌ها (۳۰ روز)', stats.sessions], ['علاقه‌مندی‌ها', stats.favorites], ['جست‌وجوها', stats.searches], ['کلیک پیشنهاد', stats.offerClicks], ['بازکردن اعلان', stats.notificationOpens]] as Array<[string, number]>).map(([l, v]) => (
+            {([['کل پروفایل‌ها', stats.total], ['مهمان', stats.guests], ['ثبت‌نام‌شده', stats.registered], ...(mode === 'remote' ? [['پروفایل کامل', (stats as { complete?: number }).complete ?? 0], ['پروفایل ناقص', (stats as { incomplete?: number }).incomplete ?? 0]] as Array<[string, number]> : []), ['فعال روزانه', stats.dau], ['فعال هفتگی', stats.wau], ['فعال ماهانه', stats.mau], ['جدید (۳۰ روز)', stats.newProfiles], ['بازگشتی', stats.returning], ['نشست‌ها (۳۰ روز)', stats.sessions], ['علاقه‌مندی‌ها', stats.favorites], ['جست‌وجوها', stats.searches], ['کلیک پیشنهاد', stats.offerClicks], ['بازکردن اعلان', stats.notificationOpens]] as Array<[string, number]>).map(([l, v]) => (
               <article key={l} className="adm-stat"><div className="adm-stat-text"><span className="adm-label">{l}</span><strong className="adm-value">{faNum(v)}</strong></div></article>
             ))}
           </div>
@@ -119,9 +119,9 @@ export default function Users() {
           <p className="adm-note" aria-live="polite">{faNum(list.total)} پروفایل · صفحه {faNum(list.page)} از {faNum(pages)}</p>
           {list.items.length === 0 ? <div className="adm-card adm-empty"><strong>نتیجه‌ای پیدا نشد</strong><p>کاربرانی که داده‌شان ثبت نشده در فیلترهای مربوطه نمی‌آیند.</p></div> : (
             <div className="adm-table-wrap" style={{ display: 'block', overflowX: 'auto' }}>
-              <table className="adm-table"><thead><tr><th>شناسه</th><th>وضعیت</th><th>نام</th><th>شهر</th>{th('first_seen_at', 'اولین مراجعه')}{th('last_active_at', 'آخرین فعالیت')}{th('sessions', 'نشست')}{th('destinations_viewed', 'مقصد')}<th>علایق برتر</th><th /></tr></thead>
+              <table className="adm-table"><thead><tr><th>شناسه</th><th>وضعیت</th><th>نام</th><th>شهر</th><th>پروفایل</th>{th('first_seen_at', 'اولین مراجعه')}{th('last_active_at', 'آخرین فعالیت')}{th('sessions', 'نشست')}{th('destinations_viewed', 'مقصد')}<th>علایق برتر</th><th /></tr></thead>
                 <tbody>{list.items.map((u) => (
-                  <tr key={u.id}><td dir="ltr">{u.id}</td><td><span className={`adm-badge ${u.status === 'registered' ? 'on' : 'off'}`}>{u.status === 'registered' ? 'ثبت‌نام‌شده' : 'مهمان'}</span>{u.state !== 'active' && ' (غیرفعال)'}</td><td>{u.display_name ?? '—'}</td><td>{u.city ?? '—'}</td><td>{fmtDate(u.first_seen_at)}</td><td>{fmtDate(u.last_active_at)}</td><td>{faNum(u.sessions)}</td><td>{faNum(u.destinations_viewed)}</td><td>{u.top_interests.join('، ') || '—'}</td>
+                  <tr key={u.id}><td dir="ltr">{u.id}</td><td><span className={`adm-badge ${u.status === 'registered' ? 'on' : 'off'}`}>{u.status === 'registered' ? 'ثبت‌نام‌شده' : 'مهمان'}</span>{u.state !== 'active' && ' (غیرفعال)'}</td><td>{u.display_name ?? '—'}</td><td>{u.city ?? '—'}</td><td>{u.status !== 'registered' ? '—' : u.profile_complete === undefined ? '—' : <span className={`adm-badge ${u.profile_complete ? 'on' : 'warn'}`}>{u.profile_complete ? 'کامل' : 'ناقص'}</span>}</td><td>{fmtDate(u.first_seen_at)}</td><td>{fmtDate(u.last_active_at)}</td><td>{faNum(u.sessions)}</td><td>{faNum(u.destinations_viewed)}</td><td>{u.top_interests.join('، ') || '—'}</td>
                     <td><button className="adm-btn" onClick={() => setOpen(u.id)}>جزئیات</button></td></tr>))}</tbody></table>
             </div>)}
           <div className="adm-form-actions">

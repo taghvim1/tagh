@@ -1,7 +1,25 @@
 import { useSyncExternalStore } from 'react'
 
 // کلاینت ورود با کد پیامکی. نشست در کوکی HttpOnly است (جاوااسکریپت توکنی نمی‌بیند)؛ اینجا فقط وضعیت نمایشی (شمارهٔ ماسک‌شده) نگه‌داری می‌شود.
-export interface AuthUser { id: string; phone_masked: string; created_at: string }
+export interface AuthProfile { first_name: string; last_name: string; city: string; email?: string }
+export interface AuthUser { id: string; phone_masked: string; created_at: string; profile?: AuthProfile | null; profile_complete?: boolean }
+
+// شناسهٔ نصب: عدد تصادفی بی‌اطلاعات شخصی، جدا از شناسهٔ تحلیل؛ فقط برای شمارش نصب‌ها و وصل‌شدن به حساب پس از ثبت‌نام
+const INSTALL_KEY = 'tp-install-id'
+export function getInstallId(): string | undefined {
+  try {
+    let id = localStorage.getItem(INSTALL_KEY)
+    if (!id || id.length < 8) { id = (globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`); localStorage.setItem(INSTALL_KEY, id) }
+    return id
+  } catch { return undefined }
+}
+/** هر بار برنامه باز می‌شود: نصب تازه در پنل مدیریت «مهمان» ثبت می‌شود (بی‌صدا؛ خطا نادیده گرفته می‌شود). */
+export async function registerInstallation(fetchImpl?: typeof fetch): Promise<boolean> {
+  const id = getInstallId(); if (!id) return false
+  const pwa = (() => { try { return window.matchMedia?.('(display-mode: standalone)').matches === true } catch { return false } })()
+  const r = await http('/installations', { method: 'POST', body: { installation_id: id, platform: pwa ? 'pwa' : 'web', app_version: '1' } }, fetchImpl)
+  return !!r && r.status === 204
+}
 export interface AuthState { status: 'unknown' | 'out' | 'in'; user: AuthUser | null; /** آیا سرور ورود پیامکی را پشتیبانی می‌کند؟ (null = هنوز معلوم نیست) */ available: boolean | null }
 
 let state: AuthState = { status: 'unknown', user: null, available: null }
@@ -29,10 +47,11 @@ export async function refreshAuth(fetchImpl?: typeof fetch) {
   set({ available: cfg.json.sms === true, status: user ? 'in' : 'out', user })
 }
 
+export type OtpPurpose = 'login' | 'reset'
 export type RequestError = 'invalid_phone' | 'too_soon' | 'too_many' | 'sms_unavailable' | 'sms_failed' | 'forbidden' | 'network'
 export type RequestOutcome = { ok: true; resendIn: number; expiresIn: number; devCode?: string } | { ok: false; error: RequestError; retryAfter?: number }
-export async function requestCode(phone: string, fetchImpl?: typeof fetch): Promise<RequestOutcome> {
-  const r = await http('/auth/otp/request', { method: 'POST', body: { phone } }, fetchImpl)
+export async function requestCode(phone: string, fetchImpl?: typeof fetch, purpose?: OtpPurpose): Promise<RequestOutcome> {
+  const r = await http('/auth/otp/request', { method: 'POST', body: { phone, ...(purpose ? { purpose } : {}) } }, fetchImpl)
   if (!r) return { ok: false, error: 'network' }
   if (r.status === 200) return { ok: true, resendIn: Number(r.json.resend_in) || 60, expiresIn: Number(r.json.expires_in) || 120, ...(typeof r.json.dev_code === 'string' ? { devCode: r.json.dev_code } : {}) }
   if (r.status === 403) return { ok: false, error: 'forbidden' }
@@ -45,7 +64,7 @@ export type VerifyError = 'invalid' | 'expired' | 'wrong_code' | 'locked' | 'for
 export type VerifyOutcome = { ok: true; user: AuthUser; created: boolean } | { ok: false; error: VerifyError; attemptsLeft?: number }
 /** anonymousId فقط وقتی داده شود که کاربر به تحلیل ناشناس رضایت داده؛ برای وصل‌کردن رویدادهای قبلی به حساب */
 export async function verifyCode(phone: string, code: string, anonymousId?: string, fetchImpl?: typeof fetch): Promise<VerifyOutcome> {
-  const r = await http('/auth/otp/verify', { method: 'POST', body: { phone, code, ...(anonymousId ? { anonymous_id: anonymousId } : {}) } }, fetchImpl)
+  const r = await http('/auth/otp/verify', { method: 'POST', body: { phone, code, ...(anonymousId ? { anonymous_id: anonymousId } : {}), ...(getInstallId() ? { installation_id: getInstallId() } : {}) } }, fetchImpl)
   if (!r) return { ok: false, error: 'network' }
   if (r.status === 200) { const user = r.json.user as AuthUser; set({ status: 'in', user }); return { ok: true, user, created: r.json.created === true } }
   if (r.status === 403) return { ok: false, error: 'forbidden' }
@@ -55,3 +74,13 @@ export async function verifyCode(phone: string, code: string, anonymousId?: stri
 
 export async function logout(fetchImpl?: typeof fetch) { const r = await http('/auth/logout', { method: 'POST' }, fetchImpl); if (r) set({ status: 'out', user: null }); return !!r }
 export async function deleteAccount(fetchImpl?: typeof fetch) { const r = await http('/auth/account', { method: 'DELETE' }, fetchImpl); if (r && (r.status === 204 || r.status === 401)) { set({ status: 'out', user: null }); return true } return false }
+
+export type ProfileOutcome = { ok: true; user: AuthUser } | { ok: false; error: 'invalid' | 'unauthorized' | 'network' }
+/** تکمیل/ویرایش پروفایل؛ در پنل مدیریت هم همان لحظه ثبت می‌شود. */
+export async function saveProfile(p: AuthProfile, fetchImpl?: typeof fetch): Promise<ProfileOutcome> {
+  const r = await http('/auth/profile', { method: 'PUT', body: p }, fetchImpl)
+  if (!r) return { ok: false, error: 'network' }
+  if (r.status === 200) { const user = r.json.user as AuthUser; set({ status: 'in', user }); return { ok: true, user } }
+  if (r.status === 401) { set({ status: 'out', user: null }); return { ok: false, error: 'unauthorized' } }
+  return { ok: false, error: 'invalid' }
+}

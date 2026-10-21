@@ -162,7 +162,7 @@ describe('ورود با کد پیامکی', () => {
     await app.close()
     const t2 = await mk()
     expect((await t2.call('GET', '/api/auth/config')).json()).toEqual({ sms: true })
-    expect((await t2.call('PUT', '/api/admin/sms/settings', { template: 'taghvim-otp', enabled: false })).statusCode).toBe(200)
+    expect((await t2.call('PUT', '/api/admin/sms/settings', { templates: [{ name: 'taghvim-otp', purpose: 'login' }], enabled: false })).statusCode).toBe(200)
     expect((await t2.call('GET', '/api/auth/config')).json()).toEqual({ sms: false })
     expect((await t2.call('POST', '/api/auth/otp/request', { phone: PHONE })).statusCode).toBe(503)
   })
@@ -230,17 +230,38 @@ describe('پنل مدیریت: ورود پیامکی', () => {
     const put = await t.call('PUT', '/api/admin/settings/secrets/ghasedak', { value: KEY })
     expect(put.statusCode).toBe(200); expect(put.json().status).toMatchObject({ configured: true, source: 'ui', masked: '••••7890', env_var: 'GHASEDAK_API_KEY' })
     const s = (await t.call('GET', '/api/admin/sms')).json()
-    expect(s).toMatchObject({ configured: true, available: true, base_host: 'api.ghasedaksms.com', https: true, settings: { template: 'taghvim-otp', enabled: true } })
+    expect(s).toMatchObject({ configured: true, available: true, base_host: 'api.ghasedaksms.com', https: true, settings: { enabled: true, templates: [{ name: 'taghvim-otp', purpose: 'login' }] } })
     expect((await t.call('POST', '/api/auth/otp/request', { phone: PHONE })).statusCode).toBe(200) // کلید ذخیره‌شده از UI هم استفاده می‌شود
     expect(t.calls.at(-1)!.apikey).toBe(KEY)
   })
 
-  it('تنظیمات: نام قالب فارسی/نامعتبر رد می‌شود و قالب انتخابی در ارسال استفاده می‌شود', async () => {
+  it('تنظیمات: نام قالب نامعتبر رد می‌شود و قالبِ هر وظیفه در ارسال استفاده می‌شود', async () => {
     const t = await mk()
-    for (const template of ['قالب', 'ab', 'has space', 'x'.repeat(41)]) expect((await t.call('PUT', '/api/admin/sms/settings', { template, enabled: true })).statusCode, template).toBe(400)
-    expect((await t.call('PUT', '/api/admin/sms/settings', { template: 'my-otp_2', enabled: true })).json()).toMatchObject({ settings: { template: 'my-otp_2', enabled: true }, available: true })
+    for (const name of ['قالب', 'ab', 'has space', 'x'.repeat(41)]) expect((await t.call('PUT', '/api/admin/sms/settings', { templates: [{ name, purpose: 'login' }], enabled: true })).statusCode, name).toBe(400)
+    const put = (templates: unknown[]) => t.call('PUT', '/api/admin/sms/settings', { templates, enabled: true })
+    expect((await put([{ name: 'a-login', purpose: 'reset' }])).statusCode).toBe(400) // قالب «ورود» لازم است
+    expect((await put([{ name: 'a-login', purpose: 'login' }, { name: 'A-LOGIN', purpose: 'other' }])).statusCode).toBe(400) // نام تکراری
+    expect((await put([{ name: 'a-login', purpose: 'login' }, { name: 'b-login', purpose: 'login' }])).statusCode).toBe(400) // دو قالب برای یک وظیفه
+    const r = await put([{ name: 'my-otp_2', purpose: 'login' }, { name: 'my-reset', purpose: 'reset' }, { name: 'promo-1', purpose: 'other', label: 'تبلیغ' }])
+    expect(r.json()).toMatchObject({ settings: { enabled: true, templates: [{ name: 'my-otp_2', purpose: 'login' }, { name: 'my-reset', purpose: 'reset' }, { name: 'promo-1', purpose: 'other', label: 'تبلیغ' }] }, available: true })
     await t.call('POST', '/api/auth/otp/request', { phone: PHONE })
     expect(t.calls.at(-1)!.body.get('template')).toBe('my-otp_2')
+    t.clock.t += 61_000
+    await t.call('POST', '/api/auth/otp/request', { phone: PHONE, purpose: 'reset' })
+    expect(t.calls.at(-1)!.body.get('template')).toBe('my-reset')
+    // ارسال آزمایشی با قالب انتخابی
+    const id = (r.json().settings.templates as { id: string; name: string }[]).find((x) => x.name === 'promo-1')!.id
+    await t.call('POST', '/api/admin/sms/test-send', { phone: PHONE, template_id: id })
+    expect(t.calls.at(-1)!.body.get('template')).toBe('promo-1')
+    expect((await t.call('POST', '/api/admin/sms/test-send', { phone: PHONE, template_id: 'nope' })).statusCode).toBe(400)
+  })
+
+  it('تنظیمات قدیمی (فقط یک نام قالب) به قالب «ورود» مهاجرت می‌کند و ریست بدون قالب جدا از قالب ورود استفاده می‌کند', async () => {
+    const t = await mk()
+    await t.store.setKV('auth:sms_settings', JSON.stringify({ template: 'legacy-otp', enabled: true }))
+    expect((await t.call('GET', '/api/admin/sms')).json().settings).toMatchObject({ enabled: true, templates: [{ name: 'legacy-otp', purpose: 'login' }] })
+    await t.call('POST', '/api/auth/otp/request', { phone: PHONE, purpose: 'reset' })
+    expect(t.calls.at(-1)!.body.get('template')).toBe('legacy-otp')
   })
 
   it('ارسال آزمایشی: موفق، شمارهٔ نامعتبر، و خطاهای قاصدک با پیام فارسی', async () => {
@@ -265,17 +286,11 @@ describe('پنل مدیریت: ورود پیامکی', () => {
     expect((await nokey.call('POST', '/api/admin/sms/test-send', { phone: PHONE })).json().error).toBe('not_configured')
   })
 
-  it('اعتبار، ساخت قالب (با اعمال خودکار) و وضعیت قالب', async () => {
+  it('اعتبار حساب؛ و مسیرهای ساخت/وضعیت قالب دیگر وجود ندارند (قالب فقط در پنل قاصدک ساخته می‌شود)', async () => {
     const t = await mk()
     expect((await t.call('POST', '/api/admin/sms/credit')).json()).toEqual({ ok: true, credit_rial: 9190153 })
-    expect((await t.call('POST', '/api/admin/sms/template', { name: 'قالب', message: 'کد: %param1%' })).statusCode).toBe(400)
-    expect((await t.call('POST', '/api/admin/sms/template', { name: 'new-otp', message: 'کد شما بدون جای‌گذار' })).statusCode).toBe(400)
-    const r = await t.call('POST', '/api/admin/sms/template', { name: 'new-otp', message: 'کد ورود: %param1%' })
-    expect(r.json()).toMatchObject({ ok: true, template_id: 9421, applied: true })
-    const c = t.calls.at(-1)!; expect(c.url).toContain('/v2/sms/otp/create'); expect(Object.fromEntries(c.body)).toEqual({ template: 'new-otp', message: 'کد ورود: %param1%' })
-    expect((await t.call('GET', '/api/admin/sms')).json().settings.template).toBe('new-otp')
-    expect((await t.call('POST', '/api/admin/sms/template/status', { template_id: 9421 })).json()).toEqual({ ok: true, status: 1 })
-    expect((await t.call('POST', '/api/admin/sms/template/status', { template_id: 'x' })).statusCode).toBe(400)
+    expect((await t.call('POST', '/api/admin/sms/template', { name: 'new-otp', message: 'کد: %param1%' })).statusCode).toBe(404)
+    expect((await t.call('POST', '/api/admin/sms/template/status', { template_id: 1 })).statusCode).toBe(404)
   })
 
   it('«تست کلید» در تنظیمات API فقط اعتبار می‌پرسد (پیامک نمی‌فرستد)', async () => {
@@ -305,5 +320,69 @@ describe('پنل مدیریت: ورود پیامکی', () => {
   it('کلید در هیچ پاسخی نیست', () => {
     expect(bodies.length).toBeGreaterThan(20)
     expect(bodies.filter((b) => b.includes(KEY))).toEqual([])
+  })
+})
+
+describe('ثبت نصب، ثبت‌نام و تکمیل پروفایل در پنل کاربران', () => {
+  const INST = 'inst-abcdef123456'
+  const same = { origin: 'http://localhost:80', host: 'localhost:80' }
+
+  it('نصب تازه مهمان ثبت می‌شود؛ ورود با شماره آن را «ثبت‌نام‌شده» و تکمیل پروفایل آن را «کامل» می‌کند', async () => {
+    const t = await mk()
+    expect((await t.call('POST', '/api/installations', { installation_id: INST, platform: 'pwa', app_version: '1.2.3' })).statusCode).toBe(204)
+    await t.call('POST', '/api/installations', { installation_id: INST }) // دوباره باز شدن: ردیف تازه نمی‌سازد
+    expect((await t.call('POST', '/api/installations', { installation_id: 'x' })).statusCode).toBe(400)
+    let st = (await t.call('GET', '/api/admin/users/stats')).json()
+    expect(st).toMatchObject({ total: 1, guests: 1, registered: 0 })
+    const list0 = (await t.call('GET', '/api/admin/users')).json()
+    expect(list0.items).toHaveLength(1); expect(list0.items[0]).toMatchObject({ id: INST, status: 'guest', profile_complete: false })
+
+    await t.call('POST', '/api/auth/otp/request', { phone: PHONE })
+    const v = await t.call('POST', '/api/auth/otp/verify', { phone: PHONE, code: t.codeSent(), installation_id: INST })
+    expect(v.statusCode).toBe(200); expect(v.json().user).toMatchObject({ profile: null, profile_complete: false })
+    st = (await t.call('GET', '/api/admin/users/stats')).json()
+    expect(st).toMatchObject({ total: 1, guests: 0, registered: 1, complete: 0, incomplete: 1 }) // همان ردیف، نه ردیف جدید
+    const uid = v.json().user.id as string
+    const reg = (await t.call('GET', '/api/admin/users?q=' + encodeURIComponent(JSON.stringify({ filters: { status: 'registered' } })))).json()
+    expect(reg.items[0]).toMatchObject({ id: uid, status: 'registered', phone_masked: '0912***567', profile_complete: false })
+
+    const h = t.sessionHeader(v)
+    expect((await t.call('PUT', '/api/auth/profile', { first_name: 'علی', last_name: '', city: 'تهران' }, h)).statusCode).toBe(400)
+    expect((await t.call('PUT', '/api/auth/profile', { first_name: 'علی', last_name: 'رضایی', city: 'تهران' })).statusCode).toBe(401)
+    const p = await t.call('PUT', '/api/auth/profile', { first_name: 'علی', last_name: 'رضایی', city: 'تهران', email: '' }, h)
+    expect(p.statusCode).toBe(200); expect(p.json().user).toMatchObject({ profile: { first_name: 'علی', last_name: 'رضایی', city: 'تهران' }, profile_complete: true })
+    expect((await t.call('GET', '/api/auth/me', undefined, h)).json().user.profile_complete).toBe(true)
+    expect((await t.call('GET', '/api/admin/users/stats')).json()).toMatchObject({ registered: 1, complete: 1, incomplete: 0 })
+    const d = (await t.call('GET', `/api/admin/users/${uid}?contact=1`)).json()
+    expect(d).toMatchObject({ display_name: 'علی رضایی', city: 'تهران', profile_complete: true, contact: { phone: PHONE } })
+
+    // ورود دوباره (مثلاً دستگاه دیگر) پروفایل را حفظ می‌کند و ردیف جدید نمی‌سازد
+    t.clock.t += 61_000
+    const again = await t.login()
+    expect(again.json().user.profile_complete).toBe(true)
+    expect((await t.call('GET', '/api/admin/users/stats')).json().total).toBe(1)
+    void same
+  })
+
+  it('ورود بدون ثبت نصب هم ردیف ثبت‌نام‌شده می‌سازد؛ غیرفعال‌سازی مانع ورود می‌شود؛ حذف از پنل حساب را پاک می‌کند', async () => {
+    const t = await mk()
+    const v = await t.login(); const uid = v.json().user.id as string
+    expect((await t.call('GET', '/api/admin/users/stats')).json()).toMatchObject({ total: 1, registered: 1 })
+    expect((await t.call('POST', `/api/admin/users/${uid}/disable`, { confirm: 'wrong' })).statusCode).toBe(400)
+    expect((await t.call('POST', `/api/admin/users/${uid}/disable`, { confirm: uid })).statusCode).toBe(200)
+    expect((await t.call('GET', '/api/auth/me', undefined, t.sessionHeader(v))).json().user).toBeNull()
+    t.clock.t += 61_000
+    await t.call('POST', '/api/auth/otp/request', { phone: PHONE })
+    expect((await t.call('POST', '/api/auth/otp/verify', { phone: PHONE, code: t.codeSent() })).statusCode).toBe(429)
+    expect((await t.call('DELETE', `/api/admin/users/${uid}`, { confirm: uid })).statusCode).toBe(200)
+    expect((await t.call('GET', '/api/admin/users/stats')).json().total).toBe(0)
+    expect((await t.call('GET', `/api/admin/users/${uid}`)).statusCode).toBe(404)
+  })
+
+  it('حذف حساب توسط خود کاربر، ردیفش را از پنل هم برمی‌دارد', async () => {
+    const t = await mk()
+    const v = await t.login()
+    expect((await t.call('DELETE', '/api/auth/account', undefined, t.sessionHeader(v))).statusCode).toBe(204)
+    expect((await t.call('GET', '/api/admin/users/stats')).json().total).toBe(0)
   })
 })

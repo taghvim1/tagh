@@ -35,6 +35,9 @@ export interface UserSummary {
   destinations_viewed: number
   top_interests: string[]
   event_count: number
+  /** فقط پاسخ سرور: پروفایل (نام، نام خانوادگی، شهر) کامل است؟ و شمارهٔ ماسک‌شده */
+  profile_complete?: boolean
+  phone_masked?: string
 }
 export interface UserDetail extends UserSummary {
   country?: string; province?: string; registered_at?: string

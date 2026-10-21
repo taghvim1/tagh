@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, test } from 'node:test'
-import { deleteAccount, getAuth, logout, refreshAuth, requestCode, verifyCode } from '../src/auth/client'
+import { deleteAccount, getAuth, logout, refreshAuth, registerInstallation, requestCode, saveProfile, verifyCode } from '../src/auth/client'
 import { normalizeIranMobile } from '../src/auth/phone'
 
 interface Call { url: string; method: string; body: Record<string, unknown> | null; credentials: string | undefined }
@@ -87,5 +87,24 @@ describe('کلاینت ورود', () => {
     const del = mock(reply(204)); assert.equal(await deleteAccount(del.f), true)
     assert.equal(del.calls[0].method, 'DELETE'); assert.equal(del.calls[0].url, '/api/auth/account'); assert.equal(getAuth().status, 'out')
     assert.equal(await deleteAccount(mock('throw').f), false) // خطای شبکه: موفقیت ادعا نمی‌شود
+  })
+})
+
+describe('ثبت نصب و پروفایل (کلاینت)', () => {
+  test('saveProfile: موفق، اعتبارسنجی، نشست منقضی و قطع شبکه', async () => {
+    const user = { id: 'u1', phone_masked: '0912***567', created_at: 'x', profile: { first_name: 'علی', last_name: 'رضایی', city: 'تهران' }, profile_complete: true }
+    const ok = mock(reply(200, { user }))
+    const r = await saveProfile({ first_name: 'علی', last_name: 'رضایی', city: 'تهران' }, ok.f)
+    assert.deepEqual(r, { ok: true, user }); assert.equal(ok.calls[0].method, 'PUT'); assert.equal(ok.calls[0].url, '/api/auth/profile'); assert.equal(getAuth().user?.profile_complete, true)
+    assert.deepEqual(await saveProfile({ first_name: 'a', last_name: 'b', city: 'c' }, mock(reply(400, { error: 'invalid' })).f), { ok: false, error: 'invalid' })
+    assert.deepEqual(await saveProfile({ first_name: 'a', last_name: 'b', city: 'c' }, mock(reply(401, { error: 'unauthorized' })).f), { ok: false, error: 'unauthorized' })
+    assert.equal(getAuth().status, 'out')
+    assert.deepEqual(await saveProfile({ first_name: 'a', last_name: 'b', city: 'c' }, mock('throw').f), { ok: false, error: 'network' })
+  })
+  test('requestCode با وظیفه؛ registerInstallation بدون ذخیره‌سازی بی‌صدا شکست می‌خورد', async () => {
+    const m = mock(reply(200, { ok: true }))
+    await requestCode('09121234567', m.f, 'reset'); assert.deepEqual(m.calls[0].body, { phone: '09121234567', purpose: 'reset' })
+    const m2 = mock(reply(200, { ok: true })); await requestCode('09121234567', m2.f); assert.deepEqual(m2.calls[0].body, { phone: '09121234567' })
+    const n = mock(reply(204)); assert.equal(await registerInstallation(n.f), false); assert.equal(n.calls.length, 0) // در Node ذخیره‌سازی نیست
   })
 })

@@ -1,11 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { tracker } from '../analytics'
-import { deleteAccount, logout, refreshAuth, requestCode, useAuth, verifyCode, type RequestError, type VerifyError } from '../auth/client'
+import { refreshAuth, requestCode, useAuth, verifyCode, type RequestError, type VerifyError } from '../auth/client'
 import { normalizeIranMobile, toLatinDigits } from '../auth/phone'
-import AppChrome from '../components/AppChrome'
 import { faNum } from '../lib/jalali'
-import { goBack } from '../lib/router'
-import { useDarkMode, useThemeColorMeta } from '../lib/theme'
 
 const REQUEST_MSG: Record<RequestError, string> = {
   invalid_phone: 'شمارهٔ موبایل معتبر نیست؛ مثل ۰۹۱۲۱۲۳۴۵۶۷ وارد کنید.',
@@ -26,9 +23,9 @@ const VERIFY_MSG: Record<VerifyError, string> = {
 }
 
 // ورود با شمارهٔ موبایل: ۱) شماره ← ۲) کد پیامکی ۶ رقمی. جلسه در کوکی امن سرور می‌ماند.
-export default function LoginPage() {
-  const [dark] = useDarkMode()
-  useThemeColorMeta(dark)
+export const REQUEST_ERRORS = REQUEST_MSG
+/** مراحل ورود/ثبت‌نام (بدون قاب صفحه)؛ در صفحهٔ «پروفایل» استفاده می‌شود. پس از موفقیت وضعیت ورود عوض می‌شود و صفحه خودش فرم پروفایل را نشان می‌دهد. */
+export function LoginFlow() {
   const auth = useAuth()
   const [step, setStep] = useState<'phone' | 'code'>('phone')
   const [phoneInput, setPhoneInput] = useState(''), [phone, setPhone] = useState('')
@@ -57,7 +54,7 @@ export default function LoginPage() {
     const anon = tracker.consent().analytics ? tracker.exportMyData().installation.anonymous_id : undefined // وصل‌کردن رویدادهای قبلی فقط با رضایت تحلیل
     const r = await verifyCode(phone, value, anon)
     submitting.current = false; setBusy(false)
-    if (r.ok) { goBack('/settings'); return }
+    if (r.ok) return
     setErr(r.error === 'wrong_code' && r.attemptsLeft !== undefined ? `${VERIFY_MSG.wrong_code} ${faNum(r.attemptsLeft)} تلاش باقی مانده.` : VERIFY_MSG[r.error])
     if (r.error !== 'wrong_code') setCode('')
   }
@@ -67,46 +64,29 @@ export default function LoginPage() {
     if (d.length === 6) void verify(d) // با کامل‌شدن ۶ رقم خودکار تأیید می‌شود
   }
 
-  return (
-    <div className="tp-page" data-theme={dark ? 'dark' : 'light'}>
-      <AppChrome title="تقویم سفر" backFallback="/settings" />
-      <main className="tp-main">
-        <header className="tp-head"><h1>{auth.status === 'in' ? 'حساب کاربری' : 'ورود با شماره موبایل'}</h1></header>
-
-        {auth.status === 'in' && auth.user ? (
-          <div className="lg-card">
-            <p>با شمارهٔ <strong dir="ltr">{auth.user.phone_masked}</strong> وارد شده‌اید.</p>
-            <div className="lg-row">
-              <button type="button" className="tp-btn" disabled={busy} onClick={async () => { setBusy(true); await logout(); setBusy(false); setStep('phone'); setPhoneInput('') }}>خروج از حساب</button>
-              <button type="button" className="tp-btn" disabled={busy} onClick={async () => { if (window.confirm('حساب شما حذف شود؟ این کار برگشت‌پذیر نیست.')) { setBusy(true); await deleteAccount(); setBusy(false); setStep('phone'); setPhoneInput('') } }}>حذف حساب</button>
-            </div>
-          </div>
-        ) : auth.available === false ? (
-          <p className="st-hint">{REQUEST_MSG.sms_unavailable}</p>
-        ) : step === 'phone' ? (
-          <form className="lg-card" onSubmit={onPhone} noValidate>
-            <label className="lg-field">شمارهٔ موبایل
-              <input className="lg-input" type="tel" inputMode="tel" autoComplete="tel" dir="ltr" placeholder="09123456789" value={phoneInput} onChange={(e) => { setPhoneInput(e.target.value); setErr(null) }} autoFocus aria-invalid={!!err} />
-            </label>
-            {err && <p className="lg-err" role="alert">{err}</p>}
-            <button type="submit" className="tp-btn primary" disabled={busy || !phoneInput.trim()}>{busy ? 'در حال ارسال…' : 'ارسال کد'}</button>
-          </form>
-        ) : (
-          <div className="lg-card">
-            <p>کد ۶ رقمی به <strong dir="ltr">{phone.slice(0, 4)}***{phone.slice(-4)}</strong> پیامک شد.</p>
-            <label className="lg-field">کد تأیید
-              <input className="lg-input lg-code" type="text" inputMode="numeric" autoComplete="one-time-code" dir="ltr" maxLength={12} placeholder="••••••" value={code} onChange={(e) => onCode(e.target.value)} autoFocus disabled={busy} aria-invalid={!!err} />
-            </label>
-            {dev && <p className="st-hint">محیط توسعه — کد: <strong dir="ltr">{dev}</strong></p>}
-            {err && <p className="lg-err" role="alert">{err}</p>}
-            <div className="lg-row">
-              <button type="button" className="tp-btn primary" disabled={busy || code.length !== 6} onClick={() => void verify(code)}>{busy ? 'در حال بررسی…' : 'تأیید و ورود'}</button>
-              <button type="button" className="tp-btn" disabled={busy || wait > 0} onClick={() => void send(phone)}>{wait > 0 ? `ارسال دوباره (${faNum(wait)})` : 'ارسال دوباره'}</button>
-            </div>
-            <button type="button" className="lg-link" onClick={() => { setStep('phone'); setCode(''); setErr(null); setWait(0) }}>ویرایش شماره</button>
-          </div>
-        )}
-      </main>
+  if (auth.available === false) return <p className="st-hint">{REQUEST_MSG.sms_unavailable}</p>
+  return step === 'phone' ? (
+    <form className="lg-card" onSubmit={onPhone} noValidate>
+      <p className="st-hint">با شمارهٔ موبایل ثبت‌نام کنید یا وارد شوید؛ کد تأیید پیامک می‌شود.</p>
+      <label className="lg-field">شمارهٔ موبایل
+        <input className="lg-input" type="tel" inputMode="tel" autoComplete="tel" dir="ltr" placeholder="09123456789" value={phoneInput} onChange={(e) => { setPhoneInput(e.target.value); setErr(null) }} autoFocus aria-invalid={!!err} />
+      </label>
+      {err && <p className="lg-err" role="alert">{err}</p>}
+      <button type="submit" className="tp-btn primary" disabled={busy || !phoneInput.trim()}>{busy ? 'در حال ارسال…' : 'ارسال کد'}</button>
+    </form>
+  ) : (
+    <div className="lg-card">
+      <p>کد ۶ رقمی به <strong dir="ltr">{phone.slice(0, 4)}***{phone.slice(-4)}</strong> پیامک شد.</p>
+      <label className="lg-field">کد تأیید
+        <input className="lg-input lg-code" type="text" inputMode="numeric" autoComplete="one-time-code" dir="ltr" maxLength={12} placeholder="••••••" value={code} onChange={(e) => onCode(e.target.value)} autoFocus disabled={busy} aria-invalid={!!err} />
+      </label>
+      {dev && <p className="st-hint">محیط توسعه — کد: <strong dir="ltr">{dev}</strong></p>}
+      {err && <p className="lg-err" role="alert">{err}</p>}
+      <div className="lg-row">
+        <button type="button" className="tp-btn primary" disabled={busy || code.length !== 6} onClick={() => void verify(code)}>{busy ? 'در حال بررسی…' : 'تأیید و ورود'}</button>
+        <button type="button" className="tp-btn" disabled={busy || wait > 0} onClick={() => void send(phone)}>{wait > 0 ? `ارسال دوباره (${faNum(wait)})` : 'ارسال دوباره'}</button>
+      </div>
+      <button type="button" className="lg-link" onClick={() => { setStep('phone'); setCode(''); setErr(null); setWait(0) }}>ویرایش شماره</button>
     </div>
   )
 }
