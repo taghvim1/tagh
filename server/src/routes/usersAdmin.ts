@@ -46,7 +46,7 @@ export function usersAdminRoutes(adm: FastifyInstance, d: { registry: Registry; 
     try { raw = JSON.parse(String((req.query as { q?: string }).q ?? '{}')) } catch { return reply.code(400).send({ error: 'validation', errors: ['پرس‌وجو نامعتبر است.'] }) }
     const q = listQuery.safeParse(raw); if (!q.success) return reply.code(400).send({ error: 'validation', errors: ['پرس‌وجو نامعتبر است.'] })
     const f = q.data.filters
-    let rows = await registry.all()
+    let rows = await registry.all() // کپی است؛ مرتب‌سازی روی فهرست اصلی اثر ندارد
     if (f.status) rows = rows.filter((p) => p.status === f.status)
     if (f.city) rows = rows.filter((p) => p.city && norm(p.city).includes(norm(f.city!)))
     if (f.query) { const k = norm(f.query); rows = rows.filter((p) => norm(p.id).includes(k) || norm(nameOf(p) ?? '').includes(k) || (p.phone ?? '').includes(f.query!)) }

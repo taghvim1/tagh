@@ -14,11 +14,16 @@ export function getInstallId(): string | undefined {
   } catch { return undefined }
 }
 /** هر بار برنامه باز می‌شود: نصب تازه در پنل مدیریت «مهمان» ثبت می‌شود (بی‌صدا؛ خطا نادیده گرفته می‌شود). */
+const PING_KEY = 'tp-install-ping', PING_GAP = 30 * 60_000
 export async function registerInstallation(fetchImpl?: typeof fetch): Promise<boolean> {
   const id = getInstallId(); if (!id) return false
+  // حداکثر هر ۳۰ دقیقه یک بار (به اندازهٔ یک «نشست»)؛ بازشدن‌های پشت‌سرهم درخواستی به سرور نمی‌فرستند
+  try { const last = Number(localStorage.getItem(PING_KEY) ?? 0); if (Date.now() - last < PING_GAP) return true } catch { /* بدون ذخیره‌سازی */ }
   const pwa = (() => { try { return window.matchMedia?.('(display-mode: standalone)').matches === true } catch { return false } })()
   const r = await http('/installations', { method: 'POST', body: { installation_id: id, platform: pwa ? 'pwa' : 'web', app_version: '1' } }, fetchImpl)
-  return !!r && r.status === 204
+  const ok = !!r && r.status === 204
+  if (ok) { try { localStorage.setItem(PING_KEY, String(Date.now())) } catch { /* فقط حافظه */ } }
+  return ok
 }
 export interface AuthState { status: 'unknown' | 'out' | 'in'; user: AuthUser | null; /** آیا سرور ورود پیامکی را پشتیبانی می‌کند؟ (null = هنوز معلوم نیست) */ available: boolean | null }
 

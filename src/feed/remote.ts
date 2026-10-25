@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { isFresh, markFetched } from '../lib/throttle'
 import { isFeedKind, type FeedKind } from './topics'
 
 // کارت‌های امروز («آیا می‌دانستید» و موضوع‌های کاشی صفحهٔ دوم) از سرور. Offline-First: آخرین نتیجهٔ موفق در localStorage می‌ماند؛
@@ -13,6 +14,7 @@ export interface FeedItem {
 export interface FeedSnapshot { date: string; items: Partial<Record<FeedKind, FeedItem>> }
 
 const KEY = 'taghvim-feed-v1'
+const REFRESH_FEED_MS = 15 * 60_000 // کارت‌های روز؛ در همان روز و کمتر از ۱۵ دقیقه دوباره پرسیده نمی‌شود
 const EMPTY: FeedSnapshot = { date: '', items: {} }
 const https = (u: unknown): u is string => typeof u === 'string' && /^https:\/\//i.test(u)
 const http = (u: unknown): u is string => typeof u === 'string' && /^https?:\/\//i.test(u)
@@ -47,7 +49,7 @@ export async function refreshFeed(fetchImpl: typeof fetch = (...a) => fetch(...a
   try {
     const res = await fetchImpl('/api/feed', { signal: AbortSignal.timeout(8000), headers: { accept: 'application/json' } })
     if (!res.ok || !(res.headers.get('content-type') ?? '').includes('json')) return false // مثلاً هاست فقط‌-ایستا که index.html برمی‌گرداند
-    snap = sanitizeFeed(await res.json())
+    snap = sanitizeFeed(await res.json()); markFetched('feed')
     try { localStorage.setItem(KEY, JSON.stringify(snap)) } catch { /* فقط حافظه */ }
     listeners.forEach((l) => l()); return true
   } catch { return false }
@@ -56,10 +58,10 @@ export async function refreshFeed(fetchImpl: typeof fetch = (...a) => fetch(...a
 const subscribe = (l: () => void) => {
   listeners.add(l)
   if (!started) {
-    started = true; void refreshFeed()
+    started = true; if (!isFresh('feed', REFRESH_FEED_MS)) void refreshFeed()
     // بازگشت به برنامه (مثلاً روز بعد) یا برگشتن اینترنت ⇒ کارت‌های تازهٔ امروز
-    window.addEventListener('online', () => void refreshFeed())
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') void refreshFeed() })
+    window.addEventListener('online', () => { if (!isFresh('feed', REFRESH_FEED_MS)) void refreshFeed() })
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !isFresh('feed', REFRESH_FEED_MS)) void refreshFeed() })
   }
   return () => { listeners.delete(l) }
 }

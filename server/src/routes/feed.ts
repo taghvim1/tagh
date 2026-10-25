@@ -3,10 +3,13 @@ import { z } from 'zod'
 import { issuesOf } from '../domain/schema.js'
 import { FEED_KINDS, FEED_STATUSES, feedContentSchema, sourceInput } from '../feed/schema.js'
 import type { FeedService } from '../feed/service.js'
+import { createMicroCache, sendCacheable } from '../lib-cache.js'
 
 /** عمومی: کارت امروزِ هر موضوع (فقط منتشرشده‌ها، بدون هیچ فیلد داخلی) */
 export function feedPublicRoutes(app: FastifyInstance, feed: FeedService) {
-  app.get('/feed', async () => feed.publicFeed())
+  const cache = createMicroCache()
+  // publicFeed هر بار KV را می‌نویسد (چرخش روزانه)؛ ۳۰ ثانیه کش حافظه و ۵ دقیقه کش مرورگر
+  app.get('/feed', async (req, reply) => sendCacheable(req, reply, await cache('feed', 30_000, () => feed.publicFeed()), 300))
 }
 
 const id = z.coerce.number().int().positive()

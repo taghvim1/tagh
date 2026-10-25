@@ -16,6 +16,7 @@
     "import:holidays": "node scripts/import-holidays.mjs"
   },
   "dependencies": {
+    "@fastify/compress": "^9.2.2",
     "@fastify/rate-limit": "^11.2.1",
     "@fastify/static": "^10.1.6",
     "@types/jalaali-js": "^1.2.0",

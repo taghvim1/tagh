@@ -13,6 +13,7 @@ import { createRegistry } from './auth/registry.js'
 import { adminRoutes } from './routes/admin.js'
 import { authRoutes } from './routes/auth.js'
 import { createPackageService } from './package/service.js'
+import compress from '@fastify/compress'
 import { createPusher } from './package/push.js'
 import { packagePublicRoutes } from './routes/package.js'
 import { eventRoutes } from './routes/events.js'
@@ -27,21 +28,24 @@ export interface AppDeps { config: Config; db?: Db | null; store?: Store; fetchI
 export async function buildApp({ config, db = null, store: injected, fetchImpl, now }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({ logger: config.NODE_ENV === 'test' ? false : { level: 'info', redact: ['req.headers.authorization', 'req.headers.cookie'] }, trustProxy: true, bodyLimit: 64 * 1024 })
 
+  await app.register(compress, { global: true, threshold: 1024, encodings: ['br', 'gzip'] }) // JSON و فایل‌های متنی فشرده می‌روند
   await app.register(rateLimit, { global: false })
   const store = injected ?? await createJsonStore(config.NODE_ENV === 'test' ? undefined : resolve(config.DATA_DIR, 'store.json'))
-  app.addHook('onClose', async () => { await store.close() })
+  const registryRef: { current?: ReturnType<typeof createRegistry> } = {}
+  app.addHook('onClose', async () => { await registryRef.current?.flush(); await store.close() })
   const secrets = createSecrets(config, store)
   const ai = createAiService({ store, secrets, fetch: fetchImpl ?? ((...a) => fetch(...a)) })
   const feed = createFeedService({ store, ai })
   const pkg = createPackageService({ store, ai, pusher: createPusher({ store, config }), ...(now ? { now: () => new Date(now()) } : {}) })
   const sms = createGhasedak({ secrets, baseUrl: config.GHASEDAK_BASE_URL, fetchImpl })
   const registry = createRegistry({ store, ...(now ? { now } : {}) })
+  registryRef.current = registry
   const auth = createAuthService({ store, secrets, sms, config, registry, ...(now ? { now } : {}) })
 
   app.addHook('onSend', async (req, reply) => {
     reply.header('X-Content-Type-Options', 'nosniff').header('Referrer-Policy', 'strict-origin-when-cross-origin')
     // پاسخ‌های API (اطلاعات شخصی/مدیریتی) هرگز کش نشوند
-    if (req.url.startsWith('/api/')) reply.header('Cache-Control', 'no-store')
+    if (req.url.startsWith('/api/') && !reply.hasHeader('cache-control')) reply.header('Cache-Control', 'no-store')
   })
 
   await app.register(async (api) => {

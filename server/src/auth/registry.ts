@@ -35,17 +35,34 @@ const note = (p: Person, type: LogType, at: string) => { p.log = [...(p.log ?? [
 export function createRegistry(d: { store: Store; now?: () => number }) {
   const { store } = d, now = d.now ?? (() => Date.now())
   const iso = () => new Date(now()).toISOString()
-  const load = async (): Promise<Person[]> => { try { const v = JSON.parse((await store.getKV(KEY)) ?? '[]'); return Array.isArray(v) ? v as Person[] : [] } catch { return [] } }
+  // کل فهرست یک‌بار از KV خوانده و در حافظه نگه داشته می‌شود؛ نوشتن روی دیسک/DB دسته‌ای است (حداکثر هر ۵ ثانیه یک بار)
+  // نه برای هر درخواست. فرض: یک نمونهٔ سرور. برای چند نمونه یا بیش از ~۵۰ هزار کاربر باید جدول واقعی در Postgres باشد.
+  const FLUSH_MS = 5000
+  let cache: Person[] | null = null, dirty = false, timer: ReturnType<typeof setTimeout> | null = null
+  const load = async (): Promise<Person[]> => {
+    if (cache) return cache
+    try { const v = JSON.parse((await store.getKV(KEY)) ?? '[]'); cache = Array.isArray(v) ? v as Person[] : [] } catch { cache = [] }
+    return cache
+  }
+  async function flush() {
+    if (timer) { clearTimeout(timer); timer = null }
+    if (!dirty || !cache) return
+    dirty = false
+    try { await store.setKV(KEY, JSON.stringify(cache)) } catch { dirty = true; schedule() }
+  }
+  function schedule() { if (!timer) { timer = setTimeout(() => { timer = null; void flush() }, FLUSH_MS); timer.unref?.() } }
   let chain: Promise<unknown> = Promise.resolve()
   function tx<T>(fn: (people: Person[]) => T): Promise<T> {
-    const run = chain.then(async () => { const people = await load(); const r = fn(people); await store.setKV(KEY, JSON.stringify(people)); return r })
+    const run = chain.then(async () => { const people = await load(); const r = fn(people); dirty = true; schedule(); return r })
     chain = run.catch(() => undefined)
     return run
   }
   const byAnon = (ps: Person[], a: string) => ps.find((p) => p.anonymous_ids.includes(a))
 
   return {
-    all: load,
+    all: async () => [...(await load())],
+    /** نوشتن فوری تغییرات معلق (هنگام خاموش‌شدن سرور) */
+    flush,
     get: async (id: string) => (await load()).find((p) => p.id === id) ?? null,
     /** هر بار برنامه باز می‌شود: نصب تازه = مهمان جدید؛ نصب قبلی فقط «آخرین مراجعه» را به‌روز می‌کند. */
     touchInstall(anon: string, platform: 'web' | 'pwa', appVersion: string) {

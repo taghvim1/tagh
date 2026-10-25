@@ -1,9 +1,11 @@
 import type { FastifyInstance } from 'fastify'
 import type { Store } from '../store/types.js'
+import { createMicroCache, sendCacheable } from '../lib-cache.js'
 
 /** فقط پیشنهادهای «منتشرشده» با تصویر تأییدشده؛ بدون هیچ فیلد داخلی (دلیل رد، منبع هوش مصنوعی، …) */
 export function publicRoutes(app: FastifyInstance, store: Store) {
-  app.get('/travel-suggestions', async () => {
+  const cache = createMicroCache()
+  const build = async () => {
     const all = (await store.allSuggestions()).filter((s) => s.status === 'published')
     const items = []
     for (const s of all) {
@@ -15,5 +17,7 @@ export function publicRoutes(app: FastifyInstance, store: Store) {
       items.push({ id: s.id, version: s.version, published_at: s.published_at, content: s.content, image: pick(cover), images: [cover, ...extra].slice(0, 8).map(pick) })
     }
     return { items }
-  })
+  }
+  // برای همهٔ کاربران یکسان است ⇒ ۶۰ ثانیه در حافظهٔ سرور و ۵ دقیقه در مرورگر/CDN کش می‌شود (انتشار جدید حداکثر چند دقیقه دیرتر دیده می‌شود)
+  app.get('/travel-suggestions', async (req, reply) => sendCacheable(req, reply, await cache('suggestions', 60_000, build), 300))
 }

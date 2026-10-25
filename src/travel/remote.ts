@@ -15,18 +15,19 @@ export function toRemoteDestinations(list: PublicSuggestion[]): Destination[] {
   return list.map((s) => contentToDestination(s.content, REMOTE_ID_BASE + s.id, s.image.url, credit(s.image),
     (s.images ?? []).filter((i) => /^https:\/\//.test(i.url)).map((i) => ({ url: i.url, credit: credit(i) }))))
 }
+import { isFresh, markFetched } from '../lib/throttle'
 export async function refreshRemoteSuggestions(fetchImpl: typeof fetch = (...a) => fetch(...a)): Promise<boolean> {
   try {
     const res = await fetchImpl('/api/travel-suggestions', { signal: AbortSignal.timeout(8000), headers: { accept: 'application/json' } })
     if (!res.ok || !(res.headers.get('content-type') ?? '').includes('json')) return false // مثلاً هاست فقط‌-ایستا که index.html برمی‌گرداند
     const body = (await res.json()) as { items?: PublicSuggestion[] }
     if (!Array.isArray(body.items)) return false
-    items = toRemoteDestinations(body.items)
+    items = toRemoteDestinations(body.items); markFetched('suggestions')
     try { localStorage.setItem(KEY, JSON.stringify(items)) } catch { /* فقط حافظه */ }
     listeners.forEach((l) => l()); return true
   } catch { return false }
 }
-const subscribe = (l: () => void) => { listeners.add(l); if (!started) { started = true; void refreshRemoteSuggestions() } return () => { listeners.delete(l) } }
+const subscribe = (l: () => void) => { listeners.add(l); if (!started) { started = true; if (!isFresh('suggestions', 30 * 60_000)) void refreshRemoteSuggestions() } return () => { listeners.delete(l) } }
 const useRemote = () => useSyncExternalStore(subscribe, () => items, () => items)
 
 /** مقصدهای قابل‌نمایش برای کاربر: محلی + منتشرشدهٔ سرور (بدون تکرار شناسه) */
