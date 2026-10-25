@@ -11,7 +11,7 @@ const nameOf = (p: Person) => [p.first_name, p.last_name].filter(Boolean).join('
 const summary = (p: Person) => ({
   id: p.id, status: p.status, state: p.state, display_name: nameOf(p), city: p.city,
   first_seen_at: p.first_seen_at, last_active_at: p.last_seen_at,
-  sessions: 0, destinations_viewed: 0, top_interests: [] as string[], event_count: 0,
+  sessions: p.sessions ?? 0, destinations_viewed: 0, top_interests: [] as string[], event_count: 0,
   profile_complete: p.profile_complete, phone_masked: maskPhone(p.phone), registered_at: p.registered_at,
 })
 
@@ -36,7 +36,7 @@ export function usersAdminRoutes(adm: FastifyInstance, d: { registry: Registry; 
       dau: within(1), wau: within(7), mau: within(30),
       newProfiles: all.filter((p) => t - Date.parse(p.first_seen_at) <= 30 * DAY).length,
       returning: all.filter((p) => t - Date.parse(p.last_seen_at) <= 7 * DAY && t - Date.parse(p.first_seen_at) > 7 * DAY).length,
-      sessions: 0, topDestinations: [], topSeasons: [], topCategories: [], favorites: 0, searches: 0, offerClicks: 0, notificationOpens: 0,
+      sessions: all.reduce((n, p) => n + (p.sessions ?? 0), 0), topDestinations: [], topSeasons: [], topCategories: [], favorites: 0, searches: 0, offerClicks: 0, notificationOpens: 0,
       definitions: { active: 'کاربر فعال: آخرین مراجعه در بازه (۱، ۷ یا ۳۰ روز).', complete: 'پروفایل کامل: نام، نام خانوادگی و شهر ثبت شده باشد.' },
     }
   })
@@ -63,7 +63,7 @@ export function usersAdminRoutes(adm: FastifyInstance, d: { registry: Registry; 
       ...summary(p), country: undefined, province: undefined, anonymous_ids: p.anonymous_ids,
       favorites: { destination: [], tour: [] }, interests: [], consent: { analytics: false, personalization: false, marketing: false }, notifications: {},
       merge_logs: [], seasons: {}, viewed_destinations: [], viewed_tours: [], filters_used: {}, offer_clicks: 0,
-      platform: p.platform, app_version: p.app_version,
+      platform: p.platform, app_version: p.app_version, opens: p.opens ?? 0, first_name: p.first_name, last_name: p.last_name, email: p.email, log: [...(p.log ?? [])].reverse(),
       ...(contact ? { contact: { phone: p.phone, email: p.email } } : {}),
     }
   })

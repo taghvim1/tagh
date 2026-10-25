@@ -364,6 +364,22 @@ describe('ثبت نصب، ثبت‌نام و تکمیل پروفایل در پن
     void same
   })
 
+  it('نشست‌ها و تاریخچهٔ فعالیت: باز کردن‌های نزدیک یک نشست‌اند و جزئیات شمارهٔ موبایل و تاریخچه دارد', async () => {
+    const t = await mk()
+    await t.call('POST', '/api/installations', { installation_id: INST })
+    await t.call('POST', '/api/installations', { installation_id: INST }) // چند ثانیه بعد: همان نشست
+    t.clock.t += 31 * 60_000
+    await t.call('POST', '/api/installations', { installation_id: INST }) // بیش از ۳۰ دقیقه بعد: نشست دوم
+    await t.call('POST', '/api/auth/otp/request', { phone: PHONE })
+    const v = await t.call('POST', '/api/auth/otp/verify', { phone: PHONE, code: t.codeSent(), installation_id: INST })
+    await t.call('PUT', '/api/auth/profile', { first_name: 'علی', last_name: 'رضایی', city: 'تهران' }, t.sessionHeader(v))
+    const uid = v.json().user.id as string
+    const d = (await t.call('GET', `/api/admin/users/${uid}?contact=1`)).json()
+    expect(d).toMatchObject({ sessions: 2, opens: 3, contact: { phone: PHONE }, first_name: 'علی' })
+    expect(d.log.map((l: { type: string }) => l.type)).toEqual(['profile', 'register', 'open', 'first_open'])
+    expect((await t.call('GET', '/api/admin/users/stats')).json().sessions).toBe(2)
+  })
+
   it('ورود بدون ثبت نصب هم ردیف ثبت‌نام‌شده می‌سازد؛ غیرفعال‌سازی مانع ورود می‌شود؛ حذف از پنل حساب را پاک می‌کند', async () => {
     const t = await mk()
     const v = await t.login(); const uid = v.json().user.id as string

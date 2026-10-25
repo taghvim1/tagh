@@ -7,6 +7,7 @@ import { PRESETS } from '../../analytics/admin/query'
 import type { Page, UserSummary } from '../../analytics/admin/profiles'
 import { faNum } from '../../lib/jalali'
 import UserDetailView, { fmtDate } from '../components/UserDetail'
+import UserDetailReal from '../components/UserDetailReal'
 
 type Tab = 'overview' | 'list' | 'audience'
 const ROLES: Array<[AdminRole, string]> = [['super_admin', 'مدیر کل'], ['support', 'پشتیبان'], ['analyst', 'تحلیلگر'], ['marketing', 'بازاریابی']]
@@ -148,7 +149,8 @@ export default function Users() {
         </div>
       )}
 
-      {open && <UserDetailView api={api} role={role} id={open} onClose={() => setOpen(null)} onChanged={() => setRev((x) => x + 1)} />}
+      {open && mode === 'remote' && <UserDetailReal api={api} actor={actor} id={open} onClose={() => setOpen(null)} onChanged={() => setRev((x) => x + 1)} />}
+      {open && mode === 'demo' && <UserDetailView api={api} role={role} id={open} onClose={() => setOpen(null)} onChanged={() => setRev((x) => x + 1)} />}
     </>
   )
 }
