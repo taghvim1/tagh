@@ -74,6 +74,16 @@ for (const [label, mk] of Object.entries(makers)) {
       expect(await store.addConsents([c('c1', true, '2026-10-14T08:00:00.000Z')])).toBe(0)
       expect(await store.latestConsents('a')).toEqual({ analytics: false }); expect(await store.latestConsents('zzz')).toEqual({})
       expect(await store.eventStats()).toEqual({ events: 2, consents: 2 })
+      // رویدادها/رضایت‌های یک کاربر (چند شناسهٔ نصب)، صفحه‌بندی، بازهٔ زمانی و حذف
+      await store.addEvents([{ ...ev, event_id: 'e3', anonymous_id: 'b', occurred_at: '2026-10-14T10:00:00.000Z', props: { destination_id: 4 } }])
+      const mine = await store.eventsOf(['a', 'b'], { limit: 2 })
+      expect(mine.total).toBe(3); expect(mine.items.map((e) => e.event_id)).toEqual(['e3', 'e2']); expect(mine.items[0]).toMatchObject({ anonymous_id: 'b', props: { destination_id: 4 }, occurred_at: '2026-10-14T10:00:00.000Z', consent_context: { analytics: true } })
+      expect((await store.eventsOf(['a', 'b'], { limit: 2, offset: 2 })).items.map((e) => e.event_id)).toEqual(['e1'])
+      expect(await store.eventsOf([], { limit: 5 })).toEqual({ items: [], total: 0 })
+      expect((await store.eventsSince('2026-10-14T09:00:00.000Z', 10)).map((e) => e.event_id)).toEqual(['e3'])
+      expect((await store.consentsOf(['a'])).map((r) => [r.consent_id, r.granted])).toEqual([['c1', true], ['c2', false]]); expect(await store.consentsOf([])).toEqual([])
+      expect(await store.deleteSubjects(['a'])).toEqual({ events: 2, consents: 2 })
+      expect(await store.eventStats()).toEqual({ events: 1, consents: 0 })
     })
   })
 }

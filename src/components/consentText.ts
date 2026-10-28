@@ -1,5 +1,9 @@
-export const CONSENT_TEXT: Record<'analytics' | 'marketing' | 'notifications', { title: string; text: string; defaultOn: boolean }> = {
+export const CONSENT_TEXT: Record<'analytics' | 'marketing', { title: string; text: string; defaultOn: boolean }> = {
   analytics: { title: 'تحلیل ناشناس استفاده', defaultOn: true, text: 'به‌طور پیش‌فرض روشن است. فقط رویدادهای کلی (مثل مشاهدهٔ مقصد یا فصل) با یک شناسهٔ تصادفی؛ بدون نام، موقعیت و متن جست‌وجو.' },
   marketing: { title: 'پیشنهادها و تبلیغات شخصی‌سازی‌شده', defaultOn: true, text: 'به‌طور پیش‌فرض روشن است. پیشنهادها بر اساس علایق برآوردشده از استفادهٔ شما نمایش داده می‌شود.' },
-  notifications: { title: 'اعلان‌ها', defaultOn: true, text: 'به‌طور پیش‌فرض روشن است. اجازهٔ اعلان مرورگر جداگانه و فقط با اقدام شما پرسیده می‌شود.' },
+}
+/** اعلان و موقعیت سوییچ جداگانه ندارند: وقتی مرورگر یا سیستم‌عامل مجوز را داده باشد فعال محسوب می‌شوند. */
+export const PERMISSION_TEXT: Record<'notifications' | 'location', { title: string; text: string }> = {
+  notifications: { title: 'اعلان‌ها', text: 'با اجازهٔ اعلان در مرورگر فعال می‌شود. برای لغو، اجازه را از تنظیمات مرورگر یا برنامهٔ نصب‌شده بردارید.' },
+  location: { title: 'موقعیت مکانی', text: 'فقط برای نمایش آب‌وهوای شهر شما با اجازهٔ مرورگر استفاده می‌شود. مختصات گردشده (حدود ۱ کیلومتر) فقط روی دستگاه می‌ماند و برای دریافت آب‌وهوا و نام شهر به سرویس‌های خارجی (Open-Meteo و BigDataCloud) فرستاده می‌شود، نه به سرور ما. با برداشتن اجازه، مختصات ذخیره‌شده پاک می‌شود.' },
 }

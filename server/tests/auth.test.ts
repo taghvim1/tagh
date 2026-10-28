@@ -355,6 +355,11 @@ describe('ثبت نصب، ثبت‌نام و تکمیل پروفایل در پن
     expect((await t.call('GET', '/api/admin/users/stats')).json()).toMatchObject({ registered: 1, complete: 1, incomplete: 0 })
     const d = (await t.call('GET', `/api/admin/users/${uid}?contact=1`)).json()
     expect(d).toMatchObject({ display_name: 'علی رضایی', city: 'تهران', profile_complete: true, contact: { phone: PHONE } })
+    // ایمیل و شماره فقط با contact=1 در پاسخ می‌آید
+    await t.call('PUT', '/api/auth/profile', { first_name: 'علی', last_name: 'رضایی', city: 'تهران', email: 'ali@example.com' }, h)
+    const plain = JSON.stringify((await t.call('GET', `/api/admin/users/${uid}`)).json())
+    expect(plain).not.toContain('ali@example.com'); expect(plain).not.toContain(PHONE)
+    expect((await t.call('GET', `/api/admin/users/${uid}?contact=1`)).json().contact).toEqual({ phone: PHONE, email: 'ali@example.com' })
 
     // ورود دوباره (مثلاً دستگاه دیگر) پروفایل را حفظ می‌کند و ردیف جدید نمی‌سازد
     t.clock.t += 61_000

@@ -1,4 +1,5 @@
-import { CONSENT_KINDS, clearConsent, consentSummary, loadConsentRecords, recordConsent, seedDefaultConsents } from './consent'
+import { CONSENT_KINDS, PERMISSION_KINDS, clearConsent, consentSummary, loadConsentRecords, recordConsent, seedDefaultConsents, syncPermissionConsent } from './consent'
+import { browserPermissionReader, type PermissionReader } from './permissions'
 import { APP_VERSION, clearInstallation, getOrCreateInstallation } from './installation'
 import { nowISO, randomId, type KV } from './ids'
 import { EVENT_TYPES, type ActivityEvent, type ConsentKind, type ConsentRecord, type ConsentSummary, type EventType } from './types'
@@ -122,6 +123,7 @@ export function createTracker(deps: TrackerDeps) {
     const id = installation().anonymous_id
     seed()
     for (const [kind, granted] of Object.entries(values) as [ConsentKind, boolean][]) {
+      if (PERMISSION_KINDS.includes(kind)) continue // اعلان/موقعیت فقط از مجوز واقعی می‌آید (syncPermissions)
       recordConsent(kv, id, kind, granted, now(), source)
       if (kind === 'analytics' && !granted) kv.removeItem(OUTBOX_KEY) // لغو رضایت: صف ارسال‌نشده پاک می‌شود
     }
@@ -129,16 +131,32 @@ export function createTracker(deps: TrackerDeps) {
   }
   const setConsent = (kind: ConsentKind, granted: boolean, source: ConsentRecord['source'] = 'settings') => setConsents({ [kind]: granted }, source)
 
+  /** رضایت اعلان/موقعیت را با وضعیت واقعی مجوز مرورگر یکی می‌کند. وضعیت نامعلوم (مرورگر پاسخ نمی‌دهد) رضایت را تغییر نمی‌دهد. true یعنی چیزی تغییر کرد. */
+  async function syncPermissions(reader: PermissionReader = browserPermissionReader): Promise<boolean> {
+    const id = installation().anonymous_id
+    seed()
+    let changed = false
+    for (const [kind, state] of [['notifications', await reader.notifications()], ['location', await reader.location()]] as const) {
+      if (state === 'unknown') continue
+      if (syncPermissionConsent(kv, id, kind, state === 'granted', now())) changed = true
+    }
+    if (changed) emit()
+    return changed
+  }
+
   /** نسخهٔ قابل‌مشاهده از داده‌های همین دستگاه (حق مشاهده) */
   const exportMyData = () => ({ installation: installation(), consent: seed(), pending_events: loadOutbox() })
 
-  /** درخواست حذف: داده‌های محلی پاک، رضایت‌ها لغو و یک درخواست حذف برای سرور (پس از اتصال) ثبت می‌شود. */
+  /** درخواست حذف: داده‌های محلی پاک و یک درخواست حذف برای سرور (پس از اتصال) ثبت می‌شود. نصب جدید با تحلیل و تبلیغات «خاموش» شروع می‌شود تا بعد از درخواست حذف، ثبت داده خودبه‌خود از سر گرفته نشود؛ کاربر می‌تواند از /privacy دوباره روشن کند. */
   function deleteMyData() {
     const id = installation().anonymous_id
     const req = { anonymous_id: id, requested_at: nowISO(now()), status: 'pending_server' as const }
     ;[OUTBOX_KEY, SESSION_KEY].forEach((k) => kv.removeItem(k))
     clearConsent(kv); clearInstallation(kv); kv.removeItem(SYNCED_KEY)
     try { kv.setItem(DELETION_KEY, JSON.stringify(req)) } catch { /* فقط حافظه */ }
+    const fresh = installation().anonymous_id // شناسهٔ تازه؛ رکوردهای «خاموش» به نام همین شناسه ثبت می‌شود
+    recordConsent(kv, fresh, 'analytics', false, now(), 'privacy_page')
+    recordConsent(kv, fresh, 'marketing', false, now(), 'privacy_page')
     lastKey = ''
     emit()
     return req
@@ -146,7 +164,7 @@ export function createTracker(deps: TrackerDeps) {
   const deletionRequest = () => { try { return JSON.parse(kv.getItem(DELETION_KEY) ?? 'null') as { anonymous_id: string; requested_at: string; status: string } | null } catch { return null } }
 
   return {
-    track, flush, setConsent, setConsents, consent,
+    track, flush, setConsent, setConsents, consent, syncPermissions,
     exportMyData, deleteMyData, deletionRequest,
     pending: () => loadOutbox().length, retryAt: () => retryAt, installation,
     subscribe: (l: () => void) => { listeners.add(l); return () => { listeners.delete(l) } },

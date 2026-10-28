@@ -68,7 +68,7 @@ export async function enableDateNotification(): Promise<EnableResult> {
   if (st === 'unsupported') return 'unsupported'
   if (st === 'denied') return 'denied'
   if (st === 'default') { const p = await Notification.requestPermission(); if (p === 'denied') return 'denied'; if (p !== 'granted') return 'dismissed' }
-  setDateNotificationSetting(true); tracker.setConsent('notifications', true, 'settings')
+  setDateNotificationSetting(true); void tracker.syncPermissions() // رضایت اعلان از مجوز واقعی مرورگر می‌آید
   await setSwFlag(true)
   const ok = await syncDateNotification()
   await registerPeriodic(await registration(), true)

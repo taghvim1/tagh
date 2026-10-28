@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import { memoryKV } from '../src/analytics/ids'
 import { getOrCreateInstallation } from '../src/analytics/installation'
 import { createTracker, notConnectedTransport, OUTBOX_MAX, type Transport } from '../src/analytics/tracker'
+import type { PermissionReader, PermState } from '../src/analytics/permissions'
 import { computeInterests } from '../src/analytics/interest'
 import { mergeGuestIntoAccount, type AccountState, type GuestBundle } from '../src/analytics/merge'
 import { can } from '../src/analytics/admin/access'
@@ -39,17 +40,47 @@ test('پیش‌فرض: تحلیل ثبت می‌شود (روشن)؛ لغو، ص�
   assert.ok(tr.track('app_open'))
 })
 
-test('پیش‌فرض‌ها: هر چهار رضایت روشن؛ هر نوع مستقل است و پیش‌فرض‌ها با نسخهٔ سیاست ثبت می‌شوند', () => {
+test('پیش‌فرض‌ها: تحلیل و تبلیغات روشن؛ اعلان و موقعیت فقط با مجوز واقعی (نه پیش‌فرض)', () => {
   const { tr } = mk()
-  assert.deepEqual(tr.consent(), { analytics: true, marketing: true, notifications: true, location: true }) // هر چهار رضایت پیش‌فرض فعال
+  assert.deepEqual(tr.consent(), { analytics: true, marketing: true, notifications: false, location: false })
   const recs = tr.exportMyData().consent
-  assert.deepEqual(recs.map((r) => [r.kind, r.granted, r.source]).sort(), [['analytics', true, 'default'], ['location', true, 'default'], ['marketing', true, 'default'], ['notifications', true, 'default']])
-  assert.ok(recs.every((r) => r.policy_version === '2026-10-v4' && r.recorded_at))
+  assert.deepEqual(recs.map((r) => [r.kind, r.granted, r.source]).sort(), [['analytics', true, 'default'], ['marketing', true, 'default']]) // برای اعلان/موقعیت رکورد «پیش‌فرض» ساخته نمی‌شود
+  assert.ok(recs.every((r) => r.policy_version === '2026-10-v5' && r.recorded_at))
   tr.setConsent('marketing', false, 'privacy_page')
-  assert.deepEqual(tr.consent(), { analytics: true, marketing: false, notifications: true, location: true })
-  tr.setConsent('notifications', false)
-  assert.deepEqual(tr.consent(), { analytics: true, marketing: false, notifications: false, location: true })
-  assert.equal(tr.exportMyData().consent.at(-1)!.source, 'settings')
+  assert.deepEqual(tr.consent(), { analytics: true, marketing: false, notifications: false, location: false })
+  tr.setConsent('notifications', true, 'settings') // سوییچ دستی برای اعلان/موقعیت اثری ندارد
+  assert.equal(tr.consent().notifications, false)
+})
+
+const perm = (n: PermState, l: PermState): PermissionReader => ({ notifications: async () => n, location: async () => l })
+test('رضایت اعلان/موقعیت از مجوز واقعی خوانده می‌شود؛ فقط هنگام تغییر رکورد می‌نویسد', async () => {
+  const { tr } = mk()
+  assert.equal(await tr.syncPermissions(perm('prompt', 'prompt')), false) // هنوز پرسیده نشده: بدون رکورد
+  assert.equal(await tr.syncPermissions(perm('granted', 'prompt')), true)
+  assert.deepEqual(tr.consent(), { analytics: true, marketing: true, notifications: true, location: false })
+  assert.equal(await tr.syncPermissions(perm('granted', 'prompt')), false) // تکراری ثبت نمی‌شود
+  await tr.syncPermissions(perm('granted', 'granted'))
+  assert.equal(tr.consent().location, true)
+  await tr.syncPermissions(perm('denied', 'denied')) // برداشتن مجوز = لغو رضایت
+  assert.deepEqual(tr.consent(), { analytics: true, marketing: true, notifications: false, location: false })
+  const perms = tr.exportMyData().consent.filter((r) => r.source === 'permission')
+  assert.deepEqual(perms.map((r) => `${r.kind}:${r.granted}`), ['notifications:true', 'location:true', 'notifications:false', 'location:false'])
+})
+test('وضعیت «نامعلوم» مجوز (مرورگر بدون Permissions API) رضایت را تغییر نمی‌دهد', async () => {
+  const { tr } = mk()
+  await tr.syncPermissions(perm('granted', 'granted'))
+  assert.equal(await tr.syncPermissions(perm('granted', 'unknown')), false)
+  assert.equal(tr.consent().location, true)
+})
+test('رکورد قدیمیِ «روشن» برای اعلان/موقعیت نادیده گرفته و با مجوز واقعی اصلاح می‌شود', async () => {
+  const kv = memoryKV()
+  const id = getOrCreateInstallation(kv, T0).anonymous_id
+  kv.setItem('taghvim-consent-v1', JSON.stringify(['notifications', 'location'].map((kind, i) => ({ consent_id: 'old' + i, subject_id: id, kind, granted: true, recorded_at: T0.toISOString(), policy_version: '2026-10-v4', source: 'default' }))))
+  const { tr } = mk(kv)
+  assert.equal(tr.consent().notifications, false) // رکورد قدیمی بدون مجوز اعتبار ندارد
+  assert.equal(await tr.syncPermissions(perm('prompt', 'denied')), true) // رکورد «false» اصلاحی برای سرور
+  const fixed = tr.exportMyData().consent.filter((r) => r.source === 'permission')
+  assert.deepEqual(fixed.map((r) => `${r.kind}:${r.granted}`).sort(), ['location:false', 'notifications:false'])
 })
 
 test('رویداد تکراری پشت‌سرهم ثبت نمی‌شود و داده غیرمجاز دور ریخته می‌شود', () => {
@@ -104,14 +135,16 @@ test('صف محلی سقف دارد', () => {
   assert.equal(tr.pending(), OUTBOX_MAX)
 })
 
-test('درخواست حذف داده: پاک‌سازی محلی، لغو رضایت و ثبت درخواست برای سرور', () => {
+test('درخواست حذف داده: پاک‌سازی محلی، ثبت درخواست برای سرور و عدم برگشت ثبت داده به حالت پیش‌فرضِ روشن', () => {
   const { tr, kv } = mk()
   optIn(tr); tr.setConsent('marketing', true); tr.track('app_open')
   const id = tr.installation().anonymous_id
   const req = tr.deleteMyData()
   assert.equal(req.anonymous_id, id)
   assert.equal(tr.pending(), 0)
-  assert.deepEqual(tr.consent(), { analytics: true, marketing: true, notifications: true, location: true }) // پس از حذف دوباره پیش‌فرض‌ها
+  assert.deepEqual(tr.consent(), { analytics: false, marketing: false, notifications: false, location: false }) // پس از حذف، ثبت داده خاموش می‌ماند تا کاربر دوباره روشن کند
+  assert.equal(tr.track('app_open'), null)
+  assert.ok(tr.exportMyData().consent.every((r) => r.subject_id === tr.installation().anonymous_id)) // رکوردهای خاموش به نام شناسهٔ تازه‌اند
   assert.equal(tr.deletionRequest()?.status, 'pending_server')
   assert.notEqual(tr.installation().anonymous_id, id)
   assert.equal(kv.getItem('taghvim-outbox-v1'), null)
@@ -247,7 +280,7 @@ test('ارسال: رکوردهای رضایت همراه رویدادها می�
   const transport: Transport = { send: async (events, ctx) => { sent.push({ n: events.length, consents: ctx.consents.map((c) => `${c.kind}:${c.granted}`) }) } }
   const { tr } = mk(memoryKV(), transport)
   tr.track('app_open'); tr.track('view_calendar')
-  assert.equal((await tr.flush()).status, 'sent'); assert.equal(sent[0].n, 2); assert.deepEqual(sent[0].consents.sort(), ['analytics:true', 'location:true', 'marketing:true', 'notifications:true'])
+  assert.equal((await tr.flush()).status, 'sent'); assert.equal(sent[0].n, 2); assert.deepEqual(sent[0].consents.sort(), ['analytics:true', 'marketing:true'])
   assert.equal((await tr.flush()).status, 'empty')
   tr.setConsent('analytics', false)
   assert.equal((await tr.flush()).status, 'sent'); assert.equal(sent[1].n, 0); assert.ok(sent[1].consents.includes('analytics:false'))

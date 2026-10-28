@@ -192,7 +192,7 @@ export function adminRoutes(app: FastifyInstance, d: { config: Config; store: St
     // ---------- ورود پیامکی (قاصدک) ----------
     smsAdminRoutes(adm, { config, auth: d.auth, sms: d.sms })
     packageAdminRoutes(adm, d.pkg)
-    usersAdminRoutes(adm, { registry: d.registry, auth: d.auth })
+    usersAdminRoutes(adm, { registry: d.registry, auth: d.auth, store })
 
     // ---------- قالب پرامپت (نسخه‌دار) ----------
     adm.get('/prompts', async () => ({ items: await store.listPrompts(), builtin: DEFAULT_TEMPLATE, active_version: (await activeTemplate(store)).version }))

@@ -91,6 +91,19 @@ export async function createJsonStore(file?: string): Promise<Store> {
       if (fresh.length) await save(); return { inserted: fresh.length, duplicates: rows.length - fresh.length }
     },
     eventStats: async () => ({ events: s.events.length, consents: s.consents.length }),
+    async eventsOf(anonIds, { limit, offset = 0 }) {
+      const ids = new Set(anonIds), all = s.events.filter((e) => ids.has(e.anonymous_id)).sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.event_id.localeCompare(a.event_id)) // هم‌ترتیب با PostgreSQL (زمان، سپس شناسه)
+      return { items: clone(all.slice(offset, offset + limit)), total: all.length }
+    },
+    async eventsSince(since, limit) { return clone(s.events.filter((e) => e.occurred_at >= since).sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.event_id.localeCompare(a.event_id)).slice(0, limit)) },
+    async consentsOf(anonIds) { const ids = new Set(anonIds); return clone(s.consents.filter((c) => ids.has(c.subject_id)).sort((a, b) => a.recorded_at.localeCompare(b.recorded_at) || a.consent_id.localeCompare(b.consent_id))) },
+    async deleteSubjects(anonIds) {
+      const ids = new Set(anonIds), ev = s.events.filter((e) => ids.has(e.anonymous_id)), co = s.consents.filter((c) => ids.has(c.subject_id))
+      if (!ev.length && !co.length) return { events: 0, consents: 0 }
+      s.events = s.events.filter((e) => !ids.has(e.anonymous_id)); s.consents = s.consents.filter((c) => !ids.has(c.subject_id))
+      ev.forEach((e) => eventIds.delete(e.event_id)); co.forEach((c) => consentIds.delete(c.consent_id))
+      await save(); return { events: ev.length, consents: co.length }
+    },
     getKV: async (k) => s.kv[k] ?? null,
     async setKV(k, v) { s.kv[k] = v; await save() },
     async deleteKV(k) { delete s.kv[k]; await save() },

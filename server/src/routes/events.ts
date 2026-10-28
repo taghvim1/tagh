@@ -17,7 +17,7 @@ const eventSchema = z.object({
   duration_sec: z.number().min(0).max(3600).optional(), query_length: z.number().min(0).max(200).optional(), error_code: z.string().max(60).optional(),
   app_version: z.string().max(20), platform: z.enum(['web', 'pwa']), consent_context: consentCtx,
 }) // user_id عمداً نادیده گرفته می‌شود: پیش از احراز هویت قابل‌اعتماد نیست
-const consentSchema = z.object({ consent_id: z.string().min(1).max(80), subject_id: short, kind: z.enum(['analytics', 'marketing', 'notifications', 'location']), granted: z.boolean(), recorded_at: iso, policy_version: z.string().max(30), source: z.enum(['default', 'settings', 'prompt', 'privacy_page', 'server']) })
+const consentSchema = z.object({ consent_id: z.string().min(1).max(80), subject_id: short, kind: z.enum(['analytics', 'marketing', 'notifications', 'location']), granted: z.boolean(), recorded_at: iso, policy_version: z.string().max(30), source: z.enum(['default', 'settings', 'prompt', 'privacy_page', 'server', 'permission']) })
 const envelope = z.object({ anonymous_id: short.min(1), platform: z.enum(['web', 'pwa']), app_version: z.string().max(20), consents: z.array(z.unknown()).max(100).default([]), events: z.array(z.unknown()).max(100).default([]) })
 
 /** دریافت دسته‌ای رویدادها و رضایت‌ها از برنامه. عمومی (بدون ورود) اما با محدودیت اندازه/نرخ و اعتبارسنجی. */

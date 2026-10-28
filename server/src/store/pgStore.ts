@@ -19,6 +19,9 @@ const image = (r: Record<string, unknown>): ImageRow => ({
   author: (r.author as string | null) ?? null, license: (r.license as string | null) ?? null, license_url: (r.license_url as string | null) ?? null, attribution: (r.attribution as string | null) ?? null,
   status: r.status as ImageRow['status'], created_at: iso(r.created_at)!, decided_at: iso(r.decided_at),
 })
+const eventRow = (r: Record<string, unknown>): EventRow => ({ event_id: String(r.event_id), anonymous_id: String(r.anonymous_id), event_type: String(r.event_type), occurred_at: iso(r.occurred_at)!, session_id: String(r.session_id), props: (obj(r.props) ?? {}) as Record<string, unknown>, app_version: String(r.app_version), platform: String(r.platform), consent_context: (obj(r.consent_context) ?? {}) as Record<string, boolean>, received_at: iso(r.received_at)! })
+const consentRow = (r: Record<string, unknown>): ConsentRow => ({ consent_id: String(r.consent_id), subject_id: String(r.subject_id), kind: String(r.kind), granted: Boolean(r.granted), recorded_at: iso(r.recorded_at)!, policy_version: String(r.policy_version), source: String(r.source), received_at: iso(r.received_at)! })
+const inList = (ids: string[], from = 1) => ids.map((_, i) => `$${i + from}`).join(', ') // postgres.js و PGlite هر دو: پارامتر جدا برای هر شناسه (بدون آرایه)
 const prompt = (r: Record<string, unknown>): PromptRow => ({ id: Number(r.id), version: Number(r.version), text: String(r.text), note: String(r.note), active: Boolean(r.active), created_at: iso(r.created_at)! })
 
 const SUGGESTION_COLS = ['status', 'source', 'name', 'country', 'content', 'version', 'cover_image_id', 'reject_reason', 'ai_meta', 'created_at', 'updated_at', 'published_at'] as const
@@ -106,6 +109,21 @@ export async function createPgStore(query: Query, migrationSql: string): Promise
       return { inserted, duplicates: rows.length - inserted }
     },
     async eventStats() { const r = await one('select (select count(*) from activity_events)::int as events, (select count(*) from consent_records)::int as consents', []); return { events: Number(r!.events), consents: Number(r!.consents) } },
+    async eventsOf(anonIds, { limit, offset = 0 }) {
+      if (!anonIds.length) return { items: [], total: 0 }
+      const n = anonIds.length
+      const rows = await query(`select * from activity_events where anonymous_id in (${inList(anonIds)}) order by occurred_at desc, event_id desc limit $${n + 1} offset $${n + 2}`, [...anonIds, limit, offset])
+      const c = await one(`select count(*)::int as n from activity_events where anonymous_id in (${inList(anonIds)})`, anonIds)
+      return { items: rows.map(eventRow), total: Number(c!.n) }
+    },
+    async eventsSince(since, limit) { return (await query('select * from activity_events where occurred_at >= $1 order by occurred_at desc limit $2', [since, limit])).map(eventRow) },
+    async consentsOf(anonIds) { return anonIds.length ? (await query(`select * from consent_records where subject_id in (${inList(anonIds)}) order by recorded_at asc, consent_id asc`, anonIds)).map(consentRow) : [] },
+    async deleteSubjects(anonIds) {
+      if (!anonIds.length) return { events: 0, consents: 0 }
+      const ev = await query(`delete from activity_events where anonymous_id in (${inList(anonIds)}) returning event_id`, anonIds)
+      const co = await query(`delete from consent_records where subject_id in (${inList(anonIds)}) returning consent_id`, anonIds)
+      return { events: ev.length, consents: co.length }
+    },
     getKV: async (k) => { const r = await one('select value from app_settings where key = $1', [k]); return r ? String(r.value) : null },
     async setKV(k, v) { await query('insert into app_settings (key, value, updated_at) values ($1, $2, now()) on conflict (key) do update set value = excluded.value, updated_at = now()', [k, v]) },
     async deleteKV(k) { await query('delete from app_settings where key = $1', [k]) },

@@ -46,6 +46,14 @@ export interface Store {
   latestConsents(subjectId: string): Promise<Record<string, boolean>>
   addEvents(rows: EventRow[]): Promise<{ inserted: number; duplicates: number }>
   eventStats(): Promise<{ events: number; consents: number }>
+  /** رویدادهای یک کاربر (همهٔ شناسه‌های نصبِ او)، تازه‌ترین اول؛ برای صفحه‌بندی و پروفایل در پنل مدیریت */
+  eventsOf(anonIds: string[], opts: { limit: number; offset?: number }): Promise<{ items: EventRow[]; total: number }>
+  /** رویدادهای ثبت‌شده از یک زمان به بعد (برای آمار داشبورد)؛ حداکثر limit ردیف، تازه‌ترین اول */
+  eventsSince(sinceISO: string, limit: number): Promise<EventRow[]>
+  /** همهٔ رکوردهای رضایت شناسه‌های نصب (قدیمی‌ترین اول) */
+  consentsOf(anonIds: string[]): Promise<ConsentRow[]>
+  /** حذف رویدادها و رضایت‌های شناسه‌های نصب؛ تعداد حذف‌شده را برمی‌گرداند */
+  deleteSubjects(anonIds: string[]): Promise<{ events: number; consents: number }>
   getKV(key: string): Promise<string | null>
   setKV(key: string, value: string): Promise<void>
   deleteKV(key: string): Promise<void>

@@ -1,4 +1,5 @@
 import type { PackageInput, TourPackage } from './types'
+import { tracker } from '../analytics'
 
 export const BUDGETS = ['اقتصادی', 'متوسط', 'لوکس']
 export const VEHICLES = ['خودروی شخصی', 'اتوبوس', 'قطار', 'هواپیما', 'کشتی یا لنج']
@@ -41,7 +42,7 @@ const b64 = (s: string) => { const p = '='.repeat((4 - (s.length % 4)) % 4), r =
 export async function preparePush(): Promise<PushSubJSON | null> {
   try {
     if (typeof Notification === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) return null
-    if (Notification.permission === 'default') await Notification.requestPermission()
+    if (Notification.permission === 'default') { await Notification.requestPermission(); void tracker.syncPermissions() }
     if (Notification.permission !== 'granted') return null
     const o = await (await fetch('/api/package/options')).json() as { push_key?: string }
     if (!o.push_key) return null

@@ -8,11 +8,13 @@ import { initCalendarData } from './lib/calendarData'
 import { addNotification } from './lib/notifications'
 import { startAutoFlush, tracker } from './analytics'
 import { startDateNotificationSync } from './lib/dateNotification'
+import { startPermissionSync } from './lib/permissionSync'
 import { initHistory } from './lib/router'
 import { initHistoricalClimate } from './weather/history/store'
 
 tracker.track('app_open')
 startAutoFlush()
+startPermissionSync()
 startDateNotificationSync()
 initHistory() // Back هرگز از صفحهٔ داخلی مستقیم از برنامه خارج نمی‌شود
 void initHistoricalClimate() // آمار تاریخی آب‌وهوای مقصدها: از حافظه می‌آید و فقط موارد جدید/قدیمی دوباره دریافت می‌شوند

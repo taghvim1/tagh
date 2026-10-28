@@ -8,8 +8,8 @@ import { faNum } from '../../lib/jalali'
 import Modal from './Modal'
 
 export const fmtDate = (iso?: string) => (iso ? new Date(iso).toLocaleString('fa-IR', { dateStyle: 'short', timeStyle: 'short' }) : '—')
-const destName = (id: number) => MOCK_DESTINATIONS.find((d) => d.id === id)?.name ?? `مقصد ${faNum(id)}`
-const EVENT_LABEL: Record<string, string> = { view_destination: 'مشاهدهٔ مقصد', destination_dwell: 'مدت مشاهده', select_season: 'انتخاب فصل', search: 'جست‌وجو', favorite_add: 'افزودن علاقه‌مندی', favorite_remove: 'حذف علاقه‌مندی', view_tour: 'مشاهدهٔ تور', offer_click: 'کلیک پیشنهاد', notification_open: 'بازکردن اعلان', use_filter: 'استفاده از فیلتر', app_open: 'ورود به برنامه', view_calendar: 'مشاهدهٔ تقویم', view_suggestions: 'پیشنهاد سفر', view_tours: 'فهرست تورها' }
+export const destName = (id: number) => MOCK_DESTINATIONS.find((d) => d.id === id)?.name ?? `مقصد ${faNum(id)}`
+export const EVENT_LABEL: Record<string, string> = { view_destination: 'مشاهدهٔ مقصد', destination_dwell: 'مدت مشاهده', select_season: 'انتخاب فصل', search: 'جست‌وجو', favorite_add: 'افزودن علاقه‌مندی', favorite_remove: 'حذف علاقه‌مندی', view_tour: 'مشاهدهٔ تور', offer_click: 'کلیک پیشنهاد', notification_open: 'بازکردن اعلان', use_filter: 'استفاده از فیلتر', app_open: 'ورود به برنامه', view_calendar: 'مشاهدهٔ تقویم', view_suggestions: 'پیشنهاد سفر', view_tours: 'فهرست تورها', view_season: 'مشاهدهٔ فصل', select_budget: 'انتخاب بودجه', select_travel_style: 'انتخاب سبک سفر', select_scope: 'انتخاب داخلی/خارجی', view_organizer: 'مشاهدهٔ برگزارکننده', feature_use: 'استفاده از امکانات', settings_change: 'تغییر تنظیمات', technical_error: 'خطای فنی' }
 
 interface Props { api: UsersApi; role: AdminRole; id: string; onClose: () => void; onChanged: () => void }
 

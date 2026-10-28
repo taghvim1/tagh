@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { tracker, useAnalytics } from '../analytics'
 import AppChrome from '../components/AppChrome'
-import { CONSENT_TEXT } from '../components/consentText'
+import { CONSENT_TEXT, PERMISSION_TEXT } from '../components/consentText'
 import { useDarkMode, useThemeColorMeta } from '../lib/theme'
 
 type Perm = 'granted' | 'denied' | 'default' | 'unsupported'
@@ -20,6 +20,7 @@ export default function PrivacyPage() {
   const askBrowser = async () => {
     if (perm !== 'default') return
     try { setPerm((await Notification.requestPermission()) as Perm) } catch { setPerm(readPerm()) }
+    void tracker.syncPermissions()
   }
 
   return (
@@ -28,7 +29,7 @@ export default function PrivacyPage() {
       <main className="tp-main">
         <header className="tp-head"><h1>حریم خصوصی و رضایت</h1></header>
         <div className="st-list">
-          {(['analytics', 'marketing', 'notifications'] as const).map((k) => (
+          {(['analytics', 'marketing'] as const).map((k) => (
             <label key={k} className="cs-row">
               <span><strong>{CONSENT_TEXT[k].title}</strong><small>{CONSENT_TEXT[k].text}</small></span>
               <input type="checkbox" role="switch" className="cal-switch" checked={an.consent[k]} onChange={(e) => tracker.setConsent(k, e.target.checked, 'privacy_page')} />
@@ -37,10 +38,19 @@ export default function PrivacyPage() {
         </div>
         <p className="st-hint">داده‌ها اول روی همین دستگاه ذخیره می‌شوند و با اتصال به اینترنت به سرور ارسال می‌شوند{an.pending > 0 ? ` (${an.pending} رویداد در صف ارسال)` : ''}. با خاموش‌کردن هر مورد، ثبت و ارسال مربوط به آن بلافاصله متوقف می‌شود و انتخاب شما هم به سرور اعلام می‌شود.</p>
 
+        <h2 className="st-sub">مجوزهای دستگاه</h2>
+        <div className="st-list">
+          {(['notifications', 'location'] as const).map((k) => (
+            <div key={k} className="cs-row">
+              <span><strong>{PERMISSION_TEXT[k].title}: {an.consent[k] ? 'فعال (مجوز داده شده)' : 'غیرفعال'}</strong><small>{PERMISSION_TEXT[k].text}</small></span>
+            </div>
+          ))}
+        </div>
+
         <h2 className="st-sub">اجازهٔ اعلان مرورگر</h2>
         <div className="st-list"><div className="cs-row">
           <span><strong>{perm === 'granted' ? 'اجازه داده شده است' : perm === 'denied' ? 'مسدود شده است' : perm === 'unsupported' ? 'در این مرورگر پشتیبانی نمی‌شود' : 'هنوز پرسیده نشده'}</strong>
-            <small>این اجازه جدا از رضایت بالاست. اعلان پس‌زمینهٔ واقعی (Push) هنوز فعال نیست.</small></span>
+            <small>همین اجازه مبنای رضایت «اعلان‌ها» است. اعلان پس‌زمینهٔ واقعی (Push) هنوز فعال نیست.</small></span>
           {perm === 'default' && <button type="button" className="tp-btn" onClick={askBrowser}>درخواست اجازه</button>}
         </div></div>
         {perm === 'denied' && <p className="st-hint">اجازه از طرف مرورگر مسدود شده و برنامه نمی‌تواند دوباره بپرسد. برای فعال‌سازی، در تنظیمات مرورگر یا برنامهٔ نصب‌شده، بخش «اعلان‌ها»ی همین سایت را روی «اجازه» بگذارید.</p>}
