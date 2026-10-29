@@ -8,6 +8,8 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1).optional(),
   STATIC_DIR: z.string().default('dist'),
   RATE_LIMIT_PER_MIN: z.coerce.number().int().min(10).default(300),
+  /** سقف ساخت «مهمان تازه» در هر ساعت در کل سرور (محافظ پرشدن جدول با ربات/اسکریپت؛ ثبت‌نام‌شده‌ها و مهمان‌های قبلی تأثیر نمی‌گیرند) */
+  INSTALL_MAX_PER_HOUR: z.coerce.number().int().min(1).default(3000),
   /** پوشهٔ ذخیره‌سازی آزمایشی (فایل JSON). روی Railway بدون Volume با هر استقرار پاک می‌شود. */
   DATA_DIR: z.string().default('data'),
   /** اگر تنظیم شود، همهٔ /api/admin/* به هدر Authorization: Bearer <token> نیاز دارد */

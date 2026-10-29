@@ -17,7 +17,13 @@ const readCookie = (req: FastifyRequest, name: string) => {
 const cookie = (value: string, maxAgeS: number, secure: boolean) => `${SESSION_COOKIE}=${encodeURIComponent(value)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeS}${secure ? '; Secure' : ''}`
 
 const phoneBody = z.object({ phone: z.string().max(40), purpose: z.enum(PURPOSES).optional() })
-const installBody = z.object({ installation_id: z.string().min(8).max(80), platform: z.enum(['web', 'pwa']).default('web'), app_version: z.string().max(30).default('') })
+const ID_RE = /^[A-Za-z0-9_-]{8,80}$/ // شناسه‌های تصادفی برنامه؛ هر چیز دیگر (فاصله، نمادهای عجیب) رد می‌شود
+const installBody = z.object({ installation_id: z.string().regex(ID_RE), analytics_id: z.string().regex(ID_RE).optional(), platform: z.enum(['web', 'pwa']).default('web'), app_version: z.string().max(30).default('') })
+// خزنده‌ها، ابزارهای سنجش سرعت و پایش آنلاین حافظهٔ ماندگار ندارند و هر بازدیدشان یک «نصب تازه» می‌ساخت
+const BOT_RE = /bot|crawl|spider|slurp|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptime|monitor|preview|facebookexternalhit|whatsapp|telegram|curl|wget|python-requests|httpclient|go-http|node-fetch|axios|postman/i
+const PUSH_HOST_RE = /^(fcm\.googleapis\.com|android\.googleapis\.com|([a-z0-9-]+\.)*push\.services\.mozilla\.com|([a-z0-9-]+\.)*push\.apple\.com|([a-z0-9-]+\.)*notify\.windows\.com)$/
+const b64u = z.string().regex(/^[A-Za-z0-9_-]{8,200}={0,2}$/)
+const pushBody = z.object({ installation_id: z.string().regex(ID_RE), subscription: z.object({ endpoint: z.string().max(600), keys: z.object({ p256dh: b64u, auth: b64u }) }) })
 const profileBody = z.object({ first_name: z.string().trim().min(1).max(60), last_name: z.string().trim().min(1).max(60), city: z.string().trim().min(1).max(60), email: z.union([z.string().trim().email().max(120), z.literal('')]).optional() })
 const verifyBody = z.object({ phone: z.string().max(40), code: z.string().max(12), anonymous_id: z.string().min(1).max(80).optional(), installation_id: z.string().min(8).max(80).optional() })
 
@@ -64,7 +70,26 @@ export function authRoutes(app: FastifyInstance, d: { config: Config; auth: Auth
   app.post('/installations', { bodyLimit: 1024, config: { rateLimit: { max: 20, timeWindow: '1 minute' } } }, async (req, reply) => {
     if (guard(req, reply)) return
     const b = installBody.safeParse(req.body); if (!b.success) return reply.code(400).send({ error: 'invalid' })
-    await registry.touchInstall(b.data.installation_id, b.data.platform, b.data.app_version)
+    if (BOT_RE.test(String(req.headers['user-agent'] ?? ''))) return reply.code(204).send() // ربات: بی‌صدا ثبت نمی‌شود
+    await registry.touchInstall(b.data.installation_id, b.data.platform, b.data.app_version, b.data.analytics_id)
+    return reply.code(204).send()
+  })
+
+  // اشتراک Web Push برای پیشنهادهای تبلیغاتی: برنامه فقط وقتی مجوز اعلان داده شده و رضایت تبلیغاتی روشن است می‌فرستد.
+  // آدرس اشتراک فقط از سرویس‌های Push شناخته‌شدهٔ مرورگرها پذیرفته می‌شود (سرور بعداً به همین آدرس درخواست می‌زند؛ جلوگیری از SSRF).
+  app.post('/push/subscribe', { bodyLimit: 4096, config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (req, reply) => {
+    if (guard(req, reply)) return
+    const b = pushBody.safeParse(req.body); if (!b.success) return reply.code(400).send({ error: 'invalid' })
+    let host = ''
+    try { const u = new URL(b.data.subscription.endpoint); if (u.protocol === 'https:' && !u.username && !u.password && !u.port) host = u.hostname } catch { /* نامعتبر */ }
+    if (!PUSH_HOST_RE.test(host)) return reply.code(400).send({ error: 'invalid_endpoint' })
+    const ok = await registry.setPush(b.data.installation_id, { endpoint: b.data.subscription.endpoint, p256dh: b.data.subscription.keys.p256dh, auth: b.data.subscription.keys.auth })
+    return ok ? reply.code(204).send() : reply.code(404).send({ error: 'unknown_install' })
+  })
+  app.post('/push/unsubscribe', { bodyLimit: 1024, config: { rateLimit: { max: 10, timeWindow: '1 minute' } } }, async (req, reply) => {
+    if (guard(req, reply)) return
+    const b = z.object({ installation_id: z.string().regex(ID_RE) }).safeParse(req.body); if (!b.success) return reply.code(400).send({ error: 'invalid' })
+    await registry.setPush(b.data.installation_id, null)
     return reply.code(204).send()
   })
 

@@ -136,6 +136,14 @@ export interface DashboardStats {
   topCategories: Array<{ name: string; count: number }>
   favorites: number; searches: number; offerClicks: number; notificationOpens: number
   definitions: Record<string, string>
+  /** فقط پاسخ سرور: چند کاربر به هر فصل/نوع مقصد/بودجه/سبک/داخلی-خارجی علاقهٔ قوی دارند، و وضعیت دریافت داده */
+  interests?: Array<{ dimension: string; value: string; people: number }>
+  diagnostics?: ServerDiagnostics
+}
+export interface ServerDiagnostics {
+  events_total: number; events_24h: number; people_with_events: number; unlinked_analytics_ids: number
+  analytics_granted: number; marketing_granted: number; notifications_granted: number; location_granted: number
+  push_subscribers: number; guests_never_returned: number
 }
 export const STAT_DEFINITIONS = {
   active: 'کاربر فعال: دست‌کم یک رویداد در بازه (روزانه ۱ روز، هفتگی ۷ روز، ماهانه ۳۰ روز). هر پروفایل یک بار شمرده می‌شود.',
@@ -179,7 +187,7 @@ export function dashboardStats(all: ProfileRecord[], now = new Date()): Dashboar
   }
 }
 
-export interface AudienceCounts { matched: number; eligible: number; excluded: { noMarketingConsent: number; unsubscribed: number; frequencyCap: number; inactiveAccount: number } }
+export interface AudienceCounts { matched: number; eligible: number; excluded: { noMarketingConsent: number; unsubscribed: number; frequencyCap: number; inactiveAccount: number; /** فقط سرور واقعی */ noPushSubscription?: number } }
 export const FREQUENCY_CAP_DAYS = 7
 /** پیش‌نمایش مخاطب: فقط شمارش؛ هیچ اطلاعات شخصی برنمی‌گردد. فقط کسانی واجد شرایطند که رضایت تبلیغاتی دارند. */
 export function previewAudience(all: ProfileRecord[], filters: ProfileFilters, now = new Date()): AudienceCounts {

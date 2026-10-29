@@ -4,7 +4,8 @@ import { decrypt, encrypt } from '../secrets.js'
 import type { Store } from '../store/types.js'
 
 export interface PushSub { endpoint: string; keys: { p256dh: string; auth: string } }
-export interface Pusher { publicKey(): Promise<string>; send(sub: PushSub, payload: { title: string; body: string; url: string; tag?: string }): Promise<boolean> }
+export type PushPayload = { title: string; body: string; url: string; tag?: string }
+export interface Pusher { publicKey(): Promise<string>; send(sub: PushSub, payload: PushPayload): Promise<boolean>; /** ok | gone (اشتراک منقضی/لغوشده: 404/410؛ باید حذف شود) | fail (خطای موقت) */ deliver(sub: PushSub, payload: PushPayload): Promise<'ok' | 'gone' | 'fail'> }
 
 /** Web Push (برای اعلان وقتی برنامه بسته است). کلیدهای VAPID یک‌بار ساخته و روی سرور نگه داشته می‌شوند. */
 export function createPusher(d: { store: Store; config: Config }): Pusher {
@@ -20,14 +21,16 @@ export function createPusher(d: { store: Store; config: Config }): Pusher {
     await store.setKV('push:vapid', JSON.stringify(config.SECRETS_ENCRYPTION_KEY ? { publicKey: k.publicKey, enc: encrypt(k.privateKey, config.SECRETS_ENCRYPTION_KEY) } : k))
     return k
   })()
+  const deliver: Pusher['deliver'] = async (sub, payload) => {
+    try {
+      const k = await load()
+      await webpush.sendNotification(sub, JSON.stringify(payload), { vapidDetails: { subject: config.VAPID_SUBJECT ?? 'mailto:admin@example.com', publicKey: k.publicKey, privateKey: k.privateKey }, TTL: 3600, timeout: 10_000 })
+      return 'ok'
+    } catch (e) { const code = (e as { statusCode?: number }).statusCode; return code === 404 || code === 410 ? 'gone' : 'fail' }
+  }
   return {
     publicKey: async () => (await load()).publicKey,
-    async send(sub, payload) {
-      try {
-        const k = await load()
-        await webpush.sendNotification(sub, JSON.stringify(payload), { vapidDetails: { subject: config.VAPID_SUBJECT ?? 'mailto:admin@example.com', publicKey: k.publicKey, privateKey: k.privateKey }, TTL: 3600, timeout: 10_000 })
-        return true
-      } catch { return false }
-    },
+    deliver,
+    send: async (sub, payload) => (await deliver(sub, payload)) === 'ok',
   }
 }

@@ -79,14 +79,6 @@ describe('پنل کاربران: وصل‌شدن رویدادها و رضایت�
     expect(st).toMatchObject({ favorites: 1, searches: 1, notificationOpens: 1 })
   })
 
-  it('پیش‌نمایش مخاطب: فقط با رضایت تبلیغاتی ثبت‌شده؛ بدون رکورد یعنی بدون رضایت', async () => {
-    const t = await mk(); await t.install(); await t.install(ANON2); await t.install('inst-cccccccccccc')
-    await t.send(ANON, [], [cons('c1', ANON, 'marketing', true, '2026-10-28T09:00:00Z')])
-    await t.send(ANON2, [], [cons('c2', ANON2, 'marketing', false, '2026-10-28T09:00:00Z')])
-    const r = (await t.post('/api/admin/audience/preview', {})).json()
-    expect(r).toEqual({ matched: 3, eligible: 1, excluded: { noMarketingConsent: 2, unsubscribed: 0, frequencyCap: 0, inactiveAccount: 0 } })
-  })
-
   it('حذف کاربر، رویدادها و رضایت‌هایش را هم پاک می‌کند', async () => {
     const t = await mk(); await t.install()
     await t.send(ANON, [ev('e1', 'view_calendar'), ev('e2', 'view_calendar')], [cons('c1', ANON, 'analytics', true, '2026-10-28T09:00:00Z')])

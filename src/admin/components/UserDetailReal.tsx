@@ -13,17 +13,20 @@ interface Real {
   favorites?: { destination: number[]; tour: number[] }; seasons?: Record<string, number>; filters_used?: Record<string, number>
   viewed_destinations?: { id: number; views: number; approx_seconds: number }[]; viewed_tours?: number[]
   interests?: { interest_key: string; value: string; score: number; confidence: number; source: string }[]
+  push?: { subscribed: boolean; at?: string; last_promo_sent_at?: string; unsubscribed_at?: string }; reach?: string
   consent?: Record<string, boolean | null>; consent_log?: { kind: string; granted: boolean; at: string; source: string }[]
 }
 interface Ev { event_id: string; event_type: string; occurred_at: string; destination_id?: number; tour_id?: number; season?: string }
 const CONSENT_FA: Record<string, string> = { analytics: 'تحلیل ناشناس', marketing: 'تبلیغات شخصی‌سازی‌شده', notifications: 'اعلان‌ها (مجوز مرورگر)', location: 'موقعیت (مجوز مرورگر)' }
 const SOURCE_FA: Record<string, string> = { default: 'پیش‌فرض', settings: 'تنظیمات', prompt: 'پنجرهٔ رضایت', privacy_page: 'صفحهٔ حریم خصوصی', server: 'سرور', permission: 'مجوز مرورگر' }
+const REACH_FA: Record<string, string> = { eligible: 'واجد شرایط دریافت پیشنهاد', inactiveAccount: 'حساب غیرفعال', unsubscribed: 'اشتراک تبلیغاتی را لغو کرده', noMarketingConsent: 'رضایت تبلیغاتی ندارد', noPushSubscription: 'اشتراک اعلان ندارد (اجازهٔ اعلان نداده یا هنوز برنامه را باز نکرده)', frequencyCap: 'در ۷ روز اخیر پیشنهاد گرفته (سقف تکرار)' }
 const consentFa = (v: boolean | null | undefined) => (v === true ? 'موافق' : v === false ? 'مخالف' : 'ثبت نشده')
 const LOG_FA: Record<string, string> = { first_open: 'اولین باز شدن برنامه (نصب)', open: 'ورود به برنامه', register: 'ثبت‌نام با شماره', login: 'ورود با شماره', profile: 'ذخیرهٔ پروفایل' }
 const Row = ({ k, v }: { k: string; v: React.ReactNode }) => <div className="adm-row2"><span>{k}</span><b>{v || '—'}</b></div>
 
 export default function UserDetailReal({ api, actor, id, onClose, onChanged }: { api: UsersApi; actor: Actor; id: string; onClose: () => void; onChanged: () => void }) {
   const [d, setD] = useState<Real | null>(null), [err, setErr] = useState(''), [busy, setBusy] = useState(false)
+  const [pushMsg, setPushMsg] = useState('')
   const [evs, setEvs] = useState<{ items: Ev[]; total: number; page: number; pageSize: number } | null>(null), [evPage, setEvPage] = useState(1)
   useEffect(() => { setD(null); api.detail(actor, id, { includeContact: true }).then((x) => setD(x as unknown as Real)).catch((e) => setErr((e as Error).message)) }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setEvs(null); api.events(actor, id, evPage, 10).then((x) => setEvs(x as unknown as typeof evs)).catch(() => setEvs({ items: [], total: 0, page: 1, pageSize: 10 })) }, [id, evPage]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -80,6 +83,19 @@ export default function UserDetailReal({ api, actor, id, onClose, onChanged }: {
             {Object.keys(CONSENT_FA).map((k) => <Row key={k} k={CONSENT_FA[k]} v={consentFa(d.consent?.[k])} />)}
             <p className="adm-note">اعلان و موقعیت فقط وقتی «موافق» هستند که مرورگر مجوز را داده باشد. «ثبت نشده» یعنی هنوز رکوردی از دستگاه به سرور نرسیده.</p>
             {!!d.consent_log?.length && <details><summary>تاریخچهٔ رضایت</summary><ul className="adm-timeline" style={{ margin: 0, paddingInlineStart: 18 }}>{d.consent_log.map((c, i) => <li key={i}>{CONSENT_FA[c.kind] ?? c.kind}: {c.granted ? 'موافق' : 'مخالف'} <small className="adm-note">— {SOURCE_FA[c.source] ?? c.source} · {fmtDate(c.at)}</small></li>)}</ul></details>}
+          </section>
+
+          <section className="adm-card" style={{ display: 'grid', gap: 6 }}>
+            <h3>اعلان و پیشنهاد</h3>
+            <Row k="اشتراک اعلان" v={d.push?.subscribed ? `فعال${d.push.at ? ` (از ${fmtDate(d.push.at)})` : ''}` : 'ندارد'} />
+            <Row k="وضعیت دریافت پیشنهاد" v={REACH_FA[d.reach ?? ''] ?? '—'} />
+            {d.push?.last_promo_sent_at && <Row k="آخرین پیشنهاد ارسال‌شده" v={fmtDate(d.push.last_promo_sent_at)} />}
+            {d.push?.subscribed && (
+              <div className="adm-inline" style={{ gap: 8 }}>
+                <button className="adm-btn" disabled={busy} onClick={async () => { setBusy(true); setPushMsg(''); try { const r = await api.pushTest(actor, id); setPushMsg(r.result === 'ok' ? 'اعلان آزمایشی ارسال شد.' : r.result === 'gone' ? 'اشتراک منقضی بود و حذف شد.' : 'ارسال ناموفق بود (خطای موقت).') } catch (e) { setPushMsg((e as Error).message) } finally { setBusy(false) } }}>ارسال اعلان آزمایشی</button>
+                {pushMsg && <small className="adm-note" role="status">{pushMsg}</small>}
+              </div>
+            )}
           </section>
 
           <section className="adm-card">

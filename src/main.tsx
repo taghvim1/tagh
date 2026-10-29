@@ -12,7 +12,12 @@ import { startPermissionSync } from './lib/permissionSync'
 import { initHistory } from './lib/router'
 import { initHistoricalClimate } from './weather/history/store'
 
-tracker.track('app_open')
+tracker.track('app_open') // روی پنل مدیریت/دستگاه آزمایشی/ربات خودبه‌خود ثبت نمی‌شود (skipTelemetry)
+// باز شدن از روی اعلان تبلیغاتی (آدرس ?from=push): «بازکردن اعلان» شمرده می‌شود و پارامتر از آدرس برداشته می‌شود
+try {
+  const u = new URL(location.href)
+  if (u.searchParams.get('from') === 'push') { tracker.track('notification_open'); u.searchParams.delete('from'); history.replaceState(history.state, '', u.pathname + (u.search || '') + u.hash) }
+} catch { /* آدرس نامعتبر */ }
 startAutoFlush()
 startPermissionSync()
 startDateNotificationSync()

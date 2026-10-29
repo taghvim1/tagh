@@ -3,11 +3,12 @@ import { MOCK_DESTINATIONS } from '../data/destinations'
 import { safeKV } from './ids'
 import { createHttpTransport } from './httpTransport'
 import { createTracker } from './tracker'
+import { skipTelemetry } from '../lib/internal'
 import type { EventProps } from './tracker'
 
 const standalone = typeof window !== 'undefined' && !!window.matchMedia?.('(display-mode: standalone)').matches
 /** تنها نمونهٔ ردیاب برنامه. پیش‌فرض روشن (قابل خاموش‌کردن)؛ همه‌چیز اول روی دستگاه ذخیره می‌شود و با اتصال به سرور ارسال می‌شود. */
-export const tracker = createTracker({ kv: safeKV(), transport: createHttpTransport(), platform: standalone ? 'pwa' : 'web' })
+export const tracker = createTracker({ kv: safeKV(), transport: createHttpTransport(), platform: standalone ? 'pwa' : 'web', isDisabled: skipTelemetry })
 
 export function useAnalytics() {
   const read = () => ({ consent: tracker.consent(), pending: tracker.pending(), deletion: tracker.deletionRequest(), id: tracker.installation().anonymous_id })

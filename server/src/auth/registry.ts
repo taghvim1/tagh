@@ -24,16 +24,25 @@ export interface Person {
   opens?: number
   sessions?: number
   log?: { at: string; type: 'first_open' | 'open' | 'register' | 'login' | 'profile' }[]
+  /** اشتراک Web Push برای پیشنهادهای تبلیغاتی (فقط با مجوز اعلان + رضایت تبلیغاتی ثبت می‌شود) و آخرین ارسال تبلیغاتی (برای سقف تکرار) */
+  push?: { endpoint: string; p256dh: string; auth: string; at: string }
+  promo_last_sent_at?: string
+  promo_unsubscribed_at?: string
 }
 export interface ProfileInput { first_name: string; last_name: string; city: string; email?: string }
+/** مهمانِ بی‌فعالیت: ثبت‌نام نکرده، حداکثر یک‌بار باز شده و بعد از cutoff برنگشته */
+export const isStaleGuest = (p: Person, cutoffMs: number) => p.status === 'guest' && !p.user_id && (p.opens ?? 1) <= 1 && Date.parse(p.last_seen_at) < cutoffMs
 export const isComplete = (p: { first_name?: string; last_name?: string; city?: string }) => !!(p.first_name?.trim() && p.last_name?.trim() && p.city?.trim())
 
 const KEY = 'people:v1', MAX_PEOPLE = 200_000, SESSION_GAP = 30 * 60_000, MAX_LOG = 40
+export const MAX_NEW_GUESTS_PER_HOUR = 3000 // سقف ساخت مهمان تازه در هر ساعت (محافظ در برابر پرشدن جدول با ربات/اسکریپت)
+export const STALE_GUEST_DAYS = 3 // مهمانِ «یک‌بار-بازشده» که این‌قدر روز برنگشته، بی‌فعالیت حساب می‌شود
 type LogType = NonNullable<Person['log']>[number]['type']
 const note = (p: Person, type: LogType, at: string) => { p.log = [...(p.log ?? []), { at, type }].slice(-MAX_LOG) }
 
-export function createRegistry(d: { store: Store; now?: () => number }) {
-  const { store } = d, now = d.now ?? (() => Date.now())
+export function createRegistry(d: { store: Store; now?: () => number; maxNewPerHour?: number }) {
+  const { store } = d, now = d.now ?? (() => Date.now()), maxNewPerHour = d.maxNewPerHour ?? MAX_NEW_GUESTS_PER_HOUR
+  const created: number[] = [] // زمان ساخت مهمان‌های تازهٔ یک ساعت اخیر
   const iso = () => new Date(now()).toISOString()
   // کل فهرست یک‌بار از KV خوانده و در حافظه نگه داشته می‌شود؛ نوشتن روی دیسک/DB دسته‌ای است (حداکثر هر ۵ ثانیه یک بار)
   // نه برای هر درخواست. فرض: یک نمونهٔ سرور. برای چند نمونه یا بیش از ~۵۰ هزار کاربر باید جدول واقعی در Postgres باشد.
@@ -65,17 +74,24 @@ export function createRegistry(d: { store: Store; now?: () => number }) {
     flush,
     get: async (id: string) => (await load()).find((p) => p.id === id) ?? null,
     /** هر بار برنامه باز می‌شود: نصب تازه = مهمان جدید؛ نصب قبلی فقط «آخرین مراجعه» را به‌روز می‌کند. */
-    touchInstall(anon: string, platform: 'web' | 'pwa', appVersion: string) {
+    touchInstall(anon: string, platform: 'web' | 'pwa', appVersion: string, analyticsId?: string) {
       return tx((ps) => {
         const t = iso(), cur = byAnon(ps, anon)
+        // شناسهٔ ردیاب (رویدادها/رضایت‌ها) به همین نصب وصل می‌شود تا علایق و رضایت در پنل دیده شود؛ شناسهٔ متعلق به شخص دیگر هرگز برداشته نمی‌شود
+        const linkAnalytics = (p: Person) => { if (analyticsId && !p.anonymous_ids.includes(analyticsId) && !byAnon(ps, analyticsId)) p.anonymous_ids = [...p.anonymous_ids, analyticsId].slice(-20) }
         if (cur) {
           cur.opens = (cur.opens ?? 0) + 1
           if (Date.parse(t) - Date.parse(cur.last_seen_at) > SESSION_GAP || !cur.sessions) { cur.sessions = (cur.sessions ?? 0) + 1; note(cur, 'open', t) }
-          cur.last_seen_at = t; cur.platform = platform; cur.app_version = appVersion; return { created: false }
+          cur.last_seen_at = t; cur.platform = platform; cur.app_version = appVersion; linkAnalytics(cur); return { created: false, throttled: false }
         }
-        if (ps.length >= MAX_PEOPLE) return { created: false }
-        ps.push({ id: anon, anonymous_ids: [anon], status: 'guest', state: 'active', first_seen_at: t, last_seen_at: t, platform, app_version: appVersion, profile_complete: false, opens: 1, sessions: 1, log: [{ at: t, type: 'first_open' }] })
-        return { created: true }
+        const nowMs = now()
+        while (created.length && nowMs - created[0] > 3600_000) created.shift()
+        if (created.length >= maxNewPerHour) return { created: false, throttled: true }
+        if (ps.length >= MAX_PEOPLE) { const cut = nowMs - STALE_GUEST_DAYS * 86_400_000; for (let i = ps.length - 1; i >= 0; i--) if (isStaleGuest(ps[i], cut)) ps.splice(i, 1) }
+        if (ps.length >= MAX_PEOPLE) return { created: false, throttled: true }
+        const fresh: Person = { id: anon, anonymous_ids: [anon], status: 'guest', state: 'active', first_seen_at: t, last_seen_at: t, platform, app_version: appVersion, profile_complete: false, opens: 1, sessions: 1, log: [{ at: t, type: 'first_open' }] }
+        ps.push(fresh); linkAnalytics(fresh); created.push(nowMs)
+        return { created: true, throttled: false }
       })
     },
     /** ثبت‌نام/ورود با شماره: ردیف مهمانِ همان نصب به حساب تبدیل می‌شود (یا ردیف حساب ساخته/به‌روز می‌شود). */
@@ -113,6 +129,22 @@ export function createRegistry(d: { store: Store; now?: () => number }) {
     },
     setState(id: string, state: 'active' | 'disabled') { return tx((ps) => { const p = ps.find((x) => x.id === id); if (!p) return false; p.state = state; return true }) },
     remove(id: string) { return tx((ps) => { const i = ps.findIndex((x) => x.id === id || x.user_id === id); if (i < 0) return false; ps.splice(i, 1); return true }) },
+    /** ذخیرهٔ اشتراک Web Push (null = حذف). شناسه می‌تواند هر یک از شناسه‌های نصب شخص باشد. */
+    setPush(anon: string, sub: { endpoint: string; p256dh: string; auth: string } | null) {
+      return tx((ps) => {
+        const p = byAnon(ps, anon) ?? ps.find((x) => x.id === anon); if (!p) return false
+        if (sub) { p.push = { ...sub, at: iso() }; delete p.promo_unsubscribed_at } else { delete p.push; p.promo_unsubscribed_at = iso() }
+        return true
+      })
+    },
+    clearPushByEndpoint: (endpoint: string) => tx((ps) => { let n = 0; for (const p of ps) if (p.push?.endpoint === endpoint) { delete p.push; n++ } return n }),
+    markPromoSent: (ids: string[], at: string) => tx((ps) => { const s = new Set(ids); for (const p of ps) if (s.has(p.id)) p.promo_last_sent_at = at }),
+    /** حذف مهمان‌های بی‌فعالیت؛ فهرست حذف‌شده‌ها را برمی‌گرداند تا رویداد/رضایت‌شان هم پاک شود */
+    purgeStaleGuests: (olderThanDays: number) => tx((ps) => {
+      const cut = now() - olderThanDays * 86_400_000, gone: Person[] = []
+      for (let i = ps.length - 1; i >= 0; i--) if (isStaleGuest(ps[i], cut)) gone.push(...ps.splice(i, 1))
+      return gone
+    }),
     isDisabled: async (userId: string) => (await load()).some((p) => p.user_id === userId && p.state === 'disabled'),
   }
 }

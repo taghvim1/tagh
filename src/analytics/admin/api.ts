@@ -7,8 +7,12 @@ import { dashboardStats, detailOf, listProfiles, pageEvents, previewAudience, ty
 
 export class ApiUnavailableError extends Error { constructor(public code: string = 'API_UNAVAILABLE') { super(code) } }
 export class NotReadyError extends Error { constructor(public feature: string) { super('NOT_READY:' + feature) } }
+/** خطای معنادار سرور (مثلاً «تعداد گیرندگان بیش از سقف است») با پیام فارسی همان‌جا */
+export class ApiRequestError extends Error { constructor(message: string, public code: string) { super(message) } }
 
-export interface OfferDraft { title: string; body: string; kind: 'promotional'; filters: ProfileFilters }
+export interface OfferDraft { title: string; body: string; kind: 'promotional'; filters: ProfileFilters; /** مسیر داخلی برنامه که با کلیک روی اعلان باز می‌شود */ url?: string }
+export interface OfferResult { matched: number; targeted: number; sent: number; failed: number; removed: number }
+export interface PromoLog extends OfferResult { at: string; title: string; body: string; url: string }
 export interface Actor { adminId: string; role: AdminRole }
 
 /** قرارداد API مدیریت کاربران. پیاده‌سازی واقعی باید روی سرور باشد و مجوزها را همان‌جا دوباره بررسی کند. */
@@ -23,7 +27,13 @@ export interface UsersApi {
   audience(a: Actor, filters: ProfileFilters): Promise<AudienceCounts>
   disable(a: Actor, id: string, confirm: string): Promise<void>
   remove(a: Actor, id: string, confirm: string): Promise<void>
-  sendOffer(a: Actor, draft: OfferDraft): Promise<never>
+  /** ارسال واقعی فقط در سرور (فقط به واجدین شرایط: رضایت تبلیغاتی + اشتراک اعلان + سقف تکرار) */
+  sendOffer(a: Actor, draft: OfferDraft): Promise<OfferResult>
+  /** مهمان‌های بی‌فعالیت (یک‌بار-بازشده و برنگشته) */
+  staleGuests(a: Actor, days: number): Promise<{ days: number; count: number }>
+  cleanupGuests(a: Actor, days: number): Promise<{ removed: number; deleted_events: number; deleted_consents: number }>
+  pushTest(a: Actor, id: string): Promise<{ result: 'ok' | 'gone' | 'fail' }>
+  promoHistory(a: Actor): Promise<{ items: PromoLog[] }>
 }
 
 /** نسخهٔ نمایشی در حافظه (با داده ساختگی). تغییرات با بارگذاری دوباره از بین می‌رود و هیچ‌جا ذخیره نمی‌شود. */
@@ -46,7 +56,11 @@ export function createDemoApi(now: () => Date = () => new Date(), seed?: Profile
     async audience(a, f) { assertCan(a.role, 'audience.preview'); log(a, 'audience_preview'); return previewAudience(data, f, now()) },
     async disable(a, id, confirm) { assertCan(a.role, 'users.disable'); if (confirm !== id) throw new Error('CONFIRMATION_MISMATCH'); find(id).state = 'disabled'; log(a, 'disable_user', id) },
     async remove(a, id, confirm) { assertCan(a.role, 'users.delete'); if (confirm !== id) throw new Error('CONFIRMATION_MISMATCH'); find(id).state = 'deleted'; log(a, 'delete_user', id) },
-    async sendOffer() { throw new NotReadyError('send_offer') }, // ارسال واقعی غیرفعال است
+    async sendOffer() { throw new NotReadyError('send_offer') }, // نسخهٔ نمایشی هرگز چیزی نمی‌فرستد
+    async staleGuests() { throw new NotReadyError('cleanup') },
+    async cleanupGuests() { throw new NotReadyError('cleanup') },
+    async pushTest() { throw new NotReadyError('push_test') },
+    async promoHistory() { return { items: [] } },
   }
 }
 
@@ -57,7 +71,12 @@ export function createRemoteApi(baseUrl = '/api/admin', fetchImpl: typeof fetch 
     let token = ''; try { token = sessionStorage.getItem('adm-token') ?? '' } catch { /* بدون ذخیره‌سازی */ }
     try { res = await fetchImpl(baseUrl + path, { credentials: 'include', ...init, headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) } }) } catch { throw new ApiUnavailableError('NETWORK_ERROR') }
     if (res.status === 401 || res.status === 403) throw new ApiUnavailableError('UNAUTHORIZED')
-    if (!res.ok || !(res.headers.get('content-type') ?? '').includes('json')) throw new ApiUnavailableError('BACKEND_NOT_CONNECTED')
+    const isJson = (res.headers.get('content-type') ?? '').includes('json')
+    if (!res.ok && isJson && res.status !== 404) { // پاسخ خطای معنادار سرور (اعتبارسنجی، تأیید لازم، سقف گیرندگان…)
+      const j = await res.json().catch(() => ({})) as { error?: string; errors?: string[] }
+      throw new ApiRequestError(j.errors?.[0] ?? j.error ?? `HTTP_${res.status}`, j.error ?? 'error')
+    }
+    if (!res.ok || !isJson) throw new ApiUnavailableError('BACKEND_NOT_CONNECTED')
     return res.json() as Promise<T>
   }
   const qs = (o: object) => '?q=' + encodeURIComponent(JSON.stringify(o))
@@ -70,7 +89,11 @@ export function createRemoteApi(baseUrl = '/api/admin', fetchImpl: typeof fetch 
     audience: (_a, f) => req('/audience/preview', { method: 'POST', body: JSON.stringify(f) }),
     disable: (_a, id, confirm) => req(`/users/${encodeURIComponent(id)}/disable`, { method: 'POST', body: JSON.stringify({ confirm }) }),
     remove: (_a, id, confirm) => req(`/users/${encodeURIComponent(id)}`, { method: 'DELETE', body: JSON.stringify({ confirm }) }),
-    sendOffer: async () => { throw new NotReadyError('send_offer') },
+    sendOffer: (_a, d) => req('/audience/send', { method: 'POST', body: JSON.stringify({ title: d.title, body: d.body, url: d.url || '/', filters: d.filters, confirm: true }) }),
+    staleGuests: (_a, days) => req(`/users/stale-count?days=${days}`),
+    cleanupGuests: (_a, days) => req('/users/cleanup', { method: 'POST', body: JSON.stringify({ olderThanDays: days, confirm: true }) }),
+    pushTest: (_a, id) => req(`/users/${encodeURIComponent(id)}/push-test`, { method: 'POST', body: JSON.stringify({}) }),
+    promoHistory: () => req('/audience/history'),
   }
 }
 export { nowISO }

@@ -86,6 +86,8 @@ export interface UserProfile {
   viewed_destinations: Array<{ id: number; views: number; approx_seconds: number }>; viewed_tours: number[]
   offer_clicks: number; searches: number; notification_opens: number
   event_types: Record<string, number>
+  /** همهٔ مقصدهای دیده‌شده و کلید علایق «قوی» (امتیاز ≥ حداقل)؛ برای فیلتر مخاطب (در پاسخ جزئیات نمی‌آید) */
+  viewed_destination_ids: number[]; strong_interests: string[]
 }
 
 export function profileOf(events: EventRow[], now: Date): UserProfile {
@@ -118,6 +120,7 @@ export function profileOf(events: EventRow[], now: Date): UserProfile {
     interests: interests.slice(0, 12), favorites: favoritesOf(events), seasons, filters_used: filters,
     viewed_destinations: [...dest].map(([id, v]) => ({ id, views: v.views, approx_seconds: v.sec })).filter((x) => x.views > 0).sort((a, b) => b.views - a.views).slice(0, 20),
     viewed_tours: [...tours].slice(0, 50), offer_clicks: offers, searches, notification_opens: opens, event_types: types,
+    viewed_destination_ids: [...dest].filter(([, v]) => v.views > 0).map(([id]) => id), strong_interests: interests.filter((i) => i.score >= INTEREST_MIN_SCORE).map((i) => i.interest_key),
   }
 }
 

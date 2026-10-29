@@ -52,6 +52,8 @@ export interface Store {
   eventsSince(sinceISO: string, limit: number): Promise<EventRow[]>
   /** همهٔ رکوردهای رضایت شناسه‌های نصب (قدیمی‌ترین اول) */
   consentsOf(anonIds: string[]): Promise<ConsentRow[]>
+  /** همهٔ رکوردهای رضایت (قدیمی‌ترین اول) تا سقف limit؛ برای ساخت نمای کلی کاربران */
+  allConsents(limit: number): Promise<ConsentRow[]>
   /** حذف رویدادها و رضایت‌های شناسه‌های نصب؛ تعداد حذف‌شده را برمی‌گرداند */
   deleteSubjects(anonIds: string[]): Promise<{ events: number; consents: number }>
   getKV(key: string): Promise<string | null>

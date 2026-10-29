@@ -36,9 +36,10 @@ export async function buildApp({ config, db = null, store: injected, fetchImpl, 
   const secrets = createSecrets(config, store)
   const ai = createAiService({ store, secrets, fetch: fetchImpl ?? ((...a) => fetch(...a)) })
   const feed = createFeedService({ store, ai })
-  const pkg = createPackageService({ store, ai, pusher: createPusher({ store, config }), ...(now ? { now: () => new Date(now()) } : {}) })
+  const pusher = createPusher({ store, config })
+  const pkg = createPackageService({ store, ai, pusher, ...(now ? { now: () => new Date(now()) } : {}) })
   const sms = createGhasedak({ secrets, baseUrl: config.GHASEDAK_BASE_URL, fetchImpl })
-  const registry = createRegistry({ store, ...(now ? { now } : {}) })
+  const registry = createRegistry({ store, maxNewPerHour: config.INSTALL_MAX_PER_HOUR, ...(now ? { now } : {}) })
   registryRef.current = registry
   const auth = createAuthService({ store, secrets, sms, config, registry, ...(now ? { now } : {}) })
 
@@ -57,7 +58,7 @@ export async function buildApp({ config, db = null, store: injected, fetchImpl, 
     eventRoutes(api, store)
     packagePublicRoutes(api, pkg)
     authRoutes(api, { config, auth, registry })
-    adminRoutes(api, { config, store, secrets, ai, feed, pkg, auth, registry, sms })
+    adminRoutes(api, { config, store, secrets, ai, feed, pkg, auth, registry, sms, pusher, ...(now ? { now: () => new Date(now()) } : {}) })
     // آمادگی: وضعیت دیتابیس بدون افشای جزئیات اتصال
     api.get('/ready', async (_req, reply) => {
       if (!db) return reply.code(503).send({ status: 'degraded', db: 'not_configured' })

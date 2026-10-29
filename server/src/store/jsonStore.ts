@@ -97,6 +97,7 @@ export async function createJsonStore(file?: string): Promise<Store> {
     },
     async eventsSince(since, limit) { return clone(s.events.filter((e) => e.occurred_at >= since).sort((a, b) => b.occurred_at.localeCompare(a.occurred_at) || b.event_id.localeCompare(a.event_id)).slice(0, limit)) },
     async consentsOf(anonIds) { const ids = new Set(anonIds); return clone(s.consents.filter((c) => ids.has(c.subject_id)).sort((a, b) => a.recorded_at.localeCompare(b.recorded_at) || a.consent_id.localeCompare(b.consent_id))) },
+    async allConsents(limit) { return clone([...s.consents].sort((a, b) => a.recorded_at.localeCompare(b.recorded_at) || a.consent_id.localeCompare(b.consent_id)).slice(-limit)) },
     async deleteSubjects(anonIds) {
       const ids = new Set(anonIds), ev = s.events.filter((e) => ids.has(e.anonymous_id)), co = s.consents.filter((c) => ids.has(c.subject_id))
       if (!ev.length && !co.length) return { events: 0, consents: 0 }

@@ -1,11 +1,14 @@
 import { useSyncExternalStore } from 'react'
+import { INSTALL_ID_KEY, INSTALL_PING_KEY, getOrCreateInstallation } from '../analytics/installation'
+import { safeKV } from '../analytics/ids'
+import { skipTelemetry } from '../lib/internal'
 
 // کلاینت ورود با کد پیامکی. نشست در کوکی HttpOnly است (جاوااسکریپت توکنی نمی‌بیند)؛ اینجا فقط وضعیت نمایشی (شمارهٔ ماسک‌شده) نگه‌داری می‌شود.
 export interface AuthProfile { first_name: string; last_name: string; city: string; email?: string }
 export interface AuthUser { id: string; phone_masked: string; created_at: string; profile?: AuthProfile | null; profile_complete?: boolean }
 
 // شناسهٔ نصب: عدد تصادفی بی‌اطلاعات شخصی، جدا از شناسهٔ تحلیل؛ فقط برای شمارش نصب‌ها و وصل‌شدن به حساب پس از ثبت‌نام
-const INSTALL_KEY = 'tp-install-id'
+const INSTALL_KEY = INSTALL_ID_KEY
 export function getInstallId(): string | undefined {
   try {
     let id = localStorage.getItem(INSTALL_KEY)
@@ -13,16 +16,19 @@ export function getInstallId(): string | undefined {
     return id
   } catch { return undefined }
 }
-/** هر بار برنامه باز می‌شود: نصب تازه در پنل مدیریت «مهمان» ثبت می‌شود (بی‌صدا؛ خطا نادیده گرفته می‌شود). */
-const PING_KEY = 'tp-install-ping', PING_GAP = 30 * 60_000
+/** هر بار برنامه باز می‌شود: نصب تازه در پنل مدیریت «مهمان» ثبت می‌شود (بی‌صدا؛ خطا نادیده گرفته می‌شود).
+ *  ثبت نمی‌شود برای: پنل مدیریت، ربات/خزنده، اجرای محلی و دستگاهِ علامت‌خورده به‌عنوان آزمایشی. شناسهٔ ردیاب هم همراه می‌رود تا رویدادها و رضایت‌ها به همین نصب وصل شوند. */
+const PING_GAP = 30 * 60_000
 export async function registerInstallation(fetchImpl?: typeof fetch): Promise<boolean> {
+  if (skipTelemetry()) return false
   const id = getInstallId(); if (!id) return false
-  // حداکثر هر ۳۰ دقیقه یک بار (به اندازهٔ یک «نشست»)؛ بازشدن‌های پشت‌سرهم درخواستی به سرور نمی‌فرستند
-  try { const last = Number(localStorage.getItem(PING_KEY) ?? 0); if (Date.now() - last < PING_GAP) return true } catch { /* بدون ذخیره‌سازی */ }
+  const analyticsId = (() => { try { return getOrCreateInstallation(safeKV()).anonymous_id } catch { return undefined } })()
+  // حداکثر هر ۳۰ دقیقه یک بار (به اندازهٔ یک «نشست»)؛ بازشدن‌های پشت‌سرهم درخواستی نمی‌فرستند. اگر شناسهٔ ردیاب عوض شده باشد فوراً ثبت می‌شود.
+  try { const [t, a] = (localStorage.getItem(INSTALL_PING_KEY) ?? '0|').split('|'); if (Date.now() - Number(t) < PING_GAP && a === (analyticsId ?? '')) return true } catch { /* بدون ذخیره‌سازی */ }
   const pwa = (() => { try { return window.matchMedia?.('(display-mode: standalone)').matches === true } catch { return false } })()
-  const r = await http('/installations', { method: 'POST', body: { installation_id: id, platform: pwa ? 'pwa' : 'web', app_version: '1' } }, fetchImpl)
+  const r = await http('/installations', { method: 'POST', body: { installation_id: id, ...(analyticsId ? { analytics_id: analyticsId } : {}), platform: pwa ? 'pwa' : 'web', app_version: '1' } }, fetchImpl)
   const ok = !!r && r.status === 204
-  if (ok) { try { localStorage.setItem(PING_KEY, String(Date.now())) } catch { /* فقط حافظه */ } }
+  if (ok) { try { localStorage.setItem(INSTALL_PING_KEY, `${Date.now()}|${analyticsId ?? ''}`) } catch { /* فقط حافظه */ } }
   return ok
 }
 export interface AuthState { status: 'unknown' | 'out' | 'in'; user: AuthUser | null; /** آیا سرور ورود پیامکی را پشتیبانی می‌کند؟ (null = هنوز معلوم نیست) */ available: boolean | null }

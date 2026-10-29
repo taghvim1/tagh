@@ -4,6 +4,8 @@ import { DEFAULT_CONSENT } from './consent'
 
 export const APP_VERSION = '1.0.0'
 const KEY = 'taghvim-installation-v1'
+/** شناسهٔ ثبت نصب در پنل (جدا از شناسهٔ ردیاب) و زمان آخرین ثبت؛ با «حذف داده‌ها» هر دو پاک می‌شوند تا نصب تازه به ردیف قبلی وصل نشود */
+export const INSTALL_ID_KEY = 'tp-install-id', INSTALL_PING_KEY = 'tp-install-ping'
 
 /** شناسهٔ ناشناس نصب: در اولین اجرا ساخته می‌شود و در اجراهای بعدی ثابت می‌ماند. */
 export function getOrCreateInstallation(kv: KV, now = new Date(), platform: 'web' | 'pwa' = 'web'): AnonymousInstallation {

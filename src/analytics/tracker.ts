@@ -1,6 +1,6 @@
 import { CONSENT_KINDS, PERMISSION_KINDS, clearConsent, consentSummary, loadConsentRecords, recordConsent, seedDefaultConsents, syncPermissionConsent } from './consent'
 import { browserPermissionReader, type PermissionReader } from './permissions'
-import { APP_VERSION, clearInstallation, getOrCreateInstallation } from './installation'
+import { APP_VERSION, INSTALL_ID_KEY, INSTALL_PING_KEY, clearInstallation, getOrCreateInstallation } from './installation'
 import { nowISO, randomId, type KV } from './ids'
 import { EVENT_TYPES, type ActivityEvent, type ConsentKind, type ConsentRecord, type ConsentSummary, type EventType } from './types'
 
@@ -34,7 +34,7 @@ export function sanitizeProps(p: EventProps): EventProps {
   return out
 }
 
-export interface TrackerDeps { kv: KV; transport?: Transport; now?: () => Date; platform?: 'web' | 'pwa'; appVersion?: string }
+export interface TrackerDeps { kv: KV; transport?: Transport; now?: () => Date; platform?: 'web' | 'pwa'; appVersion?: string; /** دستگاه آزمایشی/ربات/پنل مدیریت: چیزی ثبت و ارسال نمی‌شود */ isDisabled?: () => boolean }
 export type FlushResult = { status: 'empty' | 'sent' | 'failed' | 'skipped'; sent: number; code?: string }
 
 export function createTracker(deps: TrackerDeps) {
@@ -71,7 +71,7 @@ export function createTracker(deps: TrackerDeps) {
 
   /** ثبت رویداد؛ بدون رضایت «تحلیل» هیچ‌چیز ذخیره نمی‌شود. null یعنی ثبت نشد. */
   function track(type: EventType, props: EventProps = {}): ActivityEvent | null {
-    if (!EVENT_TYPES.includes(type)) return null
+    if (!EVENT_TYPES.includes(type) || deps.isDisabled?.()) return null
     const c = consent()
     if (!c.analytics) return null
     const t = now()
@@ -96,7 +96,7 @@ export function createTracker(deps: TrackerDeps) {
    * رکوردهای رضایت (از جمله لغو) همیشه همراه می‌روند؛ رویدادها فقط با رضایت «تحلیل».
    */
   async function flush(opts: { force?: boolean } = {}): Promise<FlushResult> {
-    if (flushing) return { status: 'skipped', sent: 0 }
+    if (flushing || deps.isDisabled?.()) return { status: 'skipped', sent: 0 }
     if (!opts.force && now().getTime() < retryAt) return { status: 'skipped', sent: 0 }
     const records = seed()
     const batch = consent().analytics ? loadOutbox() : []
@@ -153,6 +153,7 @@ export function createTracker(deps: TrackerDeps) {
     const req = { anonymous_id: id, requested_at: nowISO(now()), status: 'pending_server' as const }
     ;[OUTBOX_KEY, SESSION_KEY].forEach((k) => kv.removeItem(k))
     clearConsent(kv); clearInstallation(kv); kv.removeItem(SYNCED_KEY)
+    ;[INSTALL_ID_KEY, INSTALL_PING_KEY].forEach((k) => kv.removeItem(k)) // نصب تازه = ردیف تازه؛ به ردیف قبلی در پنل وصل نمی‌شود
     try { kv.setItem(DELETION_KEY, JSON.stringify(req)) } catch { /* فقط حافظه */ }
     const fresh = installation().anonymous_id // شناسهٔ تازه؛ رکوردهای «خاموش» به نام همین شناسه ثبت می‌شود
     recordConsent(kv, fresh, 'analytics', false, now(), 'privacy_page')

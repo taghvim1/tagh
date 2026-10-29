@@ -118,6 +118,7 @@ export async function createPgStore(query: Query, migrationSql: string): Promise
     },
     async eventsSince(since, limit) { return (await query('select * from activity_events where occurred_at >= $1 order by occurred_at desc limit $2', [since, limit])).map(eventRow) },
     async consentsOf(anonIds) { return anonIds.length ? (await query(`select * from consent_records where subject_id in (${inList(anonIds)}) order by recorded_at asc, consent_id asc`, anonIds)).map(consentRow) : [] },
+    async allConsents(limit) { return (await query('select * from (select * from consent_records order by recorded_at desc, consent_id desc limit $1) t order by recorded_at asc, consent_id asc', [limit])).map(consentRow) },
     async deleteSubjects(anonIds) {
       if (!anonIds.length) return { events: 0, consents: 0 }
       const ev = await query(`delete from activity_events where anonymous_id in (${inList(anonIds)}) returning event_id`, anonIds)
