@@ -42,6 +42,7 @@ async function setSwPlan(plan: Plan | null) {
 export async function syncDateNotification(): Promise<boolean> {
   if (!dateNotificationEnabled() || notificationState() !== 'granted') return false
   const reg = await registration(); if (!reg) return false
+  await setSwFlag(true) // پرچم SW ممکن است با پاک‌سازی حافظهٔ مرورگر رفته باشد؛ با هر باز شدن دوباره گذاشته می‌شود تا بازگذاری اعلان ادامه یابد
   await ensureTitleScript(); const { title: dateTitle, day: dayNumber } = TITLE() as { title: string; day: number }; if (!dateTitle) return false
   const plan = buildPlan(); await setSwPlan(plan)
   const nowMs = Date.now(), slot = plan[isoDay(nowMs)]?.[hourKey(nowMs)]
